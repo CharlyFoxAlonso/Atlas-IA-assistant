@@ -415,32 +415,59 @@ with st.sidebar:
     st.divider()
 
     # ========================================
-    # SECCIÓN: Drag & Drop Local
+    # SECCIÓN: Drag & Drop Local (DINÁMICO)
     # ========================================
     st.subheader("📂 Archivos Locales (Drag & Drop)")
-    st.caption("PDFs, audios (MP3, AAC), videos (MP4), imágenes.")
+    st.caption("PDFs, audios, videos, imágenes. Seleccioná destino o creá subcarpeta nueva.")
 
     archivos_subidos = st.file_uploader(
         "Soltá tus archivos:",
-        type=['pdf', 'txt', 'md', 'docx', 'png', 'jpg', 'jpeg',
-              'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
+        type=['pdf', 'txt', 'md', 'docx', 'png', 'jpg', 'jpeg', 
+              'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 
               'mp4', 'mov', 'avi', 'mkv', 'webm'],
         accept_multiple_files=True,
         key="uploader_local"
     )
 
-    categoria_local = st.selectbox("Categoría local:", ["Estudio", "Derecho", "Investigacion", "General"], key="categoria_local")
+    # Obtener carpetas dinámicamente del backend
+    from core.local_ingestion_manager import detectar_carpetas_atlas_memory, crear_subcarpeta
+    carpetas_disponibles = detectar_carpetas_atlas_memory()
 
+    categoria_local = st.selectbox(
+        "📁 Carpeta destino:",
+        options=carpetas_disponibles,
+        key="categoria_local"
+    )
+
+    # Opción para crear subcarpeta nueva
+    crear_sub = st.checkbox("📁 ¿Crear subcarpeta nueva dentro de esta ruta?", key="chk_crear_sub")
+    if crear_sub:
+        nombre_sub = st.text_input("Nombre de la subcarpeta:", placeholder="ej: balance_julio, facturas_2026", key="txt_nombre_sub")
+        if st.button("✅ Crear y actualizar lista", use_container_width=True, key="btn_crear_subcarpeta"):
+            if nombre_sub.strip():
+                ruta_nueva = f"{categoria_local}/{nombre_sub.strip().replace(' ', '_')}"
+                resultado = crear_subcarpeta(ruta_nueva)
+                st.toast(resultado["mensaje"])
+                if resultado["exito"]:
+                    st.rerun()  # Recarga la lista de carpetas
+            else:
+                st.warning("Escribí un nombre válido para la subcarpeta.")
+
+    # Botón de procesamiento
     if st.button("⚡ Procesar con Prometeo", use_container_width=True, key="btn_procesar_local"):
         if not archivos_subidos:
             st.warning("Soltá archivos primero")
         else:
             from core.local_ingestion_manager import procesar_archivo_local
+            
+            # Determinar ruta final (si hay subcarpeta recién creada, se usa esa)
+            ruta_destino = st.session_state.get("categoria_local", categoria_local) or categoria_local
+            
             for archivo in archivos_subidos:
-                st.markdown(f"**Procesando:** {archivo.name}")
+                st.markdown(f"**Procesando:** `{archivo.name}` → `{ruta_destino}`")
                 progreso_container = st.empty()
                 try:
-                    for paso in procesar_archivo_local(archivo, categoria_local):
+                    for paso in procesar_archivo_local(archivo, ruta_destino):
                         if paso["estado"] == "error":
                             progreso_container.error(paso["mensaje"]); break
                         elif paso["estado"] == "completado":
@@ -448,10 +475,8 @@ with st.sidebar:
                         else:
                             progreso_container.info(paso["mensaje"])
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"❌ Error: {str(e)}")
                 st.divider()
-
-    st.divider()
 
     # ========================================
     # SECCIÓN: Auto-conocimiento

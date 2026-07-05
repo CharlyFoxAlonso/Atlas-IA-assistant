@@ -1,7 +1,7 @@
 """
 core/config.py
 ========================================
-CONFIGURACIÓN CENTRALIZADA DE ATLAS v2.7
+CONFIGURACIÓN CENTRALIZADA DE ATLAS v3
 ========================================
 
 Este archivo es el ÚNICO lugar donde se definen:
@@ -25,9 +25,9 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "2.7"
+VERSION = "3.0"
 NOMBRE = "Atlas"
-CODENAME = "Prometeo"
+CODENAME = "Limpio"
 
 # ============================================
 # 🧠 MODELO LOCAL (Ollama)
@@ -234,12 +234,15 @@ def obtener_info_modelo(modelo_id: str) -> dict:
 
 
 def listar_modelos_locales_descargados() -> list:
+    """Lista modelos descargados en Ollama (compatible con Windows UTF-8)."""
     try:
         result = subprocess.run(
             ["ollama", "list"],
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
+            encoding='utf-8',
+            errors='replace'
         )
         if result.returncode != 0:
             return []
@@ -251,6 +254,8 @@ def listar_modelos_locales_descargados() -> list:
                 if partes:
                     modelos.append(partes[0])
         return modelos
+    except FileNotFoundError:
+        return []
     except Exception:
         return []
 
@@ -261,29 +266,42 @@ def verificar_modelo_local(modelo_id: str) -> bool:
 
 
 def descargar_modelo_local(modelo_id: str, callback_progreso=None) -> dict:
+    """Descarga un modelo desde Ollama (compatible con Windows UTF-8)."""
     if verificar_modelo_local(modelo_id):
         return {"exito": True, "mensaje": f"✅ {modelo_id} ya está descargado"}
     try:
         if callback_progreso:
             callback_progreso(f"📥 Descargando {modelo_id}...")
+        
+        # Forzar UTF-8 y entorno limpio para Windows
+        env = os.environ.copy()
+        env['PYTHONIOENCODING'] = 'utf-8'
+        
         proceso = subprocess.Popen(
             ["ollama", "pull", modelo_id],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
-            universal_newlines=True
+            universal_newlines=True,
+            encoding='utf-8',
+            errors='replace',
+            env=env
         )
+        
         ultima_linea = ""
         for linea in proceso.stdout:
             ultima_linea = linea.strip()
             if callback_progreso and ultima_linea:
                 callback_progreso(ultima_linea)
+        
         proceso.wait()
+        
         if proceso.returncode == 0:
             return {"exito": True, "mensaje": f"✅ {modelo_id} descargado correctamente"}
         else:
             return {"exito": False, "mensaje": f"❌ Error descargando {modelo_id}: {ultima_linea}"}
+    
     except FileNotFoundError:
         return {"exito": False, "mensaje": "❌ Ollama no está instalado o no está en el PATH"}
     except Exception as e:
@@ -291,12 +309,15 @@ def descargar_modelo_local(modelo_id: str, callback_progreso=None) -> dict:
 
 
 def eliminar_modelo_local(modelo_id: str) -> dict:
+    """Elimina un modelo descargado (compatible con Windows UTF-8)."""
     try:
         result = subprocess.run(
             ["ollama", "rm", modelo_id],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            encoding='utf-8',
+            errors='replace'
         )
         if result.returncode == 0:
             return {"exito": True, "mensaje": f"🗑️ {modelo_id} eliminado"}
@@ -365,7 +386,8 @@ def _detectar_ram() -> float:
     try:
         result = subprocess.run(
             ["wmic", "os", "get", "TotalVisibleMemorySize", "/Value"],
-            capture_output=True, text=True, timeout=5
+            capture_output=True, text=True, timeout=5,
+            encoding='utf-8', errors='replace'
         )
         for line in result.stdout.split("\n"):
             if "=" in line:
@@ -380,7 +402,8 @@ def _detectar_gpu() -> str:
     try:
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
-            capture_output=True, text=True, timeout=5
+            capture_output=True, text=True, timeout=5,
+            encoding='utf-8', errors='replace'
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -393,7 +416,8 @@ def _detectar_vram() -> float:
     try:
         result = subprocess.run(
             ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=5
+            capture_output=True, text=True, timeout=5,
+            encoding='utf-8', errors='replace'
         )
         if result.returncode == 0 and result.stdout.strip():
             mb = float(result.stdout.strip().split("\n")[0])
