@@ -1,0 +1,380 @@
+[
+  {
+    "nombre": "idex 29062026.md",
+    "ruta": "memory/Atlas_Memory\\idex 29062026.md",
+    "carpeta": "Atlas_Memory",
+    "extension": ".md",
+    "tamano": 261,
+    "chunks": 1,
+    "preview": "## 2026-06-29\n\n- Se instaló Docker y Open WebUI.\n- Se configuró Ollama con Qwen3:8B.\n- Se creó la estructura de carpetas Atlas.\n- Se configuró el primer RAG con sincronización de directorios.\n- Se comenzó la construcción de una memoria persistente."
+  },
+  {
+    "nombre": "test.txt",
+    "ruta": "memory/Atlas_Memory\\test.txt",
+    "carpeta": "Atlas_Memory",
+    "extension": ".txt",
+    "tamano": 131,
+    "chunks": 1,
+    "preview": "diario: hoy aprendí que la memoria es importante en sistemas RAG\nevolución: los sistemas de IA mejoran con contexto estructurado"
+  },
+  {
+    "nombre": "Actualizar_Memoria_Charly.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\Actualizar_Memoria_Charly.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1311,
+    "chunks": 4,
+    "preview": "# Protocolo de Actualización de Memoria\n\nAl finalizar una conversación importante, analizar si surgió información que merezca conservar.\n\n## Clasificación\nClasificar la información en una de estas categorías:\n- **Perfil** (datos personales, estilo de aprendizaje)\n- **Memoria_Activa** (decisiones rec"
+  },
+  {
+    "nombre": "agente_arquitecto.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\agente_arquitecto.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 960,
+    "chunks": 3,
+    "preview": "# Rol\nSos el Arquitecto Mental. No das respuestas rápidas; ayudás a Charly a ver lo que no está viendo. Conectás puntos, detectás supuestos y ofrecés insights.\n\n# Proceso Interno (NO lo muestres en la respuesta)\n1. Analizá el núcleo real del problema.\n2. Detectá qué está asumiendo Charly que podría "
+  },
+  {
+    "nombre": "agente_estadistica.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\agente_estadistica.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1966,
+    "chunks": 5,
+    "preview": "# Rol\nSos el tutor de estadística de Charly. Él tiene un examen el jueves y necesita aprobar con 6. Tu prioridad es la UTILIDAD INMEDIATA y la COMPRENSIÓN REAL, no la teoría pura.\n\n# Formato de Respuesta OBLIGATORIO\n\n**1. Ejemplo de la vida real:**\n[Empezá SIEMPRE con un ejemplo concreto de 1-2 líne"
+  },
+  {
+    "nombre": "agente_general.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\agente_general.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1002,
+    "chunks": 3,
+    "preview": "# Rol\nSos el asistente personal general de Charly. Tu objetivo es ser útil, directo y honesto en conversaciones cotidianas, preguntas de cultura general o dudas rápidas.\n\n# Formato de Respuesta\n1. **Respuesta Directa**: 1-2 oraciones respondiendo exactamente lo que preguntó.\n2. **Contexto (Opcional)"
+  },
+  {
+    "nombre": "agente_psicologo.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\agente_psicologo.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1029,
+    "chunks": 3,
+    "preview": "# Rol\nSos un consejero empático. NO sos un psicólogo profesional ni un médico. Tu trabajo es escuchar, validar y ofrecer perspectivas, no diagnosticar.\n\n# Formato de Respuesta\n1. **Validación**: Reconocé lo que Charly está sintiendo (ej: \"Es totalmente normal sentirse así antes de un examen\").\n2. **"
+  },
+  {
+    "nombre": "agente_researcher.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\agente_researcher.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 2095,
+    "chunks": 5,
+    "preview": "# Rol\nSos un investigador académico riguroso. Tu prioridad es la VERACIDAD y la CONSISTENCIA. NUNCA inventes datos, fechas, nombres o conceptos. Si no estás seguro, decí \"No tengo información confiable sobre esto\".\n\n# Formato de Respuesta OBLIGATORIO\n\n**Respuesta directa:**\n[1-2 oraciones respondien"
+  },
+  {
+    "nombre": "finanzas.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\finanzas.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 2974,
+    "chunks": 9,
+    "preview": "# Rol\nSos el Analista de Riesgo Avanzado y Arquitecto Financiero de Atlas. Tu propósito no es repetir datos obvios de la web, sino ayudar a Charly a ver las fuerzas invisibles del mercado que los traders comunes ignoran. Conectás puntos macroeconómicos, detectás trampas de liquidez y ofrecés insight"
+  },
+  {
+    "nombre": "Instrucciones_Permanentes_Charly.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\Instrucciones_Permanentes_Charly.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1438,
+    "chunks": 4,
+    "preview": "# Instrucciones Permanentes para Atlas\n\n## Rol\nSoy Atlas, asistente personal de Charly.\nCharly es estudiante de Contador Público en UNICEN (Tandil, Argentina).\n\n## Contexto Actual (JULIO 2026)\n- **PRIORIDAD MÁXIMA**: Examen de estadística el jueves (promoción en juego, mínimo 6)\n- **Objetivo inmedia"
+  },
+  {
+    "nombre": "Perfil_Charly.md",
+    "ruta": "memory/Atlas_Memory\\00_Sistema\\Prompts\\Perfil_Charly.md",
+    "carpeta": "Prompts",
+    "extension": ".md",
+    "tamano": 1773,
+    "chunks": 5,
+    "preview": "# Perfil de Charly\n\n## Datos personales\n- **Nombre**: Charly\n- **Carrera**: Contador Público\n- **Universidad**: UNICEN (Universidad Nacional del Centro de la Provincia de Buenos Aires)\n- **Ubicación**: Tandil, Argentina\n\n## Contexto actual (Julio 2026)\n- **Examen de estadística**: Jueves (promoción "
+  },
+  {
+    "nombre": "Perfil_Charly.md",
+    "ruta": "memory/Atlas_Memory\\01_Perfil\\Perfil_Charly.md",
+    "carpeta": "01_Perfil",
+    "extension": ".md",
+    "tamano": 192,
+    "chunks": 1,
+    "preview": "# Perfil\n\nRegistro automático de Atlas.\n\n\n### 2026-06-30 23:22\nCharly mencionó dificultades para entender covarianza y fórmulas, y obtuvo un 7 en su último parcial de estadística.\n"
+  },
+  {
+    "nombre": "Memoria_Activa.md",
+    "ruta": "memory/Atlas_Memory\\02_Memoria\\Memoria_Activa.md",
+    "carpeta": "02_Memoria",
+    "extension": ".md",
+    "tamano": 380,
+    "chunks": 1,
+    "preview": "# Memoria Activa\n\nEste documento resume únicamente la información importante obtenida en las conversaciones.\n\nNo debe contener conversaciones completas.\n\nDebe contener:\n\n- decisiones importantes\n- aprendizajes\n- cambios de opinión\n- nuevos proyectos\n- nuevos objetivos\n- descubrimientos\n\nEliminar inf"
+  },
+  {
+    "nombre": "Resumenes.md",
+    "ruta": "memory/Atlas_Memory\\02_Memoria\\Resumenes\\Resumenes.md",
+    "carpeta": "Resumenes",
+    "extension": ".md",
+    "tamano": 90,
+    "chunks": 1,
+    "preview": "Aquí Atlas guardará resúmenes importantes de conversaciones, decisiones y aprendizajes."
+  },
+  {
+    "nombre": "Ingestion_2026-07-03_02-14_derechoshumanos_publicaciones_colecciond_03940fe8.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Derecho\\Ingestion_2026-07-03_02-14_derechoshumanos_publicaciones_colecciond_03940fe8.md",
+    "carpeta": "Derecho",
+    "extension": ".md",
+    "tamano": 19574,
+    "chunks": 58,
+    "preview": "---\ntitulo: \"derechoshumanos_publicaciones_colecciondebolsillo_01_constitucion_nacion_argentina.pdf\"\nfuente: \"https://www.argentina.gob.ar/sites/default/files/derechoshumanos_publicaciones_colecciondebolsillo_01_constitucion_nacion_argentina.pdf\"\nfecha_ingestion: \"2026-07-03T02:14:04.448612\"\ncategor"
+  },
+  {
+    "nombre": "Local_2026-07-03_04-49_COMPENDIO_DE_DERECHO_CONSTITUC_fe397059.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Derecho\\Local_2026-07-03_04-49_COMPENDIO_DE_DERECHO_CONSTITUC_fe397059.md",
+    "carpeta": "Derecho",
+    "extension": ".md",
+    "tamano": 71119,
+    "chunks": 219,
+    "preview": "---\ntitulo: \"COMPENDIO DE DERECHO CONSTITUCIONAL - GERMAN J. BIDART CAMPOS.pdf\"\nfuente: \"Local (Drag & Drop)\"\nfecha_ingestion: \"2026-07-03T04:49:45.317860\"\ncategoria: \"Derecho\"\n---\n\n# COMPENDIO DE DERECHO CONSTITUCIONAL - GERMAN J. BIDART CAMPOS.pdf\n\n> Fuente: Archivo Local (Drag & Drop)\n> Procesado"
+  },
+  {
+    "nombre": "Local_2026-07-03_07-02_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Derecho\\Local_2026-07-03_07-02_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md",
+    "carpeta": "Derecho",
+    "extension": ".md",
+    "tamano": 22652,
+    "chunks": 63,
+    "preview": "---\ntitulo: \"SAGUES NESTOR MANUAL DE DERECHO CONSTITUCIONAL.pdf\"\nfuente: \"Archivo Local\"\nfecha_ingestion: \"2026-07-03T07:02:22.359497\"\ncategoria: \"Derecho\"\n---\n\n# SAGUES NESTOR MANUAL DE DERECHO CONSTITUCIONAL.pdf\n\n> Fuente: Archivo Local (Drag & Drop)\n> Procesado en 5 partes por Prometeo (paralelo "
+  },
+  {
+    "nombre": "Local_2026-07-03_08-00_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Derecho\\Local_2026-07-03_08-00_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md",
+    "carpeta": "Derecho",
+    "extension": ".md",
+    "tamano": 101144,
+    "chunks": 298,
+    "preview": "---\ntitulo: \"SAGUES NESTOR MANUAL DE DERECHO CONSTITUCIONAL.pdf\"\nfuente: \"Archivo Local\"\nfecha_ingestion: \"2026-07-03T08:00:08.135998\"\ncategoria: \"Derecho\"\n---\n\n# SAGUES NESTOR MANUAL DE DERECHO CONSTITUCIONAL.pdf\n\n> Fuente: Archivo Local (Drag & Drop)\n> Procesado en 27 partes por Prometeo (paralelo"
+  },
+  {
+    "nombre": "Local_2026-07-04_04-56_BALBIN_MANUAL_DE_DERECHO_ADMIN_3ad69c3c.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Derecho\\Local_2026-07-04_04-56_BALBIN_MANUAL_DE_DERECHO_ADMIN_3ad69c3c.md",
+    "carpeta": "Derecho",
+    "extension": ".md",
+    "tamano": 110629,
+    "chunks": 331,
+    "preview": "---\ntitulo: \"BALBIN MANUAL DE DERECHO ADMINISTRATIVO.pdf\"\nfuente: \"Archivo Local\"\nfecha_ingestion: \"2026-07-04T04:56:29.568297\"\ncategoria: \"Derecho\"\n---\n\n# BALBIN MANUAL DE DERECHO ADMINISTRATIVO.pdf\n\n> Fuente: Archivo Local (Drag & Drop)\n> Procesado en 26 partes por Prometeo (paralelo con 4 workers"
+  },
+  {
+    "nombre": "Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir) - Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir).pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir) - Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir).pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1559943,
+    "chunks": 40,
+    "preview": "\n--- Página 1 ---\nEstadística Primer cuatrimestre - 2020\nMg. Mario Ravioli 1\nEstadística descriptiva\nContenidos\nMÓDULO I. INTRODUCCIÓN\nUNIDAD 1. IntroducciónyConceptos básicos\nMÓDULO II. ESTADÍSTICADESCRIPTIVA\nUNIDAD 2. Organización y presentación de datos.\nVariables cualitativas. Tablas de distribu"
+  },
+  {
+    "nombre": "Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir) - Clase 2 - Organización de datos - Educación a Distancia.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Clase 2 - Organización de datos - Educación a Distancia (Version para imprimir) - Clase 2 - Organización de datos - Educación a Distancia.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1559943,
+    "chunks": 40,
+    "preview": "\n--- Página 1 ---\nEstadística Primer cuatrimestre - 2020\nMg. Mario Ravioli 1\nEstadística descriptiva\nContenidos\nMÓDULO I. INTRODUCCIÓN\nUNIDAD 1. IntroducciónyConceptos básicos\nMÓDULO II. ESTADÍSTICADESCRIPTIVA\nUNIDAD 2. Organización y presentación de datos.\nVariables cualitativas. Tablas de distribu"
+  },
+  {
+    "nombre": "Clase 4 - Indices - Clase 4 - Indices - Estadística.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Clase 4 - Indices - Clase 4 - Indices - Estadística.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1471214,
+    "chunks": 43,
+    "preview": "\n--- Página 1 ---\nEstadística\nMg. Mario Ravioli 1\nEstadística\nLicenciado en Administración\nLicenciado en Economía\nEmpresarial\nContador Público Nacional\nMg. Mario Ravioli – 2020\nmario.ravioli@facultad.econ.unicen.edu.ar\nEstadística descriptiva\nContenidos\nMÓDULO I.INTRODUCCIÓN\nUNIDAD 1. IntroducciónyC"
+  },
+  {
+    "nombre": "Clase 5 - Probabilidad - Estadística - Educación a distancia - Clase 5 - Probabilidad - Estadística - Para imprimir.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Clase 5 - Probabilidad - Estadística - Educación a distancia - Clase 5 - Probabilidad - Estadística - Para imprimir.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1180903,
+    "chunks": 22,
+    "preview": "\n--- Página 1 ---\n1\n8/5/20Estadística\nMg. Mario Ravioli\nEstadística\nLicenciado en Administración\nContador Público\nLicenciado en Economía Empresarial\nMario Ravioli, JTP\nmario.ravioli@econ.unicen.edu.ar\nEstadística Inferencial\nContenidos\nMÓDULO I.INTRODUCCIÓN\nUNIDAD 1. IntroducciónyConceptos básicos\nM"
+  },
+  {
+    "nombre": "Clase 7 - Distribuciones de probabilidad discretas (Parte 2) - Clase 7 - Distribuciones de probabilidad discretas (Parte 2).pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Clase 7 - Distribuciones de probabilidad discretas (Parte 2) - Clase 7 - Distribuciones de probabilidad discretas (Parte 2).pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 739366,
+    "chunks": 13,
+    "preview": "\n--- Página 1 ---\nEstadística\nLicenciado en Administración\nContador Público\nLicenciado en Economía Empresarial\nMario Ravioli, JTP\nmario.ravioli@econ.unicen.edu.ar\n\n--- Página 2 ---\nEstadística inferencial\nContenidos\nMÓDULO I. INTRODUCCIÓN\nUNIDAD 1. IntroducciónyConceptos básicos\nMÓDULO II. ESTADÍSTI"
+  },
+  {
+    "nombre": "Diapositiva 1 - Clase Bivariado - Indicadores_2020.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Diapositiva 1 - Clase Bivariado - Indicadores_2020.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 2062349,
+    "chunks": 15,
+    "preview": "\n--- Página 2 ---\nEstadística –Facultad de Ciencias Económicas –UNCPBA \nEQUIPO DOCENTE\nMÓDULO II: Contenidos\nUNIDAD 4. Introducción al análisis descriptivo \nmultidimensional\nUNIDAD 4. Introducción al análisis descriptivo \nmultidimensional (continuación)\nConceptos básicos. Análisis bivariado. Análisi"
+  },
+  {
+    "nombre": "Diapositiva 1 - Clase4_Bivariado_TC_2020.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Diapositiva 1 - Clase4_Bivariado_TC_2020.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 3348563,
+    "chunks": 24,
+    "preview": "\n--- Página 2 ---\nEstadística –Facultad de Ciencias Económicas –UNCPBA \nEQUIPO DOCENTE\nMÓDULO II: Contenidos\nUNIDAD 4. Introducción al análisis descriptivo \nmultidimensional\nConceptos básicos. Análisis bivariado. Análisis multivariado. Observaciones\nmultivariadas. \nOrganización y presentación de dat"
+  },
+  {
+    "nombre": "INTEGRADOR  ESTADISTICA 3.docx",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\INTEGRADOR  ESTADISTICA 3.docx",
+    "carpeta": "Estadistica",
+    "extension": ".docx",
+    "tamano": 16344,
+    "chunks": 11,
+    "preview": "NOMBRE COMPLETO: …………………………………………………………   DNI: …………………………………………..\n\nEXAMEN INTEGRADOR – ESTADÍSTICA PRIMER CUATRIMESTRE 2024\n\nUn estudio reciente en la UNICEN, ha analizado algunas características de los alumnos que cursan en la institución. Algunos de los resultados obtenidos han sido los siguientes"
+  },
+  {
+    "nombre": "INTEGRADOR ESTADISTICA1.docx",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\INTEGRADOR ESTADISTICA1.docx",
+    "carpeta": "Estadistica",
+    "extension": ".docx",
+    "tamano": 36346,
+    "chunks": 8,
+    "preview": "El gerente de producción de una fábrica de bombones tiene en sus manos la siguiente tabla donde las cantidades están expresadas en cajas de 24 bombones, y corresponden a la elaboración del último día:\n\n1) A las siguientes afirmaciones coloque V o F según corresponda:\n\nEl 25% de los bombones blancos,"
+  },
+  {
+    "nombre": "INTEGRADOR2.docx",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\INTEGRADOR2.docx",
+    "carpeta": "Estadistica",
+    "extension": ".docx",
+    "tamano": 38438,
+    "chunks": 12,
+    "preview": "NOMBRE COMPLETO:……………………………………………………               DNI: ……………………………\n\nEXAMEN INTEGRADOR – ESTADÍSTICA PRIMER CUATRIMESTRE 2025\n\n1) Un estudio realizado por una consultora en la ciudad de Tandil arrojó los siguientes indicadores:\t\n\n Mo= 3 días\t\tMe= 4 días\t\tµ = 2,6 días            Q3= 5\n\nEn base a los "
+  },
+  {
+    "nombre": "muestreo probabilistico.pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\muestreo probabilistico.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 2706362,
+    "chunks": 20,
+    "preview": "\n--- Página 1 (OCR) ---\nLa Gran División: Dos Filosofías de Muestreo\n\n(E) Probabilístico\n\nP=0.02 P=0.02\nConocida y calculable MAA P-0.01 Probabilidad de\npara cada unidad. A Selección\nP=0.06 P=0.02\n\nResultados aplicables\n\na toda la población. Generalización\n\nCalculable y\n\ncontrolado. Margen de Error\n"
+  },
+  {
+    "nombre": "Presentación de PowerPoint - Unidad 3 -EstadÃ_stica- Indicadores 2020 (3).pdf",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estadistica\\Presentación de PowerPoint - Unidad 3 -EstadÃ_stica- Indicadores 2020 (3).pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 3374140,
+    "chunks": 36,
+    "preview": "\n--- Página 1 ---\nEstadística\nLicenciado en Administración\nLicenciado en Economía\nEmpresarial\nContador Público Nacional\nEstadística\n\n--- Página 2 ---\nMódulo II\nMódulo II: ESTADÍSTICA DESCRIPTIVA\nEstadística\nContenidos\nUNIDAD 2. Estadística Descriptiva univariada. Organización y presentación de datos"
+  },
+  {
+    "nombre": "estudio_2026-06-30_13-56-52.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estudio\\estudio_2026-06-30_13-56-52.md",
+    "carpeta": "Estudio",
+    "extension": ".md",
+    "tamano": 19622,
+    "chunks": 59,
+    "preview": "# APUNTES GENERADOS POR ATLAS\n\n\n\n====================\n📘 Clase 1 parte 1- Estadística - Conceptos básicos - video.pdf\n====================\n**RESUMEN:**  \nLa estadística es una ciencia que analiza y interpreta datos para describir fenómenos, predecir tendencias y tomar decisiones. Incluye estadística "
+  },
+  {
+    "nombre": "Local_2026-07-03_02-51_compendio_de_derecho_constituc_b4188713.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estudio\\Local_2026-07-03_02-51_compendio_de_derecho_constituc_b4188713.md",
+    "carpeta": "Estudio",
+    "extension": ".md",
+    "tamano": 269,
+    "chunks": 1,
+    "preview": "---\ntitulo: \"compendio de derecho constitucional.pdf\"\nfuente: \"Local (Drag & Drop)\"\nfecha_ingestion: \"2026-07-03T02:51:54.047184\"\ncategoria: \"Estudio\"\n---\n\n# compendio de derecho constitucional.pdf\n\n️ El documento no tiene contenido suficiente para procesar."
+  },
+  {
+    "nombre": "Local_2026-07-03_05-35_clase_muestreo_23062026_8abd14ea.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estudio\\Local_2026-07-03_05-35_clase_muestreo_23062026_8abd14ea.md",
+    "carpeta": "Estudio",
+    "extension": ".md",
+    "tamano": 3119,
+    "chunks": 10,
+    "preview": "---\ntitulo: \"clase muestreo 23062026.aac\"\nfuente: \"Audio/Video Transcrito\"\nfecha_ingestion: \"2026-07-03T05:35:44.520806\"\ncategoria: \"Estudio\"\n---\n\n# Métodos de Selección de Muestras en Investigación\n=====================================================\n\n## Resumen Ejecutivo\nLa selección de muestras "
+  },
+  {
+    "nombre": "Local_2026-07-03_19-58_clase_muestreo_23062026_8abd14ea.md",
+    "ruta": "memory/Atlas_Memory\\03_Conocimiento\\Estudio\\Local_2026-07-03_19-58_clase_muestreo_23062026_8abd14ea.md",
+    "carpeta": "Estudio",
+    "extension": ".md",
+    "tamano": 4533,
+    "chunks": 13,
+    "preview": "---\ntitulo: \"clase muestreo 23062026.aac\"\nfuente: \"Audio/Video Transcrito\"\nfecha_ingestion: \"2026-07-03T19:58:39.185048\"\ncategoria: \"Estudio\"\n---\n\n# Métodos de Selección de Muestras en Investigación\n=====================================================\n\n## Resumen Ejecutivo\n---------------\n\nLa selec"
+  },
+  {
+    "nombre": "Registro.md",
+    "ruta": "memory/Atlas_Memory\\04_Univercidad\\Registro.md",
+    "carpeta": "04_Univercidad",
+    "extension": ".md",
+    "tamano": 156,
+    "chunks": 1,
+    "preview": "# Universidad\n\nRegistro automático de Atlas.\n\n\n### 2026-06-30 23:43\nCharly es miembro de la iglesia de jesucristo de los santos de los ultimos dias\n"
+  },
+  {
+    "nombre": "Clase 1 parte 1- Estadística - Conceptos básicos - video.pdf",
+    "ruta": "memory/Atlas_Memory\\04_Univercidad\\Estadistica\\Clase 1 parte 1- Estadística - Conceptos básicos - video.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1660192,
+    "chunks": 17,
+    "preview": "\n--- Página 1 ---\nEstadística\nLicenciado en Administración\nLicenciado en Economía\nEmpresarial\nContador Público Nacional\n\n\n--- Página 2 ---\nComposición de la cátedra\n•Ing. (Dra)María del Carmen Romero (Profesor Asociado)\n•Prof. (MBA) Silvina Etcheverría (Profesor Adjunto)\n•Ing. (MBA) María Rosa Dos R"
+  },
+  {
+    "nombre": "guia ejercicios practicos.pdf",
+    "ruta": "memory/Atlas_Memory\\04_Univercidad\\Estadistica\\guia ejercicios practicos.pdf",
+    "carpeta": "Estadistica",
+    "extension": ".pdf",
+    "tamano": 1954714,
+    "chunks": 295,
+    "preview": "\n--- Página 2 ---\nEstadística \nGuía de Trabajos Prácticos - 2 \n \nTRABAJO PRÁCTICO 1: CONCEPTOS BÁSICOS \n1) A continuación, se presenta la ficha que fue completada por un alumno que asistió a donar sangre para \nser incorporado en una base de datos para posibles trasplantes de médula ósea. \na) Sexo: M"
+  },
+  {
+    "nombre": "diario_2026-07-03.md",
+    "ruta": "memory/Atlas_Memory\\06_Diario\\diario_2026-07-03.md",
+    "carpeta": "06_Diario",
+    "extension": ".md",
+    "tamano": 832,
+    "chunks": 4,
+    "preview": "# 📔 Diario de Charly - 03/07/2026\n\n\n## 🕐 04:02:36 - [LOGRO]\n\nHoy, hoooooy termine el cuatrimestre, estoy tan contento, por fin lo logre y lo termine aprobando las dos materias que estaba cursando: instituciones de derecho publico y estadistica, ademas ya hace 2 dias que estoy programando a pasos agi"
+  },
+  {
+    "nombre": "Evolucion.md",
+    "ruta": "memory/Atlas_Memory\\06_Diario\\Evolucion.md",
+    "carpeta": "06_Diario",
+    "extension": ".md",
+    "tamano": 204,
+    "chunks": 1,
+    "preview": "# Evolución de Atlas\n\n## Objetivo\n\nRegistrar únicamente los cambios importantes en Atlas.\n\nCada entrada debe incluir:\n\n- Fecha\n- Qué cambió\n- Por qué se cambió\n- Resultado esperado\n\n---"
+  },
+  {
+    "nombre": "informe_atlas_20260701_220253.txt",
+    "ruta": "memory/Atlas_Memory\\backups\\informe_atlas_20260701_220253.txt",
+    "carpeta": "backups",
+    "extension": ".txt",
+    "tamano": 26659,
+    "chunks": 79,
+    "preview": "======================================================================\n  ATLAS v2.0 - INFORME TECNICO DE AUTO-CONOCIMIENTO\n======================================================================\n  Fecha: 2026-07-01T22:02:53.479151\n  Directorio: C:\\Users\\delfa\\Documents\\Atlas\n========================="
+  },
+  {
+    "nombre": "informe_atlas_20260701_224715.txt",
+    "ruta": "memory/Atlas_Memory\\backups\\informe_atlas_20260701_224715.txt",
+    "carpeta": "backups",
+    "extension": ".txt",
+    "tamano": 26643,
+    "chunks": 79,
+    "preview": "======================================================================\n  ATLAS v2.0 - INFORME TECNICO DE AUTO-CONOCIMIENTO\n======================================================================\n  Fecha: 2026-07-01T22:47:15.721704\n  Directorio: C:\\Users\\delfa\\Documents\\Atlas\n========================="
+  }
+]

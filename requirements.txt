@@ -1,0 +1,44 @@
+# Atlas v2.7 - Dependencias completas
+# ================================
+
+# UI
+streamlit==1.31.0
+
+# LLM y APIs
+openai==1.12.0
+requests==2.31.0
+python-dotenv==1.0.0
+
+# RAG y embeddings
+chromadb==0.4.22
+sentence-transformers==2.5.1
+
+# Búsqueda web
+ddgs==7.0.0
+
+# Procesamiento de documentos
+pypdf==4.0.1
+python-docx==1.1.0
+python-pptx==0.6.21
+pdf2image==1.16.3
+pytesseract==0.3.10
+Pillow==10.2.0
+
+# Audio
+groq==0.4.2
+pydub==0.25.1
+SpeechRecognition==3.10.1
+vosk==0.3.45
+pyaudio==0.2.14
+edge-tts==6.1.10
+pyttsx3==2.90
+pygame==2.5.2
+
+# Visión
+pyautogui==0.9.54
+
+# Seguridad y utilidades
+cryptography==42.0.2
+
+# Trading (opcional)
+python-binance==1.0.19
