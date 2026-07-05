@@ -1,6 +1,6 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v2.9 - Interfaz Gráfica Híbrida Completa      ║
+║  🧠 ATLAS UI v3.0 - Interfaz Gráfica Híbrida Completa      ║
 ║  05/07/2026 - Charly - Atlas + Prometeo + RAG Semántico    ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Selector de Modelos Locales   ║
@@ -39,7 +39,7 @@ from core.config import (
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="🧠 Atlas v2.9",
+    page_title="🧠 Atlas v3.0",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -91,23 +91,23 @@ h1, h2, h3 { color: #e94560; }
 # ============================================
 # ESTADO DE SESIÓN
 # ============================================
-if "messages" not in st.session_state:  # ✅ CORREGIDO: sin espacio
+if "messages" not in st.session_state:
     st.session_state.messages = []
-if "voz_activa" not in st.session_state:  # ✅ CORREGIDO: sin espacio
+if "voz_activa" not in st.session_state:
     st.session_state.voz_activa = False
-if "agente_actual" not in st.session_state:  # ✅ CORREGIDO: sin espacio
-    st.session_state.agente_actual = "general"  # ✅ CORREGIDO: sin espacio
-if "autoconocimiento_cache" not in st.session_state:  # ✅ CORREGIDO: sin espacio
+if "agente_actual" not in st.session_state:
+    st.session_state.agente_actual = "general"
+if "autoconocimiento_cache" not in st.session_state:
     st.session_state.autoconocimiento_cache = None
-if "motor_activo" not in st.session_state:  # ✅ CORREGIDO: sin espacio
-    st.session_state.motor_activo = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()  # ✅ CORREGIDO: sin espacios
-if "modelo_nube" not in st.session_state:  # ✅ CORREGIDO: sin espacio
-    st.session_state.modelo_nube = "meta/llama-3.1-70b-instruct"  # ✅ CORREGIDO: sin espacio
-if "modelo_local" not in st.session_state:  # ✅ NUEVO: selector de modelo local
+if "motor_activo" not in st.session_state:
+    st.session_state.motor_activo = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()
+if "modelo_nube" not in st.session_state:
+    st.session_state.modelo_nube = "meta/llama-3.1-70b-instruct"
+if "modelo_local" not in st.session_state:
     st.session_state.modelo_local = os.getenv("MODELO_LOCAL", "qwen3:8b")
-if "examen_activo" not in st.session_state:  # ✅ CORREGIDO: sin espacio
+if "examen_activo" not in st.session_state:
     st.session_state.examen_activo = None
-if "mostrar_gestion_modelos" not in st.session_state:  # ✅ NUEVO
+if "mostrar_gestion_modelos" not in st.session_state:
     st.session_state.mostrar_gestion_modelos = False
 
 # ============================================
@@ -115,7 +115,7 @@ if "mostrar_gestion_modelos" not in st.session_state:  # ✅ NUEVO
 # ============================================
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("🧠 Atlas v2.9")
+    st.title("🧠 Atlas v3.0")
     st.caption("Sistema Híbrido + RAG Semántico + Reglas Temporales + Modelos Locales")
     st.divider()
 
@@ -298,52 +298,65 @@ with st.sidebar:
             st.session_state.mostrar_gestion_modelos = not st.session_state.mostrar_gestion_modelos
             st.rerun()
 
-        # Panel de gestión de modelos
+        # Panel de gestión de modelos (MOSTRAR COMANDOS)
         if st.session_state.mostrar_gestion_modelos:
             with st.expander("📦 Gestión de Modelos", expanded=True):
-                st.markdown("**Modelos disponibles:**")
-
+                st.markdown("### 📥 Descargar modelos")
+                st.info("💡 Abrí CMD o PowerShell y copiá los comandos:")
+                
+                # Mostrar comandos para modelos no descargados
+                modelos_no_descargados = []
                 for modelo_id in modelos_oficiales_ids:
-                    if modelo_id not in catalogo:
-                        continue
-                    info = catalogo[modelo_id]
-
-                    col1, col2, col3 = st.columns([3, 1, 1])
-                    with col1:
-                        destacado = " ⭐" if info.get("destacado") else ""
-                        st.markdown(f"**{info['descripcion']}**{destacado}")
-                        st.caption(f"{info.get('tamano_gb', 0)} GB | {info.get('velocidad', '?')}")
-
-                    with col2:
-                        if info.get("descargado"):
-                            st.markdown("✅")
-                        else:
-                            if st.button("📥", key=f"download_{modelo_id}", help="Descargar"):
-                                with st.spinner(f"Descargando {modelo_id}..."):
-                                    def progreso(msg):
-                                        pass
-                                    resultado = descargar_modelo_local(modelo_id, progreso)
+                    if modelo_id in catalogo and not catalogo[modelo_id].get("descargado"):
+                        modelos_no_descargados.append(modelo_id)
+                
+                if modelos_no_descargados:
+                    for modelo_id in modelos_no_descargados:
+                        info = catalogo[modelo_id]
+                        st.code(f"ollama pull {modelo_id}", language="bash")
+                        st.caption(f"{info['descripcion']} - {info.get('tamano_gb', 0)} GB")
+                else:
+                    st.success("✅ Todos los modelos del catálogo están descargados")
+                
+                st.markdown("---")
+                st.markdown("### ✅ Modelos ya descargados")
+                
+                modelos_descargados = []
+                for modelo_id in modelos_oficiales_ids:
+                    if modelo_id in catalogo and catalogo[modelo_id].get("descargado"):
+                        modelos_descargados.append(modelo_id)
+                
+                if modelos_descargados:
+                    for modelo_id in modelos_descargados:
+                        info = catalogo[modelo_id]
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            destacado = " ⭐" if info.get("destacado") else ""
+                            st.markdown(f"**{info['descripcion']}**{destacado}")
+                            st.caption(f"{info.get('tamano_gb', 0)} GB | {info.get('velocidad', '?')}")
+                        with col2:
+                            if modelo_id != st.session_state.modelo_local:
+                                if st.button("🗑️", key=f"delete_{modelo_id}", help="Eliminar"):
+                                    resultado = eliminar_modelo_local(modelo_id)
                                     if resultado["exito"]:
                                         st.success(resultado["mensaje"])
                                         st.rerun()
                                     else:
                                         st.error(resultado["mensaje"])
-
-                    with col3:
-                        if info.get("descargado") and modelo_id != st.session_state.modelo_local:
-                            if st.button("🗑️", key=f"delete_{modelo_id}", help="Eliminar"):
-                                resultado = eliminar_modelo_local(modelo_id)
-                                if resultado["exito"]:
-                                    st.success(resultado["mensaje"])
-                                    st.rerun()
-                                else:
-                                    st.error(resultado["mensaje"])
-
+                else:
+                    st.warning("No hay modelos descargados todavía")
+                
                 st.markdown("---")
-                st.markdown("**💡 Tip:** Los modelos ⭐ están optimizados para tu hardware.")
-
+                st.markdown("### 🖥️ Comandos útiles")
+                st.code("ollama list", language="bash")
+                st.caption("Ver modelos descargados")
+                
+                st.code("ollama rm nombre_modelo", language="bash")
+                st.caption("Eliminar un modelo")
+                
                 # Info de hardware
                 hardware = detectar_hardware()
+                st.markdown("---")
                 st.markdown(f"""
 **Tu hardware:**  
 🖥️ RAM: {hardware['ram_gb']} GB  
@@ -460,7 +473,7 @@ with st.sidebar:
         else:
             from core.local_ingestion_manager import procesar_archivo_local
             
-            # Determinar ruta final (si hay subcarpeta recién creada, se usa esa)
+            # Determinar ruta final
             ruta_destino = st.session_state.get("categoria_local", categoria_local) or categoria_local
             
             for archivo in archivos_subidos:
@@ -477,6 +490,8 @@ with st.sidebar:
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
                 st.divider()
+
+    st.divider()
 
     # ========================================
     # SECCIÓN: Auto-conocimiento
@@ -495,9 +510,9 @@ with st.sidebar:
             try:
                 agentes_disponibles = list(listar_agentes().keys())
             except:
-                agentes_disponibles = ["general", "estadistica", "researcher", "psicologo", "arquitecto", "finanzas"]
+                agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v2.9
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.0
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -608,13 +623,13 @@ Generado: {ahora_str} | Creador: Charly
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-    st.caption("📅 Versión: 2.9")
+    st.caption("📅 Versión: 3.0")
 
 # ============================================
 # HEADER PRINCIPAL
 # ============================================
 st.title("🧠 Atlas")
-st.caption(f"Asistente híbrido v2.9 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.caption(f"Asistente híbrido v3.0 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -719,7 +734,7 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
             # !AYUDA
             if comando in ["!ayuda", "!help"]:
                 st.info("""
-🧠 COMANDOS DISPONIBLES - ATLAS v2.9
+🧠 COMANDOS DISPONIBLES - ATLAS v3.0
 
 🔄 Sistema y RAG:
 • `!indexar` - Reconstruir índice semántico
@@ -1042,4 +1057,4 @@ if st.session_state.examen_activo:
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("🧠 Atlas v2.9 | RAG Semántico + Reglas Temporales + Modelos Locales | Hecho con ❤️ para Charly | 05/07/2026")
+    st.caption("🧠 Atlas v3.0 | RAG Semántico + Reglas Temporales + Modelos Locales | Hecho con ❤️ para Charly | 05/07/2026")

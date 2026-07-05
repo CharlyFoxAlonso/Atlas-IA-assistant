@@ -1,5 +1,5 @@
 """
-Cerebro principal de Atlas & Prometeo v2.9
+Cerebro principal de Atlas & Prometeo v3.0
 Con RAG semántico (ChromaDB), detección de capítulos, reglas temporales inteligentes,
 y streaming híbrido (Ollama local / NVIDIA API).
 """
@@ -167,12 +167,12 @@ def verificar_fuentes(resultados_web):
 # STREAMING HÍBRIDO
 # ============================================
 
-def _stream_local(prompt_completo):
+def _stream_local(prompt_completo, modelo="qwen3:8b"):
     """Streaming desde Ollama local (Atlas)."""
     try:
         url = "http://127.0.0.1:11434/api/chat"
         data = {
-            "model": "qwen3:8b",
+            "model": modelo,
             "messages": [{"role": "user", "content": prompt_completo}],
             "stream": True
         }
@@ -222,12 +222,14 @@ def _stream_nube(prompt_completo, modelo_nube="meta/llama-3.1-70b-instruct"):
 # FUNCIÓN PRINCIPAL CON INTERCEPTACIÓN DE REGLAS
 # ============================================
 
-def pensar_con_streaming(pregunta, motor=None, modelo_nube=None):
+def pensar_con_streaming(pregunta, motor=None, modelo_nube=None, modelo_local=None):
     """Generador principal con interceptación de reglas ANTES de enviar al modelo."""
     if motor is None:
         motor = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()
     if modelo_nube is None:
         modelo_nube = "meta/llama-3.1-70b-instruct"
+    if modelo_local is None:
+        modelo_local = os.getenv("MODELO_LOCAL", "qwen3:8b")
 
     # ⚠️ INTERCEPTACIÓN DE REGLAS: Verificar ANTES de procesar
     debe_forzar, respuesta_forzada = verificar_reglas_y_forzar_respuesta(pregunta)
@@ -383,7 +385,7 @@ Devolvé SOLO la respuesta final sin preámbulos.
     if motor == "prometeo":
         stream_generator = _stream_nube(prompt_final, modelo_nube)
     else:
-        stream_generator = _stream_local(prompt_final)
+        stream_generator = _stream_local(prompt_final, modelo_local)
 
     respuesta_completa = ""
     try:
