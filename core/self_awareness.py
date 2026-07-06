@@ -1,6 +1,6 @@
 """
 core/self_awareness.py
-Módulo de auto-conocimiento de Atlas v2.9.
+Módulo de auto-conocimiento de Atlas v3.2.
 Genera informes técnicos completos con código real de los archivos.
 Incluye sistema de modelos locales y detección de hardware.
 """
@@ -325,7 +325,7 @@ def generar_reporte_completo(incluir_codigo=True, max_lineas_codigo=50):
     # ENCABEZADO
     # ========================================
     lineas.append("=" * 70)
-    lineas.append("  ATLAS v2.9 - INFORME TÉCNICO DE AUTO-CONOCIMIENTO")
+    lineas.append("  ATLAS v3.2 - INFORME TÉCNICO DE AUTO-CONOCIMIENTO")
     lineas.append("=" * 70)
     lineas.append(f"  Fecha: {arq['metadata']['timestamp']}")
     lineas.append(f"  Directorio: {arq['metadata']['directorio_actual']}")
@@ -515,7 +515,7 @@ def generar_reporte_completo(incluir_codigo=True, max_lineas_codigo=50):
     lineas.append("  FIN DEL INFORME")
     lineas.append("=" * 70)
     lineas.append("")
-    lineas.append("  Este informe fue generado automáticamente por Atlas v2.9.")
+    lineas.append("  Este informe fue generado automáticamente por Atlas v3.2.")
     lineas.append("  Puede ser compartido con otro modelo de IA para obtener")
     lineas.append("  asistencia técnica, revisión de código o sugerencias.")
     lineas.append("")

@@ -2,7 +2,7 @@
 core/ingestion_manager.py
 Orquesta el flujo de Ingesta Web -> RAG.
 Con PARALELISMO (4 workers) para máxima velocidad en la digestión.
-Atlas v2.9
+Atlas v3.2
 """
 import os
 import hashlib

@@ -1,9 +1,9 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v3.0 - Interfaz Gráfica Híbrida Completa      ║
-║  05/07/2026 - Charly - Atlas + Prometeo + RAG Semántico    ║
+║  🧠 ATLAS UI v3.2 - Interfaz Gráfica Híbrida Completa      ║
+║  06/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
-║  + Modo Examen Interactivo + Selector de Modelos Locales   ║
+║  + Modo Examen Interactivo + Chats Múltiples               ║
 ╚════════════════════════════════════════════════════════════╝
 """
 import streamlit as st
@@ -13,7 +13,7 @@ import json
 from datetime import datetime
 
 # Importar módulos de Atlas
-from core.brain import pensar_con_streaming, limpiar_historial, ver_historial, HISTORIAL
+from core.brain import pensar_con_streaming, limpiar_historial, ver_historial, HISTORIAL, set_historial, get_historial
 from core.vision import analizar_pantalla
 from core.speech_input import escuchar, probar_microfono
 from core.speech_output import hablar, listar_voces_disponibles
@@ -24,6 +24,12 @@ from core.diary_manager import agregar_entrada, leer_diario_hoy, buscar_en_diari
 from core.temp_rules import agregar_regla, listar_reglas, limpiar_reglas
 from core.vector_store import obtener_estadisticas
 from core.exam_mode import ejecutar_examen_completo, corregir_respuesta, generar_informe_final
+from core.chat_manager import (
+    listar_chats, crear_chat, activar_chat, eliminar_chat,
+    chat_activo_id, chat_activo_datos, agregar_mensaje,
+    guardar_chat, renombrar_chat,
+    obtener_historial_brain, guardar_historial_brain
+)
 from core.config import (
     obtener_catalogo_completo,
     verificar_modelo_local,
@@ -39,7 +45,7 @@ from core.config import (
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="🧠 Atlas v3.0",
+    page_title="Atlas v3.2",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -89,10 +95,24 @@ h1, h2, h3 { color: #e94560; }
 """, unsafe_allow_html=True)
 
 # ============================================
-# ESTADO DE SESIÓN
+# ESTADO DE SESIÓN (CHATS MÚLTIPLES)
 # ============================================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "chat_activo" not in st.session_state:
+    # Inicializar: si ya existen chats, cargar el último; si no, crear uno nuevo
+    chats_existentes = listar_chats()
+    if chats_existentes:
+        datos = activar_chat(chats_existentes[0]["id"])
+        st.session_state.chat_activo = chats_existentes[0]["id"]
+        st.session_state.messages = datos.get("messages", []) if datos else []
+        hb = obtener_historial_brain()
+        set_historial(hb)
+    else:
+        nuevo_id = crear_chat("Chat principal")
+        datos = activar_chat(nuevo_id)
+        st.session_state.chat_activo = nuevo_id
+        st.session_state.messages = datos.get("messages", []) if datos else []
+        limpiar_historial()
+
 if "voz_activa" not in st.session_state:
     st.session_state.voz_activa = False
 if "agente_actual" not in st.session_state:
@@ -115,8 +135,58 @@ if "mostrar_gestion_modelos" not in st.session_state:
 # ============================================
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("🧠 Atlas v3.0")
-    st.caption("Sistema Híbrido + RAG Semántico + Reglas Temporales + Modelos Locales")
+    st.title("Atlas v3.2")
+    st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
+
+    # ========================================
+    # SECCIÓN: CHATS (Pestañas múltiples)
+    # ========================================
+    st.subheader("🗂️ Chats")
+    col_chats1, col_chats2 = st.columns([4, 1])
+    with col_chats2:
+        if st.button("➕ Nuevo", use_container_width=True, help="Crear nuevo chat"):
+            nuevo_id = crear_chat("Nuevo chat")
+            # Guardar chat actual antes de cambiar
+            guardar_historial_brain(get_historial(), st.session_state.chat_activo)
+            # Cargar el nuevo
+            datos = activar_chat(nuevo_id)
+            st.session_state.chat_activo = nuevo_id
+            st.session_state.messages = datos.get("messages", []) if datos else []
+            set_historial(obtener_historial_brain())
+            st.rerun()
+
+    chats = listar_chats()
+    for chat in chats:
+        cols = st.columns([5, 1])
+        indicador = "🟢" if chat["activo"] else "⚪"
+        label = f"{indicador} {chat['nombre']}"
+        msg_info = f" ({chat['total_mensajes']} msgs)" if chat['total_mensajes'] else ""
+        with cols[0]:
+            if st.button(label + msg_info, key=f"sel_{chat['id']}", use_container_width=True):
+                if chat["id"] != st.session_state.chat_activo:
+                    # Guardar el chat actual antes de cambiar
+                    guardar_historial_brain(get_historial(), st.session_state.chat_activo)
+                    datos = activar_chat(chat["id"])
+                    st.session_state.chat_activo = chat["id"]
+                    st.session_state.messages = datos.get("messages", []) if datos else []
+                    set_historial(obtener_historial_brain())
+                    st.rerun()
+        with cols[1]:
+            if st.button("✕", key=f"del_{chat['id']}", help="Cerrar chat"):
+                if len(chats) > 1:
+                    eliminar_chat(chat["id"])
+                    # Si eliminamos el chat activo, activar el más reciente
+                    if chat["id"] == st.session_state.chat_activo:
+                        restantes = listar_chats()
+                        if restantes:
+                            datos = activar_chat(restantes[0]["id"])
+                            st.session_state.chat_activo = restantes[0]["id"]
+                            st.session_state.messages = datos.get("messages", []) if datos else []
+                            set_historial(obtener_historial_brain())
+                    st.rerun()
+                else:
+                    st.toast("No podés eliminar el último chat")
+
     st.divider()
 
     # ========================================
@@ -512,7 +582,7 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.0
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.2
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -604,6 +674,11 @@ Generado: {ahora_str} | Creador: Charly
     if st.button("🗑️ Limpiar Chat", use_container_width=True):
         st.session_state.messages = []
         limpiar_historial()
+        # Persistir vacío en el chat activo
+        datos = chat_activo_datos()
+        if datos:
+            datos["messages"] = []
+            guardar_chat()
         st.rerun()
 
     if st.button("🛡️ Reporte Seguridad", use_container_width=True):
@@ -623,13 +698,13 @@ Generado: {ahora_str} | Creador: Charly
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-    st.caption("📅 Versión: 3.0")
+    st.caption("📅 Versión: 3.2")
 
 # ============================================
 # HEADER PRINCIPAL
 # ============================================
-st.title("🧠 Atlas")
-st.caption(f"Asistente híbrido v3.0 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.title("Atlas")
+st.caption(f"Asistente híbrido v3.2 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -718,6 +793,7 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
             st.rerun()
 
     st.session_state.messages.append({"role": "user", "content": prompt})
+    agregar_mensaje("user", prompt)
 
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -734,7 +810,7 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
             # !AYUDA
             if comando in ["!ayuda", "!help"]:
                 st.info("""
-🧠 COMANDOS DISPONIBLES - ATLAS v3.0
+🧠 COMANDOS DISPONIBLES - ATLAS v3.2
 
 🔄 Sistema y RAG:
 • `!indexar` - Reconstruir índice semántico
@@ -995,6 +1071,7 @@ Ruta de DB: {stats['ruta_db']}""")
                 st.warning(f"⚠️ Comando no reconocido: `{comando}`. Escribí `!ayuda`.")
 
         st.session_state.messages.append({"role": "assistant", "content": f"[Comando ejecutado: {comando}]"})
+        agregar_mensaje("assistant", f"[Comando ejecutado: {comando}]")
 
     # ========================================
     # CHAT NORMAL (no es comando)
@@ -1038,10 +1115,12 @@ Ruta de DB: {stats['ruta_db']}""")
                     respuesta_completa = "Sin respuesta"
 
                 st.session_state.messages.append({"role": "assistant", "content": respuesta_completa})
+                agregar_mensaje("assistant", respuesta_completa)
 
             except Exception as e:
                 message_placeholder.error(f"❌ Error: {str(e)}")
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {str(e)}"})
+                agregar_mensaje("assistant", f"Error: {str(e)}")
 
 # ============================================
 # SECCIÓN DE EXAMEN
@@ -1057,4 +1136,4 @@ if st.session_state.examen_activo:
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("🧠 Atlas v3.0 | RAG Semántico + Reglas Temporales + Modelos Locales | Hecho con ❤️ para Charly | 05/07/2026")
+    st.caption("Atlas v3.2 | RAG Semántico + Reglas Temporales + Modelos Locales + Chats Múltiples | 06/07/2026")

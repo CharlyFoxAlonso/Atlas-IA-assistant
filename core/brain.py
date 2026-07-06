@@ -1,5 +1,5 @@
 """
-Cerebro principal de Atlas & Prometeo v3.0
+Cerebro principal de Atlas & Prometeo v3.2
 Con RAG semántico (ChromaDB), detección de capítulos, reglas temporales inteligentes,
 y streaming híbrido (Ollama local / NVIDIA API).
 """
@@ -149,6 +149,23 @@ def limpiar_historial():
     """Limpia el historial."""
     HISTORIAL.clear()
     return True
+
+
+def set_historial(nuevo: list):
+    """
+    Reemplaza el historial global con una lista externa.
+    Usado por chat_manager al cambiar de pestaña de chat.
+    """
+    HISTORIAL.clear()
+    HISTORIAL.extend(nuevo)
+
+
+def get_historial() -> list:
+    """
+    Devuelve una copia del historial global.
+    Usado por chat_manager para persistir el historial al guardar.
+    """
+    return list(HISTORIAL)
 
 
 def ver_historial():

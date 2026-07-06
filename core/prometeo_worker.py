@@ -2,7 +2,7 @@
 core/prometeo_worker.py
 Procesa texto crudo usando Prometeo (NVIDIA API) para ingestión en RAG.
 Soporta chunking automático con PARALELISMO (4 workers) para máxima velocidad.
-Atlas v2.9
+Atlas v3.2
 """
 import os
 import logging

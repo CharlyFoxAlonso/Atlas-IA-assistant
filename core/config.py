@@ -25,7 +25,7 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "3.0"
+VERSION = "3.2"
 NOMBRE = "Atlas"
 CODENAME = "Limpio"
 
