@@ -4,6 +4,9 @@ import hashlib
 
 CACHE_FILE = "memory/cache.json"
 
+_CACHE_ERRORES_JSON = (json.JSONDecodeError, UnicodeDecodeError)
+
+
 def _cargar_cache():
     """Carga el cache desde disco."""
     if not os.path.exists(CACHE_FILE):
@@ -11,7 +14,7 @@ def _cargar_cache():
     try:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except (OSError, *_CACHE_ERRORES_JSON):
         return {}
 
 def _guardar_cache(cache):
@@ -24,9 +27,8 @@ def hash_archivo(ruta):
     """Calcula un hash del archivo para detectar cambios."""
     try:
         stat = os.stat(ruta)
-        # Usamos tamaño + fecha de modificación como "huella"
         return f"{stat.st_size}{stat.st_mtime}"
-    except:
+    except OSError:
         return None
 
 def esta_en_cache(ruta):

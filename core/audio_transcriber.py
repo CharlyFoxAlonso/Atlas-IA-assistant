@@ -72,6 +72,12 @@ def transcribir_archivo(ruta_archivo: str, progreso_callback=None) -> str:
     extension = os.path.splitext(ruta_archivo)[1].lower()
     ruta_procesar = ruta_archivo
     archivo_temporal = None
+    ruta_temporal = None
+
+    def _crear_temporal_mp3():
+        tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+        tmp.close()
+        return tmp.name
 
     try:
         # PASO 1: Si es video, extraer audio
@@ -79,20 +85,20 @@ def transcribir_archivo(ruta_archivo: str, progreso_callback=None) -> str:
             if progreso_callback:
                 progreso_callback("🎬 Extrayendo audio del video...")
             logger.info(f"Video detectado ({extension}), extrayendo audio...")
-            archivo_temporal = tempfile.mktemp(suffix=".mp3")
-            if not _convertir_a_mp3(ruta_archivo, archivo_temporal):
+            ruta_temporal = _crear_temporal_mp3()
+            if not _convertir_a_mp3(ruta_archivo, ruta_temporal):
                 return "❌ Error: FFmpeg no pudo extraer el audio del video."
-            ruta_procesar = archivo_temporal
+            ruta_procesar = ruta_temporal
 
         # PASO 2: Si es audio pero NO es formato nativo de Groq
         elif extension not in FORMATOS_GROQ_NATIVOS:
             if progreso_callback:
                 progreso_callback(f"🔄 Convirtiendo {extension.upper()} a MP3...")
             logger.info(f"Formato {extension} no nativo de Groq, convirtiendo a MP3...")
-            archivo_temporal = tempfile.mktemp(suffix=".mp3")
-            if not _convertir_a_mp3(ruta_archivo, archivo_temporal):
+            ruta_temporal = _crear_temporal_mp3()
+            if not _convertir_a_mp3(ruta_archivo, ruta_temporal):
                 return f"❌ Error: FFmpeg no pudo convertir {extension} a MP3."
-            ruta_procesar = archivo_temporal
+            ruta_procesar = ruta_temporal
 
         # PASO 3: Transcribir con Groq
         if progreso_callback:
@@ -116,8 +122,8 @@ def transcribir_archivo(ruta_archivo: str, progreso_callback=None) -> str:
         return f"❌ Error en la transcripción: {str(e)}"
     finally:
         # Limpiar archivo temporal si se creó uno
-        if archivo_temporal and os.path.exists(archivo_temporal):
+        if ruta_temporal and os.path.exists(ruta_temporal):
             try:
-                os.remove(archivo_temporal)
+                os.remove(ruta_temporal)
             except Exception:
                 pass

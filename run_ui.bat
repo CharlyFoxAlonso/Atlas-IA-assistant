@@ -1,6 +1,7 @@
 @echo off
 echo ========================================
 echo   🧠 ATLAS UI - Iniciando...
+echo   Puerto: 8501
 echo ========================================
 echo.
 streamlit run atlas_ui.py --server.port 8501

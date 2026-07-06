@@ -37,8 +37,17 @@ def asegurar_modelo_vosk():
             print()  # Salto de línea
             # Extraer
             print("   Extrayendo modelo...")
+            destino = os.path.abspath(VOSK_MODEL_DIR)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(VOSK_MODEL_DIR)
+                entrada_invalida = None
+                for miembro in zip_ref.namelist():
+                    ruta_destino = os.path.abspath(os.path.join(destino, miembro))
+                    if os.path.commonpath([ruta_destino, destino]) != destino:
+                        entrada_invalida = miembro
+                        break
+                if entrada_invalida:
+                    raise ValueError(f"Entrada Zip Slip detectada: {entrada_invalida}")
+                zip_ref.extractall(destino)
             # Eliminar zip
             os.remove(zip_path)
             print("✅ Modelo descargado correctamente\n")

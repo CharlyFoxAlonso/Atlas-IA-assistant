@@ -54,8 +54,16 @@ def validar_ruta(ruta_archivo):
         base_real = os.path.realpath(BASE_MEMORIA)
         ruta_real = os.path.realpath(ruta_archivo)
 
-        # Verificar que la ruta esté dentro de la base
-        if not ruta_real.startswith(base_real):
+        # Verificar que la ruta esté DENTRO de la base (uso commonpath
+        # en lugar de startswith para evitar el bypass con prefijos
+        # comunes tipo "...\\Atlas_Memory_BACKUP\\...").
+        try:
+            mismo_path = os.path.commonpath([ruta_real, base_real]) == base_real
+        except ValueError:
+            # En Windows, diferentes drives generan ValueError
+            mismo_path = False
+
+        if not mismo_path:
             log_seguridad("ACCESO_DENEGADO", f"Intento de acceso fuera de memoria: {ruta_archivo}")
             return False, "Acceso fuera de la carpeta de memoria"
         return True, ""
@@ -133,7 +141,10 @@ def verificar_ollama_localhost():
 
         return True, "Ollama está configurado correctamente (solo localhost)"
     except Exception as e:
-        return True, f"No se pudo verificar Ollama: {str(e)}"
+        # Fail-safe: si no se puede verificar, asumimos que hay riesgo
+        # y reportamos advertencia en lugar de declararlo seguro.
+        log_seguridad("ERROR_VERIFICACION_OLLAMA", f"No se pudo verificar Ollama: {str(e)}")
+        return False, f"No se pudo verificar Ollama: {str(e)}"
 
 
 def verificar_permisos_carpeta():

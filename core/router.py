@@ -3,9 +3,39 @@ Router inteligente: el MODELO decide qué agente usar.
 Atlas v2.9 - Detección mejorada de emociones, logros y derecho.
 """
 import os
+import re as _re
 from core.models import preguntar
 
 AGENTES = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
+
+_AGENTES_PATTERN = _re.compile(
+    r"\b(" + "|".join(_re.escape(a) for a in AGENTES) + r")\b",
+    flags=_re.IGNORECASE,
+)
+
+
+def _clasificar_agente_desde_texto(respuesta: str) -> str:
+    """
+    Clasificación estricta por palabra completa.
+    Reglas:
+      1. Si la respuesta coincide EXACTAMENTE con un agente (después de strip),
+         se devuelve ese.
+      2. Si no, se busca la PRIMERA coincidencia como palabra completa
+         (evita falsos positivos tipo "comenta" → "menta").
+      3. Si no se encuentra nada, se devuelve 'general'.
+    """
+    if not respuesta:
+        return "general"
+
+    texto = respuesta.strip().lower()
+    if texto in AGENTES:
+        return texto
+
+    match = _AGENTES_PATTERN.search(texto)
+    if match:
+        return match.group(1).lower()
+
+    return "general"
 
 
 def detectar_agente_con_modelo(pregunta):
@@ -55,10 +85,7 @@ Respondé SOLO con el nombre del agente (una sola palabra en minúsculas):
 """
     try:
         respuesta = preguntar(prompt).strip().lower()
-        for agente in AGENTES:
-            if agente in respuesta:
-                return agente
-        return "general"
+        return _clasificar_agente_desde_texto(respuesta)
     except Exception:
         return "general"
 

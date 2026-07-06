@@ -423,7 +423,7 @@ def chat():
             # ============================
             # !agentes
             # ============================
-            if pregunta_lower == "!agentes":
+            elif pregunta_lower == "!agentes":
                 print("\n🤖 Agentes disponibles:")
                 for ag, desc in listar_agentes().items():
                     print(f"  • {ag}: {desc}")
@@ -729,6 +729,7 @@ def chat():
                 respuesta_completa = ""
                 agente_mostrado = False
                 pensamiento_mostrado = False
+                voz_ya_reproducida = False
 
                 for pensamiento, respuesta in pensar_con_streaming(pregunta):
                     if pensamiento and pensamiento.startswith("[Agente:") and not agente_mostrado:
@@ -741,10 +742,12 @@ def chat():
                         print(f"\n🧠 Atlas:\n{respuesta}\n", flush=True)
                         print("-" * 60, flush=True)
                         respuesta_completa = respuesta
-                        if voz_activa and respuesta_completa:
-                            hablar(respuesta_completa)
                     elif respuesta == "🔍 Buscando en la web...":
                         print(f"\n{respuesta}\n", flush=True)
+
+                if voz_activa and respuesta_completa:
+                    hablar(respuesta_completa)
+                    voz_ya_reproducida = True
 
                 if respuesta_completa and len(respuesta_completa) > 50:
                     pendientes.append((pregunta, respuesta_completa))

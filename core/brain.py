@@ -28,10 +28,17 @@ from core.temp_rules import (
 # ============================================
 # CONFIGURACIÓN
 # ============================================
-BASE_ESTUDIO = "memory/Atlas_Memory/03_Conocimiento"
-BASE_PROMPTS = "memory/Atlas_Memory/00_Sistema/Prompts"
+try:
+    from core.config import BASE_ESTUDIO as _CFG_BASE_ESTUDIO, BASE_PROMPTS as _CFG_BASE_PROMPTS, MAX_HISTORIAL as _CFG_MAX_HISTORIAL
+    BASE_ESTUDIO = _CFG_BASE_ESTUDIO
+    BASE_PROMPTS = _CFG_BASE_PROMPTS
+    MAX_HISTORIAL = _CFG_MAX_HISTORIAL
+except Exception:
+    BASE_ESTUDIO = "memory/Atlas_Memory/03_Conocimiento"
+    BASE_PROMPTS = "memory/Atlas_Memory/00_Sistema/Prompts"
+    MAX_HISTORIAL = 5
+
 HISTORIAL = []
-MAX_HISTORIAL = 5
 
 
 # ============================================
@@ -388,14 +395,25 @@ Devolvé SOLO la respuesta final sin preámbulos.
         stream_generator = _stream_local(prompt_final, modelo_local)
 
     respuesta_completa = ""
+    error_final = None
     try:
         for chunk in stream_generator:
+            if not chunk:
+                continue
             respuesta_completa += chunk
             yield None, respuesta_completa
-        agregar_al_historial(pregunta, respuesta_completa)
     except Exception as e:
+        error_final = e
         log_seguridad("ERROR_RESPUESTA", str(e))
-        yield None, f"Error: {str(e)}"
+
+    if respuesta_completa:
+        try:
+            agregar_al_historial(pregunta, respuesta_completa)
+        except Exception as e:
+            log_seguridad("ERROR_HISTORIAL", str(e))
+
+    if error_final is not None:
+        yield None, f"Error: {str(error_final)}"
 
 
 def analizar_para_memoria(pregunta, respuesta):

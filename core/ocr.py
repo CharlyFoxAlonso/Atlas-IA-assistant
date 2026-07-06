@@ -1,9 +1,13 @@
 import pytesseract
 from PIL import Image
-from config.tools import TESSERACT_CMD, OCR_LANGUAGE
 
-# Configurar ruta de Tesseract
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+try:
+    from core.config import TESSERACT_CMD, OCR_LANGUAGE
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+except Exception:
+    from shutil import which
+    pytesseract.pytesseract.tesseract_cmd = which("tesseract") or "tesseract"
+    OCR_LANGUAGE = "spa"
 
 
 def imagen_a_texto(imagen):

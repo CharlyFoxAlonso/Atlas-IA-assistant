@@ -1,10 +1,10 @@
 """
 core/vector_store.py
-Motor de búsqueda semántica para Atlas v2.9.
+Motor de búsqueda semántica para Atlas v3.
 Usa ChromaDB y embeddings multilingües para entender el significado, no solo keywords.
+Inicialización perezosa: ChromaDB y el modelo de embeddings se cargan sólo cuando
+se necesita una búsqueda, no al importar este módulo.
 """
-import chromadb
-from chromadb.utils import embedding_functions
 import os
 import re
 
@@ -14,20 +14,34 @@ import re
 CHROMA_PATH = "./vector_db"
 COLLECTION_NAME = "atlas_rag"
 
-# Usamos un modelo multilingüe optimizado para español
-embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-    model_name="paraphrase-multilingual-MiniLM-L12-v2"
-)
+_cliente = None
+_coleccion = None
+_embedding_fn = None
 
-# Inicializar cliente persistente
-client = chromadb.PersistentClient(path=CHROMA_PATH)
 
-# Crear o cargar la colección
-collection = client.get_or_create_collection(
-    name=COLLECTION_NAME,
-    embedding_function=embedding_fn,
-    metadata={"hnsw:space": "cosine"}
-)
+def _get_collection():
+    """
+    Inicializa perezosamente el cliente de ChromaDB y la colección.
+    Sólo se carga al primer uso (primera búsqueda o indexación).
+    """
+    global _cliente, _coleccion, _embedding_fn
+    if _coleccion is not None:
+        return _coleccion
+
+    import chromadb
+    from chromadb.utils import embedding_functions
+
+    _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+    _coleccion = _cliente.get_or_create_collection(
+        name=COLLECTION_NAME,
+        embedding_function=_embedding_fn,
+        metadata={"hnsw:space": "cosine"}
+    )
+    return _coleccion
+
 
 # ============================================
 # DETECCIÓN DE CAPÍTULOS
@@ -73,17 +87,20 @@ def chunk_text(texto, chunk_size=500, overlap=100):
     """Divide un texto en chunks con detección de capítulos."""
     if not texto:
         return []
-    
+
+    if chunk_size <= overlap:
+        return []
+
     parrafos = texto.split('\n\n')
     chunks = []
     chunk_actual = ""
     capitulo_actual = None
-    
+
     for parrafo in parrafos:
         cap_detectado = detectar_capitulo(parrafo)
         if cap_detectado:
             capitulo_actual = cap_detectado
-        
+
         if len(chunk_actual) + len(parrafo) > chunk_size and chunk_actual:
             chunks.append({
                 "texto": chunk_actual.strip(),
@@ -92,29 +109,33 @@ def chunk_text(texto, chunk_size=500, overlap=100):
             chunk_actual = chunk_actual[-overlap:] + parrafo
         else:
             chunk_actual += "\n\n" + parrafo
-    
+
     if chunk_actual.strip():
         chunks.append({
             "texto": chunk_actual.strip(),
             "capitulo": capitulo_actual
         })
-    
-    # Dividir chunks muy grandes
+
     chunks_finales = []
     for chunk_data in chunks:
         chunk = chunk_data["texto"]
         cap = chunk_data["capitulo"]
-        
+        step = chunk_size - overlap
+        if step <= 0:
+            step = chunk_size
+
         if len(chunk) > chunk_size * 1.5:
-            for i in range(0, len(chunk), chunk_size - overlap):
-                chunks_finales.append({
-                    "texto": chunk[i:i + chunk_size],
-                    "capitulo": cap
-                })
+            for i in range(0, len(chunk), step):
+                recorte = chunk[i:i + chunk_size]
+                if recorte.strip():
+                    chunks_finales.append({
+                        "texto": recorte.strip(),
+                        "capitulo": cap
+                    })
         else:
             chunks_finales.append(chunk_data)
-    
-    return [c for c in chunks_finales if len(c["texto"]) > 20]
+
+    return [c for c in chunks_finales if len(c.get("texto", "")) > 20]
 
 
 # ============================================
@@ -128,38 +149,38 @@ def agregar_documento(doc_id, texto, metadata=None):
     """
     if not texto or len(texto.strip()) < 50:
         return 0
-    
+
     chunks_data = chunk_text(texto)
     if not chunks_data:
         return 0
-    
+
+    col = _get_collection()
+
     chunks = [c["texto"] for c in chunks_data]
     ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
-    
+
     metadatas = []
-    # SIEMPRE usar "nombre" (no "source")
     base_metadata = metadata or {"nombre": doc_id}
-    
+
     for chunk_data in chunks_data:
         chunk_metadata = base_metadata.copy()
         if chunk_data["capitulo"]:
             chunk_metadata["capitulo"] = chunk_data["capitulo"]
         metadatas.append(chunk_metadata)
-    
-    # Eliminar chunks anteriores del mismo documento (si existen)
+
     try:
-        existing = collection.get(where={"nombre": doc_id})
+        existing = col.get(where={"nombre": doc_id})
         if existing['ids']:
-            collection.delete(ids=existing['ids'])
+            col.delete(ids=existing['ids'])
     except Exception:
         pass
-    
-    collection.add(
+
+    col.add(
         documents=chunks,
         ids=ids,
         metadatas=metadatas
     )
-    
+
     return len(chunks)
 
 
@@ -169,23 +190,25 @@ def agregar_documento(doc_id, texto, metadata=None):
 
 def buscar_relevante(pregunta, n_results=5, filtro_categoria=None, filtro_capitulo=None):
     """Busca chunks relevantes para una pregunta usando similitud semántica."""
+    col = _get_collection()
+
     where_filter = {}
-    
+
     if filtro_categoria:
         where_filter["categoria"] = filtro_categoria
     if filtro_capitulo:
         where_filter["capitulo"] = filtro_capitulo
-    
+
     if not where_filter:
         where_filter = None
-    
+
     try:
-        resultados = collection.query(
+        resultados = col.query(
             query_texts=[pregunta],
             n_results=n_results,
             where=where_filter
         )
-        
+
         docs_relevantes = []
         if resultados and resultados['documents'][0]:
             for i in range(len(resultados['documents'][0])):
@@ -194,7 +217,7 @@ def buscar_relevante(pregunta, n_results=5, filtro_categoria=None, filtro_capitu
                     "metadata": resultados['metadatas'][0][i],
                     "distancia": resultados['distances'][0][i]
                 })
-        
+
         return docs_relevantes
     except Exception as e:
         print(f"Error en búsqueda semántica: {e}")
@@ -209,25 +232,25 @@ def buscar_por_nombre(pregunta, palabras_clave, n_results=10):
     """
     Búsqueda por METADATA: busca chunks cuyo nombre de archivo contenga
     alguna de las palabras_clave, combinado con similitud semántica.
-    Usa SIEMPRE filtro por "nombre" (compatible con indexer.py).
     """
     if not palabras_clave:
         return buscar_relevante(pregunta, n_results=n_results)
-    
+
+    col = _get_collection()
     docs_relevantes = []
     vistas = set()
-    
+
     for kw in palabras_clave:
         if len(kw) < 3:
             continue
-        
+
         try:
-            resultados = collection.query(
+            resultados = col.query(
                 query_texts=[pregunta],
                 n_results=n_results,
                 where={"nombre": {"$contains": kw}}
             )
-            
+
             if resultados and resultados['documents'][0]:
                 for i in range(len(resultados['documents'][0])):
                     doc_id = resultados['ids'][0][i]
@@ -240,10 +263,10 @@ def buscar_por_nombre(pregunta, palabras_clave, n_results=10):
                         })
         except Exception:
             continue
-    
+
     if not docs_relevantes:
         return buscar_relevante(pregunta, n_results=n_results)
-    
+
     return docs_relevantes
 
 
@@ -259,10 +282,10 @@ def busqueda_hibrida(pregunta, n_results=15, palabras_clave=None, umbral_semanti
     """
     resultados_semanticos = buscar_relevante(pregunta, n_results=n_results)
     texto_total = sum(len(r["texto"]) for r in resultados_semanticos)
-    
+
     if texto_total >= umbral_semantico or not palabras_clave:
         return resultados_semanticos
-    
+
     return buscar_por_nombre(pregunta, palabras_clave, n_results=n_results)
 
 
@@ -272,8 +295,9 @@ def busqueda_hibrida(pregunta, n_results=15, palabras_clave=None, umbral_semanti
 
 def obtener_estadisticas():
     """Devuelve info sobre la base de datos."""
+    col = _get_collection()
     return {
-        "total_chunks": collection.count(),
+        "total_chunks": col.count(),
         "nombre_coleccion": COLLECTION_NAME,
         "ruta_db": CHROMA_PATH
     }

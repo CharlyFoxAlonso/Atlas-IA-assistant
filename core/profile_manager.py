@@ -99,9 +99,19 @@ def importar_perfil(ruta_zip):
         if not ok_backup:
             return False, f"Error haciendo backup: {msg_backup}"
         
-        # Extraer perfil
+        # Extraer perfil de forma segura (protección Zip Slip).
         with zipfile.ZipFile(ruta_zip, 'r') as zipf:
-            zipf.extractall(".")
+            destino = os.path.abspath(".")
+            entrada_invalida = None
+            for miembro in zipf.namelist():
+                ruta_destino = os.path.abspath(os.path.join(destino, miembro))
+                # commonpath detecta traversal tipo ../../Windows/...
+                if os.path.commonpath([ruta_destino, destino]) != destino:
+                    entrada_invalida = miembro
+                    break
+            if entrada_invalida:
+                raise ValueError(f"Entrada Zip Slip detectada: {entrada_invalida}")
+            zipf.extractall(destino)
         
         log_seguridad("PERFIL_IMPORTADO", f"Perfil importado desde: {ruta_zip}")
         return True, f"Perfil importado. Backup guardado en: {backup_zip}"

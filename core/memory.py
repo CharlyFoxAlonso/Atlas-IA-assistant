@@ -1,8 +1,81 @@
 import os
-from core.indexer import cargar_indice
 from core.file_loader import leer_archivo_estudio
 
 BASE = "memory/Atlas_Memory"
+
+EXTENSIONES_INDEX = {'.md', '.txt', '.pdf', '.docx', '.pptx'}
+PREVIEW_CHARS = 300
+
+
+def _construir_indice_en_memoria():
+    """
+    Construye un índice liviano en memoria a partir de los archivos
+    de la carpeta BASE. Devuelve una lista de entradas con campos:
+      - nombre
+      - ruta
+      - ruta_relativa
+      - keywords (palabras relevantes)
+      - preview (primeros N caracteres del contenido)
+    Esta función sustituye a la antigua ``cargar_indice`` del
+    ``indexer.py``, que no existe en el código actual.
+    """
+    entradas = []
+
+    if not os.path.exists(BASE):
+        return entradas
+
+    skip_dirs = {'__pycache__', 'temp_ingestion', 'temp_local_ingestion'}
+
+    for root, dirs, files in os.walk(BASE):
+        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in skip_dirs]
+
+        for f in files:
+            extension = os.path.splitext(f)[1].lower()
+            if extension not in EXTENSIONES_INDEX:
+                continue
+
+            ruta_completa = os.path.join(root, f)
+            try:
+                contenido = _leer_archivo(ruta_completa) or ""
+            except Exception:
+                continue
+
+            ruta_relativa = os.path.relpath(ruta_completa, BASE)
+            preview = contenido[:PREVIEW_CHARS].replace("\n", " ").strip()
+            keywords = _extraer_keywords(preview)
+
+            entradas.append({
+                "nombre": f,
+                "ruta": ruta_completa,
+                "ruta_relativa": ruta_relativa,
+                "keywords": keywords,
+                "preview": preview,
+            })
+
+    entradas.sort(key=lambda e: e["ruta"])
+    return entradas
+
+
+def _extraer_keywords(texto, max_keywords=12):
+    """Extrae palabras relevantes (>=4 chars, no stopwords simples) para indexar."""
+    if not texto:
+        return []
+    stopwords = {
+        "este", "esta", "esto", "esos", "esas", "aquel", "aquella", "para",
+        "pero", "como", "más", "menos", "todo", "todos", "todas", "sin",
+        "con", "por", "del", "los", "las", "una", "uno", "unos", "unas",
+        "que", "qué", "cual", "cuál", "the", "and", "for", "with", "from",
+    }
+    palabras = []
+    for p in texto.lower().split():
+        limpio = "".join(c for c in p if c.isalnum())
+        if len(limpio) < 4 or limpio in stopwords:
+            continue
+        if limpio not in palabras:
+            palabras.append(limpio)
+        if len(palabras) >= max_keywords:
+            break
+    return palabras
 
 
 def normalizar(texto):
@@ -52,8 +125,7 @@ def buscar_memoria(query, max_resultados=5):
     """
     Busca información relevante en la memoria usando el índice.
     """
-    # Cargar el índice
-    indice = cargar_indice()
+    indice = _construir_indice_en_memoria()
 
     if not indice:
         return []
@@ -61,20 +133,18 @@ def buscar_memoria(query, max_resultados=5):
     resultados = []
 
     for entry in indice:
-        # Buscar en nombre + keywords + preview
         texto_busqueda = (
             entry.get("nombre", "") + " " +
             " ".join(entry.get("keywords", [])) + " " +
             entry.get("preview", "")
         )
-        
+
         score = score_match(query, texto_busqueda)
-        
+
         if score > 0:
-            # Leer el contenido completo solo si hay coincidencia
             ruta = entry.get("ruta")
             contenido = _leer_archivo(ruta)
-            
+
             if contenido:
                 resultados.append({
                     "path": ruta,
@@ -82,7 +152,6 @@ def buscar_memoria(query, max_resultados=5):
                     "score": score
                 })
 
-    # Ordenar por score (mayor primero)
     resultados.sort(key=lambda x: x["score"], reverse=True)
 
     return resultados[:max_resultados]

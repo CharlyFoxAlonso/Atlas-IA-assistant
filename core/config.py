@@ -480,6 +480,48 @@ def obtener_config_completa() -> dict:
     }
 
 
+# ============================================
+# OCR (Tesseract)
+# ============================================
+import sys as _sys
+
+
+def _detectar_tesseract_cmd():
+    """Detecta la ruta del ejecutable de Tesseract según la plataforma."""
+    candidatos = []
+    if _sys.platform.startswith("win"):
+        candidatos.append(os.path.expanduser(r"~\AppData\Local\Tesseract-OCR\tesseract.exe"))
+        candidatos.append(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+        candidatos.append(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe")
+    elif _sys.platform == "darwin":
+        candidatos += [
+            "/opt/homebrew/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "/opt/local/bin/tesseract",
+        ]
+    else:
+        candidatos += [
+            "/usr/bin/tesseract",
+            "/usr/local/bin/tesseract",
+            "/snap/bin/tesseract",
+        ]
+
+    for ruta in candidatos:
+        if os.path.exists(ruta):
+            return ruta
+
+    from shutil import which as _which
+    encontrado = _which("tesseract")
+    if encontrado:
+        return encontrado
+
+    return "tesseract"
+
+
+TESSERACT_CMD = _detectar_tesseract_cmd()
+OCR_LANGUAGE = os.getenv("ATLAS_OCR_LANG", "spa")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print(f"  {NOMBRE} v{VERSION} - Configuración")

@@ -14,7 +14,7 @@ chromadb==0.4.22
 sentence-transformers==2.5.1
 
 # Búsqueda web
-ddgs==7.0.0
+duckduckgo-search>=6.1.0,<8.0.0
 
 # Procesamiento de documentos
 pypdf==4.0.1
