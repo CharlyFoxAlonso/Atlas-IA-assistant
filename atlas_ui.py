@@ -992,13 +992,11 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
         args = parts[1:] if len(parts) > 1 else []
 
         with st.chat_message("assistant"):
-            # !AYUDA
+            # !AYUDA - El modal se invoca al final del flujo (post-ejecución)
+            # para no perturbar el orden de 'with st.chat_message'.
             if comando in ["!ayuda", "!help"]:
-                # El modal se invoca al final del flujo para no perturbar
-                # el orden de 'with st.chat_message'.
                 st.session_state["_mostrar_ayuda"] = True
-                st.success("📚 Abro el panel de ayuda.")
-                continue
+                st.success("📚 Abro el panel de ayuda con todos los comandos.")
 
             # !REGLAS
             elif comando == "!reglas":
