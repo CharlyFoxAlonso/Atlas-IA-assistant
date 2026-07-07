@@ -1,44 +1,48 @@
-# Atlas v2.7 - Dependencias completas
-# ================================
+# Atlas v3.4 — Dependencias curadas
+# =======================================================
+# Probadas con Python 3.11/3.12/3.13 (no usar 3.14 por
+# falta de wheels para chromadb/sentence-transformers).
+# =======================================================
 
 # UI
-streamlit==1.31.0
+streamlit>=1.36.0,<2.0.0
 
 # LLM y APIs
-openai==1.12.0
-requests==2.31.0
-python-dotenv==1.0.0
+openai>=1.50.0,<2.0.0
+requests>=2.32.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
 
-# RAG y embeddings
-chromadb==0.4.22
-sentence-transformers==2.5.1
+# RAG y embeddings (ChromaDB 0.5 es estable y tiene wheel para 3.13)
+chromadb>=0.5.0,<0.6.0
+sentence-transformers>=3.0.0,<4.0.0
+numpy<2.0.0
 
-# Búsqueda web
+# Búsqueda web (nombre correcto del paquete)
 duckduckgo-search>=6.1.0,<8.0.0
 
 # Procesamiento de documentos
-pypdf==4.0.1
-python-docx==1.1.0
-python-pptx==0.6.21
-pdf2image==1.16.3
-pytesseract==0.3.10
-Pillow==10.2.0
+pypdf>=4.0.0,<6.0.0
+python-docx>=1.1.0,<2.0.0
+python-pptx>=0.6.21,<2.0.0
+pdf2image>=1.17.0,<2.0.0
+pytesseract>=0.3.10,<1.0.0
+Pillow>=10.0.0,<12.0.0
 
 # Audio
-groq==0.4.2
-pydub==0.25.1
-SpeechRecognition==3.10.1
-vosk==0.3.45
-pyaudio==0.2.14
-edge-tts==6.1.10
-pyttsx3==2.90
-pygame==2.5.2
+groq>=0.10.0,<1.0.0
+pydub>=0.25.1,<1.0.0
+SpeechRecognition>=3.10.0,<4.0.0
+vosk>=0.3.45,<1.0.0
+pyaudio>=0.2.14,<1.0.0
+edge-tts>=6.1.10,<8.0.0
+pyttsx3>=2.90,<3.0.0
+pygame>=2.5.0,<3.0.0
 
 # Visión
-pyautogui==0.9.54
+pyautogui>=0.9.54,<1.0.0
 
 # Seguridad y utilidades
-cryptography==42.0.2
+cryptography>=42.0.0,<50.0.0
 
 # Trading (opcional)
-python-binance==1.0.19
+python-binance>=1.0.20,<2.0.0
