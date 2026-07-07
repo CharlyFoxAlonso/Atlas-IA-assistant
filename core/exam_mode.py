@@ -1,5 +1,5 @@
 """
-core/exam_mode.py - Atlas v3.2 (búsqueda híbrida + parsing robusto)
+core/exam_mode.py - Atlas v3.4 (búsqueda híbrida + parsing robusto)
 Modo Examen Interactivo Completo con RAG Semántico + fallback por nombre de archivo.
 Soporta motor local (Ollama) y Prometeo (NVIDIA API).
 """

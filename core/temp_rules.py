@@ -2,7 +2,7 @@
 core/temp_rules.py
 Gestiona reglas temporales con interceptación inteligente.
 Diferencia entre reglas de contenido (forzar respuesta) y reglas de formato (inyectar en prompt).
-Atlas v3.2
+Atlas v3.4
 """
 import re
 

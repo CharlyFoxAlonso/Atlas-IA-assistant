@@ -1,6 +1,6 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v3.2 - Interfaz Gráfica Híbrida Completa      ║
+║  🧠 ATLAS UI v3.4 - Interfaz Gráfica Híbrida Completa      ║
 ║  06/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Chats Múltiples               ║
@@ -45,7 +45,7 @@ from core.config import (
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="Atlas v3.2",
+    page_title="Atlas v3.4",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -129,13 +129,19 @@ if "examen_activo" not in st.session_state:
     st.session_state.examen_activo = None
 if "mostrar_gestion_modelos" not in st.session_state:
     st.session_state.mostrar_gestion_modelos = False
+if "motor_ingestion" not in st.session_state:
+    st.session_state.motor_ingestion = "atlas"
+if "modelo_ingestion_nube" not in st.session_state:
+    st.session_state.modelo_ingestion_nube = "meta/llama-3.1-70b-instruct"
+if "modelo_ingestion_local" not in st.session_state:
+    st.session_state.modelo_ingestion_local = "qwen3:8b"
 
 # ============================================
 # SIDEBAR
 # ============================================
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("Atlas v3.2")
+    st.title("Atlas v3.4")
     st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
 
     # ========================================
@@ -469,6 +475,69 @@ with st.sidebar:
 
         st.caption(f"☁️ NVIDIA API ({st.session_state.modelo_nube.split('/')[-1]})")
 
+    # ========================================
+    # SECCIÓN: Configuración de Digestión
+    # ========================================
+    st.markdown("---")
+    st.subheader("🔄 Motor de Digestión")
+    st.caption("Para ingesta web y archivos locales.")
+
+    digestion_opciones = {
+        "atlas": "🧠 Atlas Local (Ollama)",
+        "prometeo": "⚡ Prometeo Nube (NVIDIA)",
+    }
+    motor_dig_sel = st.selectbox(
+        "Motor para digerir PDFs/archivos:",
+        options=list(digestion_opciones.keys()),
+        format_func=lambda x: digestion_opciones[x],
+        index=list(digestion_opciones.keys()).index(st.session_state.motor_ingestion),
+        key="selector_motor_ingestion",
+    )
+
+    if motor_dig_sel != st.session_state.motor_ingestion:
+        st.session_state.motor_ingestion = motor_dig_sel
+        st.rerun()
+
+    if st.session_state.motor_ingestion == "atlas":
+        modelos_locales_opciones = {}
+        catalogo_dig = obtener_catalogo_completo()
+        for modelo_id in catalogo_dig:
+            info = catalogo_dig[modelo_id]
+            if info.get("descargado"):
+                modelos_locales_opciones[modelo_id] = f"✅ {info['descripcion']} ({info.get('velocidad', '?')})"
+
+        opciones_lista_dig = list(modelos_locales_opciones.keys())
+        indice_actual_dig = opciones_lista_dig.index(st.session_state.modelo_ingestion_local) if st.session_state.modelo_ingestion_local in opciones_lista_dig else 0
+
+        modelo_local_dig = st.selectbox(
+            "Modelo local para digestión:",
+            options=opciones_lista_dig,
+            format_func=lambda x: modelos_locales_opciones[x],
+            index=indice_actual_dig,
+            key="selector_modelo_ingestion_local",
+        )
+        if modelo_local_dig != st.session_state.modelo_ingestion_local:
+            st.session_state.modelo_ingestion_local = modelo_local_dig
+            st.toast(f"Modelo de digestión: {modelo_local_dig}")
+
+    else:
+        modelos_nube_dig = {
+            "meta/llama-3.1-70b-instruct": "Llama 3.1 70B (Equilibrado)",
+            "meta/llama-3.3-70b-instruct": "Llama 3.3 70B (Nuevo)",
+            "deepseek-ai/deepseek-v4-pro": "DeepSeek V4 Pro (Top)",
+            "nvidia/nemotron-3-ultra-550b-a55b": "Nemotron 3 Ultra 550B",
+        }
+        modelo_nube_dig = st.selectbox(
+            "Modelo nube para digestión:",
+            options=list(modelos_nube_dig.keys()),
+            format_func=lambda x: modelos_nube_dig[x],
+            index=list(modelos_nube_dig.keys()).index(st.session_state.modelo_ingestion_nube) if st.session_state.modelo_ingestion_nube in modelos_nube_dig else 0,
+            key="selector_modelo_ingestion_nube",
+        )
+        if modelo_nube_dig != st.session_state.modelo_ingestion_nube:
+            st.session_state.modelo_ingestion_nube = modelo_nube_dig
+            st.toast(f"Modelo de digestión: {modelo_nube_dig}")
+
     st.divider()
 
     # ========================================
@@ -483,9 +552,16 @@ with st.sidebar:
             st.error("Ingresá una URL")
         else:
             from core.ingestion_manager import procesar_pipeline_ingestion
+            motor_dig = st.session_state.get("motor_ingestion", "atlas")
+            modelo_dig = None
+            if motor_dig == "atlas":
+                modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+            else:
+                modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
             progreso_container = st.empty()
             try:
-                for paso in procesar_pipeline_ingestion(url_ingestion, categoria_ingestion):
+                for paso in procesar_pipeline_ingestion(url_ingestion, categoria_ingestion,
+                                                        motor=motor_dig, modelo=modelo_dig):
                     if paso["estado"] == "error":
                         progreso_container.error(paso["mensaje"]); break
                     elif paso["estado"] == "completado":
@@ -542,15 +618,23 @@ with st.sidebar:
             st.warning("Soltá archivos primero")
         else:
             from core.local_ingestion_manager import procesar_archivo_local
-            
+
+            motor_dig = st.session_state.get("motor_ingestion", "atlas")
+            modelo_dig = None
+            if motor_dig == "atlas":
+                modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+            else:
+                modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
+
             # Determinar ruta final
             ruta_destino = st.session_state.get("categoria_local", categoria_local) or categoria_local
-            
+
             for archivo in archivos_subidos:
                 st.markdown(f"**Procesando:** `{archivo.name}` → `{ruta_destino}`")
                 progreso_container = st.empty()
                 try:
-                    for paso in procesar_archivo_local(archivo, ruta_destino):
+                    for paso in procesar_archivo_local(archivo, ruta_destino,
+                                                       motor=motor_dig, modelo=modelo_dig):
                         if paso["estado"] == "error":
                             progreso_container.error(paso["mensaje"]); break
                         elif paso["estado"] == "completado":
@@ -582,7 +666,7 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.2
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.4
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -704,7 +788,7 @@ Generado: {ahora_str} | Creador: Charly
 # HEADER PRINCIPAL
 # ============================================
 st.title("Atlas")
-st.caption(f"Asistente híbrido v3.2 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.caption(f"Asistente híbrido v3.4 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -810,7 +894,7 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
             # !AYUDA
             if comando in ["!ayuda", "!help"]:
                 st.info("""
-🧠 COMANDOS DISPONIBLES - ATLAS v3.2
+🧠 COMANDOS DISPONIBLES - ATLAS v3.4
 
 🔄 Sistema y RAG:
 • `!indexar` - Reconstruir índice semántico
@@ -1136,4 +1220,4 @@ if st.session_state.examen_activo:
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v3.2 | RAG Semántico + Reglas Temporales + Modelos Locales + Chats Múltiples | 06/07/2026")
+    st.caption("Atlas v3.4 | RAG Semántico + Reglas Temporales + Modelos Locales + Chats Múltiples | 06/07/2026")

@@ -1,7 +1,7 @@
 """
 core/pdf_scraper.py
 Descarga, valida y extrae texto de recursos web.
-Atlas v3.2
+Atlas v3.4
 """
 import os
 import requests

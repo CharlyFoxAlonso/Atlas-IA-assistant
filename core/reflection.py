@@ -2,7 +2,7 @@
 core/reflection.py
 Módulo de reflexión y autoanálisis de Atlas.
 Analiza conversaciones pasadas para identificar patrones y áreas de mejora.
-Atlas v3.2
+Atlas v3.4
 """
 import json
 from datetime import datetime

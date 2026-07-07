@@ -3,7 +3,7 @@ core/audio_transcriber.py
 Transcripción ultra-rápida de Audio y Video usando Groq API (Whisper-v3).
 Soporta: MP3, WAV, M4A, AAC, OGG, FLAC, MP4, MOV, AVI, MKV, WEBM
 Si el formato no es compatible con Groq, lo convierte automáticamente con FFmpeg.
-Atlas v3.2
+Atlas v3.4
 """
 import os
 import subprocess

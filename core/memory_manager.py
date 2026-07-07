@@ -1,7 +1,7 @@
 """
 core/memory_manager.py
 Gestión de memoria persistente y análisis de conversaciones.
-Atlas v3.2
+Atlas v3.4
 """
 import os
 from datetime import datetime

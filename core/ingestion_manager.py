@@ -2,14 +2,14 @@
 core/ingestion_manager.py
 Orquesta el flujo de Ingesta Web -> RAG.
 Con PARALELISMO (4 workers) para máxima velocidad en la digestión.
-Atlas v3.2
+Atlas v3.4
 """
 import os
 import hashlib
 from datetime import datetime
 from urllib.parse import urlparse
 from core.pdf_scraper import validar_fuente, descargar_y_extraer
-from core.prometeo_worker import digerir_documento_con_progreso
+from core.digestion_worker import digerir_documento_con_progreso
 from core.security import log_seguridad
 
 RAG_BASE_PATH = "memory/Atlas_Memory/03_Conocimiento"
@@ -28,7 +28,9 @@ def normalizar_nombre(url: str, nombre_original: str) -> str:  # ✅ SIN _ al in
     return f"Ingestion_{fecha}_{base}_{hash_url}.md"  # ✅ CORREGIDO: sin espacios
 
 
-def procesar_pipeline_ingestion(url: str, categoria: str = "Estudio", max_workers: int = 4):
+def procesar_pipeline_ingestion(url: str, categoria: str = "Estudio",
+                                motor: str = "atlas", modelo: str = None,
+                                max_workers: int = 4):
     """
     Ejecuta el pipeline completo con PARALELISMO en la digestión.
     Es un GENERADOR que va yielding el estado para que la UI muestre el progreso.
@@ -36,6 +38,8 @@ def procesar_pipeline_ingestion(url: str, categoria: str = "Estudio", max_worker
     Args:
         url: URL del recurso a descargar
         categoria: Subcarpeta dentro de 03_Conocimiento
+        motor: "atlas" (Ollama local) o "prometeo" (NVIDIA API)
+        modelo: Modelo específico (None = usar default del motor)
         max_workers: Número de workers paralelos (default: 4)
     """
     try:
@@ -65,14 +69,17 @@ def procesar_pipeline_ingestion(url: str, categoria: str = "Estudio", max_worker
         except Exception:
             pass
         
-        # PASO 3: Digerir con Prometeo (CON PARALELISMO)
-        yield {"estado": "procesando", "mensaje": f"⚡ Prometeo está digiriendo el documento con {max_workers} workers en paralelo..."}
+        # PASO 3: Digerir con el motor elegido (CON PARALELISMO)
+        motor_nombre = "Atlas Local" if motor == "atlas" else "Prometeo Nube"
+        yield {"estado": "procesando", "mensaje": f"⚡ {motor_nombre} está digiriendo el documento con {max_workers} workers..."}
         texto_procesado = ""
         
         for paso in digerir_documento_con_progreso(
             texto_crudo=resultado_download["texto"],
             nombre_original=resultado_download["nombre"],
             url_origen=url,
+            motor=motor,
+            modelo=modelo,
             max_workers=max_workers
         ):
             if paso["estado"] in ["chunking", "procesando_chunk", "procesando"]:

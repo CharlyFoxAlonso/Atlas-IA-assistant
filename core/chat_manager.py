@@ -1,6 +1,6 @@
 """
 core/chat_manager.py
-Gestor de sesiones de chat múltiples para Atlas v3.2.
+Gestor de sesiones de chat múltiples para Atlas v3.4.
 Cada chat tiene su propio historial, motor y metadata.
 Se persisten en memory/Atlas_Memory/chats/{chat_id}.json
 """

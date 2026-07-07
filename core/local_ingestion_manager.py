@@ -2,12 +2,12 @@
 core/local_ingestion_manager.py
 Orquesta la ingestión de archivos LOCALES (Drag & Drop) hacia el RAG.
 Con PARALELISMO (4 workers) para máxima velocidad en la digestión.
-Atlas v3
+Atlas v3.4
 """
 import os
 import hashlib
 from datetime import datetime
-from core.prometeo_worker import digerir_documento_con_progreso
+from core.digestion_worker import digerir_documento_con_progreso
 from core.security import log_seguridad
 
 RAG_BASE_PATH = "memory/Atlas_Memory"
@@ -98,7 +98,9 @@ def crear_subcarpeta(ruta_relativa: str) -> dict:
         }
 
 
-def procesar_archivo_local(archivo_streamlit, categoria: str = "03_Conocimiento/General", max_workers: int = 4):
+def procesar_archivo_local(archivo_streamlit, categoria: str = "03_Conocimiento/General",
+                            motor: str = "atlas", modelo: str = None,
+                            max_workers: int = 4):
     """
     Procesa un archivo subido desde la UI con PARALELISMO en la digestión.
     Es un GENERADOR que reporta progreso paso a paso.
@@ -106,6 +108,8 @@ def procesar_archivo_local(archivo_streamlit, categoria: str = "03_Conocimiento/
     Args:
         archivo_streamlit: Archivo subido desde Streamlit
         categoria: Ruta relativa de la carpeta destino (ej: "05_Proyectos/balance_julio")
+        motor: "atlas" (Ollama local) o "prometeo" (NVIDIA API)
+        modelo: Modelo específico (None = usar default del motor)
         max_workers: Número de workers paralelos (default: 4)
     """
     try:
@@ -149,15 +153,18 @@ def procesar_archivo_local(archivo_streamlit, categoria: str = "03_Conocimiento/
         except Exception:
             pass
         
-        # PASO 3: Digerir con Prometeo (CON PARALELISMO)
+        # PASO 3: Digerir con el motor elegido (CON PARALELISMO)
+        motor_nombre = "Atlas Local" if motor == "atlas" else "Prometeo Nube"
         tipo_fuente = "Audio/Video Transcrito" if extension in FORMATOS_MULTIMEDIA else "Archivo Local"
-        yield {"estado": "procesando", "mensaje": f"⚡ Prometeo está digiriendo el contenido con {max_workers} workers en paralelo..."}
+        yield {"estado": "procesando", "mensaje": f"⚡ {motor_nombre} digiriendo el contenido con {max_workers} workers..."}
         
         texto_procesado = ""
         for paso in digerir_documento_con_progreso(
             texto_crudo=texto_crudo,
             nombre_original=nombre_original,
             url_origen=f"{tipo_fuente} (Drag & Drop)",
+            motor=motor,
+            modelo=modelo,
             max_workers=max_workers
         ):
             if paso["estado"] in ["chunking", "procesando_chunk", "procesando"]:
