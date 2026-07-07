@@ -802,6 +802,104 @@ st.divider()
 # ============================================
 # FUNCIONES AUXILIARES PARA EXAMEN
 # ============================================
+def _render_ayuda_modal():
+    """Muestra el panel de comandos en un modal centrado y prolijo."""
+    @st.dialog("🧠 Atlas v3.4 — Comandos", width="large")
+    def modal():
+        st.markdown(
+            """
+            <div style="font-size:16px; line-height:1.6">
+            Selecciona un comando y copialo directo al chat cuando lo necesites.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        tab_rag, tab_reglas, tab_mem, tab_dia, tab_self, tab_ex = st.tabs(
+            ["🔄 Sistema y RAG", "📏 Reglas", "🧠 Memoria", "📔 Diario",
+             "🪞 Auto-conocimiento", "📝 Examen"]
+        )
+
+        with tab_rag:
+            st.markdown("#### 🔄 Sistema y RAG Semántico")
+            cmd_list = [
+                ("`!indexar`", "Reconstruye el índice semántico desde `memory/Atlas_Memory/`."),
+                ("`!limpiar` o `!limpiar_historial`", "Borra el historial de la sesión actual."),
+                ("`!historial`", "Informa cantidad de mensajes acumulados."),
+                ("`!categorias`", "Lista las categorías de memoria persistente."),
+                ("`!agentes`", "Muestra los agentes disponibles (general, estadistica, researcher, mentor, arquitecto)."),
+                ("`!seguridad`", "Auditoría de seguridad (ruta, ollama, permisos)."),
+                ("`!stats`", "Cantidad total de chunks en ChromaDB."),
+            ]
+            for c, d in cmd_list:
+                st.markdown(f"- {c}  \n  {d}")
+
+        with tab_reglas:
+            st.markdown("#### 📏 Reglas Temporales")
+            for c, d in [
+                ("`!reglas <texto>`", "Agrega una regla temporal de comportamiento."),
+                ("`!reglas`", "Lista las reglas temporales activas."),
+                ("`!limpiar_reglas`", "Elimina todas las reglas temporales."),
+            ]:
+                st.markdown(f"- {c}  \n  {d}")
+            st.info(
+                "Ej.: `!reglas respondé siempre en menos de 100 palabras`. "
+                "Las reglas viven hasta que las limpies.",
+                icon="💡",
+            )
+
+        with tab_mem:
+            st.markdown("#### 🧠 Memoria Persistente")
+            for c, d in [
+                ("`!memoria`", "Revisa conquistas recientes y guarda recuerdos relevantes."),
+                ("`!ver_memoria`", "Abre un panel con la memoria persistente por categoría."),
+            ]:
+                st.markdown(f"- {c}  \n  {d}")
+
+        with tab_dia:
+            st.markdown("#### 📔 Diario Personal")
+            for c, d in [
+                ("`!diario agregar [texto]`", "Crea una entrada con categorización automática."),
+                ("`!diario leer`", "Abre el diario de hoy."),
+                ("`!diario buscar [término]`", "Busca en todo el histórico del diario."),
+            ]:
+                st.markdown(f"- {c}  \n  {d}")
+            st.caption(
+                "Categorías: `general`, `logro`, `emocion`, `proyecto`, `reflexion` (autodetect)."
+            )
+
+        with tab_self:
+            st.markdown("#### 🪞 Auto-conocimiento y Mejoras")
+            for c, d in [
+                ("`!autoconocer`", "Imprime el informe completo (con código)."),
+                ("`!autoconocer_corto`", "Informe sin código embebido."),
+                ("`!informe`", "Exporta el informe a `memory/Atlas_Memory/backups/`."),
+                ("`!reflexionar`", "Atlas analiza la conversación actual y guarda aprendizajes."),
+                ("`!mejorar`", "Busca mejoras recomendadas en la web (only URLs, no toca código)."),
+            ]:
+                st.markdown(f"- {c}  \n  {d}")
+
+        with tab_ex:
+            st.markdown("#### 📝 Modo Examen")
+            st.markdown(
+                "Comando: `!examen <material> capítulos X al Y [especs]`"
+            )
+            st.code(
+                "!examen Compendio Bidart capítulos 7 al 9 "
+                "3 conceptuales 4 desarrollo 3 V/F",
+                language="bash",
+            )
+            st.caption(
+                "Las especificaciones son opcionales. Tras iniciar, respondé las preguntas en el chat. "
+                "Cuando termines, Atlas corrige y genera el informe final."
+            )
+
+        st.divider()
+        if st.button("Cerrar", use_container_width=True, key="btn_cerrar_ayuda"):
+            st.rerun()
+
+    modal()
+
 def renderizar_examen():
     if not st.session_state.examen_activo:
         return
@@ -896,43 +994,11 @@ if prompt := st.chat_input("Escribí tu mensaje o usá comandos (!ayuda)..."):
         with st.chat_message("assistant"):
             # !AYUDA
             if comando in ["!ayuda", "!help"]:
-                st.info("""
-🧠 COMANDOS DISPONIBLES - ATLAS v3.4
-
-🔄 Sistema y RAG:
-• `!indexar` - Reconstruir índice semántico
-• `!limpiar` o `!limpiar_historial` - Borrar historial
-• `!historial` - Ver estado del historial
-• `!categorias` - Listar categorías de memoria
-• `!agentes` - Listar agentes disponibles
-• `!seguridad` - Reporte de seguridad
-• `!stats` - Estadísticas de ChromaDB
-
-📏 Reglas Temporales:
-• `!reglas [texto]` - Agregar regla temporal
-• `!reglas` - Ver reglas activas
-• `!limpiar_reglas` - Eliminar todas las reglas
-
-🧠 Memoria Persistente:
-• `!memoria` - Revisar conversaciones y guardar recuerdos
-• `!ver_memoria` - Ver qué hay guardado
-
-📔 Diario Personal:
-• `!diario agregar [texto]` - Guardar entrada
-• `!diario leer` - Leer entradas de hoy
-• `!diario buscar [término]` - Buscar en diarios
-
-🪞 Auto-conocimiento:
-• `!autoconocer` - Informe completo
-• `!autoconocer_corto` - Informe sin código
-• `!informe` - Exportar informe a archivo
-• `!reflexionar` - Analizar conversaciones
-• `!mejorar` - Buscar mejores prácticas
-
-📝 Modo Examen:
-• `!examen [material] [capítulos X al Y] [especificaciones]`
-Ej: `!examen Compendio Bidart capítulos 7 al 9 3 conceptuales 4 desarrollo 3 V/F`
-""")
+                # El modal se invoca al final del flujo para no perturbar
+                # el orden de 'with st.chat_message'.
+                st.session_state["_mostrar_ayuda"] = True
+                st.success("📚 Abro el panel de ayuda.")
+                continue
 
             # !REGLAS
             elif comando == "!reglas":
@@ -1216,6 +1282,12 @@ if st.session_state.examen_activo:
     with st.container():
         st.divider()
         renderizar_examen()
+
+# ============================================
+# MODAL DE AYUDA (si se solicitó en este turno)
+# ============================================
+if st.session_state.pop("_mostrar_ayuda", False):
+    _render_ayuda_modal()
 
 # ============================================
 # FOOTER

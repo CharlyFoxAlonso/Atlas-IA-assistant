@@ -18,8 +18,11 @@ chromadb>=0.5.0,<0.6.0
 sentence-transformers>=3.0.0,<4.0.0
 numpy>=2.0.0,<3.0.0
 
-# Búsqueda web (nombre correcto del paquete)
+# Búsqueda web
+# - duckduckgo-search: gratis, sin API key (default).
+# - tavily-python: opcional. Activá si usás BRAVE_API_KEY/TAVILY_API_KEY/SEARXNG_URL.
 duckduckgo-search>=6.1.0,<8.0.0
+tavily-python>=0.3.0,<1.0.0
 
 # Procesamiento de documentos
 pypdf>=4.0.0,<6.0.0
