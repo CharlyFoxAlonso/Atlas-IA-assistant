@@ -18,6 +18,9 @@ import logging
 from typing import List, Dict, Optional
 
 import requests as _requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
