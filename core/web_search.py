@@ -4,10 +4,9 @@ Búsqueda web en cadena con fallback.
 Atlas v3.4 — intento automático entre varios backends.
 
 Jerarquía (intentamos en orden):
-  1. DuckDuckGo (gratis, sin API key)        — default
-  2. Brave Search (gratis con BRAVE_API_KEY)— sostenibilidad
-  3. Tavily (gratis con TAVILY_API_KEY)     — resúmenes para IA
-  4. SearXNG (auto-hospedado en SEARXNG_URL)— fallback privado
+  1. Tavily (gratis con TAVILY_API_KEY)      — primera opción, optimizado para IA
+  2. SearXNG (auto-hospedado, SEARXNG_URL)   — fallback privado self-hosted
+  3. DuckDuckGo (gratis, sin API key)        — fallback universal
 
 Cada backend expone:
     _disponible() -> bool
@@ -17,6 +16,8 @@ Cada backend expone:
 import os
 import logging
 from typing import List, Dict, Optional
+
+import requests as _requests
 
 logger = logging.getLogger(__name__)
 
@@ -58,51 +59,6 @@ def _ddgs_buscar(query: str, max_resultados: int = 5) -> List[Dict[str, str]]:
     except Exception as e:
         return [{"error": f"duckduckgo: {str(e)}"}]
     return resultados
-
-
-# ============================================
-# Backend Brave Search (API key BRAVE_API_KEY)
-# ============================================
-
-import requests as _requests
-
-
-def _brave_disponible() -> bool:
-    return bool(os.getenv("BRAVE_API_KEY"))
-
-
-def _brave_buscar(query: str, max_resultados: int = 5) -> List[Dict[str, str]]:
-    api_key = os.getenv("BRAVE_API_KEY")
-    if not api_key:
-        return [{"error": "BRAVE_API_KEY no configurada"}]
-    try:
-        resp = _requests.get(
-            "https://api.search.brave.com/res/v1/web/search",
-            headers={
-                "Accept": "application/json",
-                "Accept-Encoding": "gzip",
-                "X-Subscription-Token": api_key,
-            },
-            params={
-                "q": query,
-                "count": max_resultados,
-            },
-            timeout=15,
-        )
-        if resp.status_code != 200:
-            return [{"error": f"brave HTTP {resp.status_code}: {resp.text[:200]}"}]
-        data = resp.json()
-        resultados = []
-        for r in data.get("web", {}).get("results", []):
-            resultados.append({
-                "titulo": r.get("title", ""),
-                "url": r.get("url", ""),
-                "snippet": r.get("description", "")[:400],
-                "fuente": "brave",
-            })
-        return resultados
-    except Exception as e:
-        return [{"error": f"brave: {str(e)}"}]
 
 
 # ============================================
@@ -191,10 +147,9 @@ def _searxng_buscar(query: str, max_resultados: int = 5) -> List[Dict[str, str]]
 # ============================================
 
 _BACKENDS = [
-    ("duckduckgo", _ddgs_disponible, _ddgs_buscar),
-    ("brave",      _brave_disponible, _brave_buscar),
     ("tavily",     _tavily_disponible, _tavily_buscar),
     ("searxng",    _searxng_disponible, _searxng_buscar),
+    ("duckduckgo", _ddgs_disponible, _ddgs_buscar),
 ]
 
 
@@ -255,8 +210,8 @@ def buscar_web(query: str, max_resultados: int = 5) -> List[Dict[str, str]]:
         return [{
             "error": (
                 "Ningún backend de búsqueda disponible. "
-                "Activá DuckDuckGo (pip install duckduckgo-search) "
-                "o configurá BRAVE_API_KEY / TAVILY_API_KEY / SEARXNG_URL."
+                "Instalá duckduckgo-search (pip install duckduckgo-search) "
+                "o configurá TAVILY_API_KEY / SEARXNG_URL en tu .env."
             )
         }]
 
