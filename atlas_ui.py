@@ -209,8 +209,11 @@ with st.sidebar:
         try:
             stats = obtener_estadisticas()
             st.metric("Chunks", stats['total_chunks'])
-        except:
+            if stats['total_chunks'] == 0:
+                st.caption("⚠️ RAG vacío: ejecutá `!indexar`")
+        except Exception as e:
             st.metric("Chunks", "?")
+            st.caption(f"RAG no inicializado: {type(e).__name__}")
 
     reglas_activas = listar_reglas()
     if reglas_activas:

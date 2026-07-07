@@ -7,6 +7,7 @@ se necesita una búsqueda, no al importar este módulo.
 """
 import os
 import re
+from datetime import datetime
 
 # ============================================
 # CONFIGURACIÓN
@@ -23,6 +24,10 @@ def _get_collection():
     """
     Inicializa perezosamente el cliente de ChromaDB y la colección.
     Sólo se carga al primer uso (primera búsqueda o indexación).
+    Si la DB existente tiene un formato incompatible (DB persistida
+    con una versión vieja de ChromaDB), la migra automáticamente
+    respaldando el archivo y restaurando desde cero (se reconstruye
+    con `!indexar`).
     """
     global _cliente, _coleccion, _embedding_fn
     if _coleccion is not None:
@@ -31,16 +36,45 @@ def _get_collection():
     import chromadb
     from chromadb.utils import embedding_functions
 
-    _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="paraphrase-multilingual-MiniLM-L12-v2"
-    )
-    _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
-    _coleccion = _cliente.get_or_create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=_embedding_fn,
-        metadata={"hnsw:space": "cosine"}
-    )
-    return _coleccion
+    try:
+        _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _coleccion = _cliente.get_or_create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=_embedding_fn,
+            metadata={"hnsw:space": "cosine"}
+        )
+        return _coleccion
+    except (KeyError, RuntimeError, ValueError) as e:
+        # DB incompat (formato viejo). Respaldo y reintento limpio.
+        from core.security import log_seguridad
+        log_seguridad("VECTOR_DB_INCOMPAT", f"Reformateando {CHROMA_PATH}: {type(e).__name__}: {e}")
+        import shutil
+        if os.path.exists(CHROMA_PATH):
+            backup = CHROMA_PATH + ".incompat." + datetime.now().strftime("%Y%m%d_%H%M%S")
+            try:
+                shutil.move(CHROMA_PATH, backup)
+            except Exception:
+                # Si no se puede mover (archivo bloqueado), abortar
+                raise RuntimeError(
+                    f"No se pudo migrar {CHROMA_PATH}. Cerrá Atlas (y Ollama si lo usás) "
+                    f"y borrá manualmente la carpeta vector_db."
+                ) from e
+        _coleccion = None
+        _cliente = None
+        # Reintentar una vez con carpeta limpia
+        _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _coleccion = _cliente.get_or_create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=_embedding_fn,
+            metadata={"hnsw:space": "cosine"}
+        )
+        return _coleccion
 
 
 # ============================================
