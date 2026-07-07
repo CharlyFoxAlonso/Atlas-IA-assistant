@@ -1,16 +1,52 @@
-modelos_nvidia_disponibles.txt
-probar_brain.py
-probrar_director.py
-probar_intent.py
-probar_ocr.py
-probar_researcher.py
-test_nvidia.py
+# ==========================================
+# ENTORNO VIRTUAL Y DEPENDENCIAS
+# ==========================================
+venv/
+env/
+ENV/
+.venv/
+
+# ==========================================
+# VARIABLES DE ENTORNO (NUNCA SUBIR SECRETS)
+# ==========================================
+.env
+.env.local
+.env.production
+*.env
+
+# ==========================================
+# ARCHIVOS COMPILADOS DE PYTHON
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ==========================================
+# IDEs Y EDITORES
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==========================================
+# DATOS PERSONALES Y MEMORIA (PRIVADO)
+# ==========================================
+memory/Atlas_Memory/01_Perfil/
+memory/Atlas_Memory/02_Memoria/
 memory/Atlas_Memory/03_Conocimiento/
 memory/Atlas_Memory/04_Univercidad/
-memory/Atlas_Memory/05_Proyectos/
+memory/Atlas_Memory/05_Finanzas/
 memory/Atlas_Memory/06_Diario/
 memory/Atlas_Memory/07_Salud/
-memory/Atlas_Memory/08_Finanzas/
+memory/Atlas_Memory/08_Proyectos/
 memory/Atlas_Memory/09_Multimedia/
 memory/Atlas_Memory/10_Inbox_crudo/
 memory/Atlas_Memory/11_Automatizaciones/
@@ -18,38 +54,55 @@ memory/Atlas_Memory/12_Scripts/
 memory/Atlas_Memory/13_IA/
 memory/Atlas_Memory/14_RAG/
 memory/Atlas_Memory/99_Buckups/
-config/__pycache__/
-agents/__pycache__/
-__pycache__/
-core/__pycache__/
-memory/cache.json/
 memory/Atlas_Memory/backups/
-vector_db/
-temp_local_ingestion
-temp_ingestion
-Atlas_Installer.bat
-atlas_security.log
-scripts/__pycache__/
-memory/Atlas_Memory/01_Perfil/
-memory/Atlas_Memory/02_Memoria/
-memory/Atlas_Memory/03_Conocimiento/
-memory/Atlas_Memory/04_Univercidad/
-memory/Atlas_Memory/06_Diario/
+memory/Atlas_Memory/chats/
 memory/Atlas_Memory/00_Sistema/Configuracion/
 memory/Atlas_Memory/00_Sistema/Personalidad/
 memory/Atlas_Memory/00_Sistema/Versiones/
-memory/Atlas_Memory/02_Memoria/Resumenes/
-memory/Atlas_Memory/03_Conocimiento/Derecho/Ingestion_2026-07-03_02-14_derechoshumanos_publicaciones_colecciond_03940fe8.md
-memory/Atlas_Memory/03_Conocimiento/Derecho/Local_2026-07-03_04-49_COMPENDIO_DE_DERECHO_CONSTITUC_fe397059.md
-memory/Atlas_Memory/03_Conocimiento/Derecho/Local_2026-07-03_07-02_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md
-memory/Atlas_Memory/03_Conocimiento/Derecho/Local_2026-07-03_08-00_SAGUES_NESTOR_MANUAL_DE_DERECH_ec66615f.md
-memory/Atlas_Memory/03_Conocimiento/Derecho/Local_2026-07-04_04-56_BALBIN_MANUAL_DE_DERECHO_ADMIN_3ad69c3c.md
-memory/Atlas_Memory/03_Conocimiento/Estadistica/
-memory/Atlas_Memory/03_Conocimiento/Estudio/
-memory/Atlas_Memory/04_Univercidad/Estadistica/Clase 1 parte 1- Estadística - Conceptos básicos - video.pdf
-.env
-**/04_Univercidad/
-**/03_Conocimiento/
-**/02_Memoria/
-**/01_Perfil/
-**/06_Diario/
+
+# Base de datos vectorial (ChromaDB) - Carpeta entera
+vector_db/
+
+# ==========================================
+# LOGS Y TEMPORALES
+# ==========================================
+*.log
+temp/
+tmp/
+captures/
+temp_local_ingestion/
+temp_ingestion/
+
+# ==========================================
+# ARCHIVOS DE SISTEMA
+# ==========================================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ==========================================
+# DOCUMENTOS PROCESADOS (PDFs, DOCX, etc.)
+# ==========================================
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+*.doc
+*.ppt
+*.xls
+
+# ==========================================
+# MODELOS LOCALES (Ollama) - Muy pesados
+# ==========================================
+models/
+*.gguf
+
+# ==========================================
+# ATLAS INSTALADOR (legacy)
+# ==========================================
+Atlas_Installer.bat
+
+# ==========================================
+# CACHE LOCAL
+# ==========================================
+memory/cache.json/
