@@ -3,15 +3,38 @@ Módulo de seguridad de Atlas.
 Protecciones básicas contra ataques comunes.
 """
 import os
+import sys
 import logging
 from datetime import datetime
 
-# Configurar logging de seguridad
-logging.basicConfig(
-    filename='atlas_security.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# Forzar UTF-8 en stdout/stderr para que los mensajes de logging estén
+# en el mismo encoding que luego se lee del archivo (Windows por defecto
+# usa cp1252 y rompe la lectura UTF-8 desde el archivo).
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except (AttributeError, OSError):
+    pass
+
+# Crear logger dedicado con FileHandler explícito en UTF-8
+_LOG_PATH = "atlas_security.log"
+_logger_seguridad = logging.getLogger("atlas_seguridad")
+_logger_seguridad.setLevel(logging.INFO)
+_logger_seguridad.propagate = False
+try:
+    # Eliminar handlers previos para evitar duplicación por reimports
+    for h in list(_logger_seguridad.handlers):
+        _logger_seguridad.removeHandler(h)
+    _fh = logging.FileHandler(_LOG_PATH, encoding="utf-8")
+    _fh.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    _logger_seguridad.addHandler(_fh)
+except Exception:
+    # Si falla el FileHandler, caer a la config básica (sin garantizar utf-8)
+    logging.basicConfig(
+        filename=_LOG_PATH,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
 
 # Base de memoria (debe coincidir con la usada en otros módulos)
 BASE_MEMORIA = "memory/Atlas_Memory"
@@ -107,7 +130,7 @@ def log_seguridad(evento, detalle):
         evento: Tipo de evento (ACCESO_DENEGADO, INYECCION_DETECTADA, etc.)
         detalle: Descripción del evento
     """
-    logging.warning(f"{evento}: {detalle}")
+    _logger_seguridad.warning(f"{evento}: {detalle}")
 
 
 def verificar_ollama_localhost():
@@ -196,13 +219,11 @@ def reporte_seguridad_completo():
 
     # Contar eventos de seguridad en el log
     try:
-        with open('atlas_security.log', 'r', encoding='utf-8') as f:
-            lineas = f.readlines()
-            eventos_recientes = [l for l in lineas[-10:] if l.strip()]
-            reporte["verificaciones"]["eventos_recientes"] = {
-                "cantidad": len(eventos_recientes),
-                "ultimos": eventos_recientes[-3:] if eventos_recientes else []
-            }
+        eventos_recientes = _leer_ultimas_lineas_log(_LOG_PATH, n=10)
+        reporte["verificaciones"]["eventos_recientes"] = {
+            "cantidad": len(eventos_recientes),
+            "ultimos": eventos_recientes[-3:] if eventos_recientes else []
+        }
     except FileNotFoundError:
         reporte["verificaciones"]["eventos_recientes"] = {
             "cantidad": 0,
@@ -210,3 +231,34 @@ def reporte_seguridad_completo():
         }
 
     return reporte
+
+
+def _leer_ultimas_lineas_log(ruta: str, n: int = 10) -> list:
+    """
+    Lee las últimas N líneas del log de seguridad de manera
+    tolerante a problemas de encoding (el log puede contener
+    bytes en cp1252 si fue escrito por procesos que no usan UTF-8).
+
+    Implementación:
+      1. Intenta UTF-8 estricto.
+      2. Si falla, intenta lectura binaria + decodificación con reemplazo
+         para evitar UnicodeDecodeError.
+
+    Retorna una lista de líneas (con saltos), filtrando vacías.
+    """
+    lineas = []
+
+    try:
+        with open(ruta, "r", encoding="utf-8") as f:
+            lineas = f.readlines()
+    except UnicodeDecodeError:
+        # Fallback binario con reemplazo (modo permisivo)
+        try:
+            with open(ruta, "rb") as f:
+                raw = f.read()
+            texto = raw.decode("utf-8", errors="replace")
+            lineas = texto.splitlines(keepends=True)
+        except Exception:
+            return []
+
+    return [l for l in lineas[-n:] if l.strip()]
