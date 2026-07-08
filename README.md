@@ -215,20 +215,20 @@ The web UI is divided into intuitive sections:
 ### Screenshots
 
 **1. Main Chat Interface & Model Selection**
-![Main Chat UI](docs/01_main_chat_ui.png)
-*Interactive chat with real-time model switching between cloud (DeepSeek V4 Pro, Llama 3.1) and local models (Qwen3 8B)*
+![Main Chat UI](docs/01_chat_ui.png)
+*Interactive chat with real-time model switching between cloud and local models.*
 
-**2. Commands Reference Panel**
-![Commands Panel](docs/02_commands_panel.png)
-*Comprehensive !help command reference with categorized commands for RAG, memory, agents, and system management*
+**2. Cloud Mode (Prometeo) & Advanced Models**
+![Prometeo Cloud UI](docs/02_chat_prometeo_ui.png)
+*Using high-tier cloud models like DeepSeek V4 Pro or Llama 3.1 for complex tasks.*
 
-**3. Document Processing & RAG Ingestion**
-![Document Upload](docs/03_document_upload.png)
-*Drag & drop interface for uploading PDFs, with destination folder selection and cloud processing via Prometheus*
+**3. Commands Reference Panel**
+![Commands Panel](docs/03_help_command.png)
+*Comprehensive !help command reference with categorized commands for RAG, memory, agents, and system management.*
 
-**4. Local Mode with Privacy & Research Agent**
-![Local Mode Chat](docs/04_local_mode_chat.png)
-*100% private local mode using Ollama (Qwen3 8B) with researcher agent providing sourced answers from web and local documents*
+**4. Document Processing & RAG Ingestion**
+![RAG Processing](docs/04_rag_processing.png)
+*Drag & drop interface for uploading PDFs, with destination folder selection and cloud processing via Prometheus.*
 
 ---
 
