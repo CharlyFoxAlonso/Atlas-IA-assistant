@@ -82,8 +82,10 @@ def construir_indice():
                         print(f"   ❌ Error: {error}")
                 
                 except Exception as e:
+                    import traceback
+                    error_detail = traceback.format_exc()
                     print(f"   ❌ Error procesando {archivo}: {str(e)}")
-                    log_seguridad("INDEXER_ERROR", f"Error indexando {ruta_relativa}: {str(e)}")
+                    log_seguridad("INDEXER_ERROR", f"Error indexando {ruta_relativa}: {str(e)}\n{error_detail}")
     
     print(f"\n✅ Indexación completa: {len(archivos_indexados)} archivos procesados")
     return archivos_indexados

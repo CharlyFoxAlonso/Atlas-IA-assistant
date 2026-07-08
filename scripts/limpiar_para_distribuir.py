@@ -355,10 +355,9 @@ def limpiar_atlas():
             "",
             "# UI",
             "streamlit>=1.30.0",
-            "",
-            "# Seguridad",
-            "cryptography>=41.0.0",
-        ]
+             "",
+             "# Seguridad",
+         ]
     )
     
     print("   [OK] requirements.txt creado")

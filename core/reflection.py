@@ -97,7 +97,7 @@ def generar_sugerencias_mejora(historial):
         sugerencias.append("⚖️ Hay muchas consultas sobre derecho. Verificá que el RAG tenga los capítulos clave de Bidart y Sagues.")
     
     if patrones.get("finanzas", 0) > 2:
-        sugerencias.append("💰 Consultas frecuentes sobre criptomonedas. El agente de finanzas está funcionando bien.")
+        sugerencias.append("📈 Optimizar el sistema de búsqueda semántica para mejorar la precisión en documentos largos.")
     
     if patrones.get("emociones", 0) > 2:
         sugerencias.append("💭 Charly comparte emociones regularmente. El agente psicólogo es importante para él.")

@@ -260,7 +260,7 @@ def obtener_arquitectura_detallada():
         "requests", "ddgs", "PIL", "pyautogui", "pytesseract",
         "SpeechRecognition", "vosk", "edge_tts", "pyttsx3",
         "pygame", "pypdf", "pdfplumber", "streamlit",
-        "cryptography", "sounddevice", "chromadb", "sentence_transformers",
+        "sounddevice", "chromadb", "sentence_transformers",
         "openai", "python-dotenv", "groq", "pdf2image"
     ]
 

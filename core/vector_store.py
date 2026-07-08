@@ -34,6 +34,8 @@ def _get_collection():
         return _coleccion
 
     import chromadb
+    import os
+    os.environ["ANONYMIZED_TELEMETRY"] = "False"
     from chromadb.utils import embedding_functions
 
     try:
@@ -204,7 +206,7 @@ def agregar_documento(doc_id, texto, metadata=None):
 
     try:
         existing = col.get(where={"nombre": doc_id})
-        if existing['ids']:
+        if existing and 'ids' in existing and existing['ids']:
             col.delete(ids=existing['ids'])
     except Exception:
         pass

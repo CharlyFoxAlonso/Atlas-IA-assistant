@@ -264,7 +264,7 @@ def pensar_con_streaming(pregunta, motor=None, modelo_nube=None, modelo_local=No
         return
 
     # --------------------------------------------------------
-    # FLUJO NORMAL (sin interceptor financiero)
+    # FLUJO NORMAL
     # --------------------------------------------------------
     perfil = cargar_perfil_charly()
     historial_contexto = formatear_historial()
