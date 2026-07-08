@@ -154,9 +154,8 @@ def procesar_archivo_local(archivo_streamlit, categoria: str = "03_Conocimiento/
             pass
         
         # PASO 3: Digerir con el motor elegido (CON PARALELISMO)
-        motor_nombre = "Atlas Local" if motor == "atlas" else "Prometeo Nube"
         tipo_fuente = "Audio/Video Transcrito" if extension in FORMATOS_MULTIMEDIA else "Archivo Local"
-        yield {"estado": "procesando", "mensaje": f"⚡ {motor_nombre} digiriendo el contenido con {max_workers} workers..."}
+        yield {"estado": "procesando", "mensaje": f"⚡ Procesando el contenido con {max_workers} workers en paralelo..."}
         
         texto_procesado = ""
         for paso in digerir_documento_con_progreso(

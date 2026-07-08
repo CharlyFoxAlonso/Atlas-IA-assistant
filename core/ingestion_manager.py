@@ -70,8 +70,7 @@ def procesar_pipeline_ingestion(url: str, categoria: str = "Estudio",
             pass
         
         # PASO 3: Digerir con el motor elegido (CON PARALELISMO)
-        motor_nombre = "Atlas Local" if motor == "atlas" else "Prometeo Nube"
-        yield {"estado": "procesando", "mensaje": f"⚡ {motor_nombre} está digiriendo el documento con {max_workers} workers..."}
+        yield {"estado": "procesando", "mensaje": f"⚡ Procesando el documento con {max_workers} workers en paralelo..."}
         texto_procesado = ""
         
         for paso in digerir_documento_con_progreso(
