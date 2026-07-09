@@ -1,4 +1,4 @@
-# 🧠 Atlas v3.4 - AI Assistant System
+# 🧠 Atlas v3.8 - AI Assistant System
 
 <div align="center">
 
@@ -56,21 +56,22 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       ATLAS v3.4 - CORE                     │
+│                       ATLAS v3.7 - CORE                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Router Model → Classifies intent & assigns specialized agent│
 ├─────────────────────────────────────────────────────────────┤
 │  Dual-Engine Chat Execution                                 │
 │  ├─ ATLAS (Local)  → Ollama (Qwen 3, Gemma 3, DeepSeek R1)  │
-│  └─ PROMETEO (Nube) → NVIDIA NIM (Llama 3.3, DeepSeek V4)   │
+│  └─ CLOUD (Nube)   → NVIDIA NIM / Groq Cloud API            │
 ├─────────────────────────────────────────────────────────────┤
 │  Semantic RAG (ChromaDB) with Lazy-Loading                  │
-│  ├─ Embeddings: paraphrase-multilingual-MiniLM-L12-v2       │
+│  ├─ Embeddings: paraphrase-multilingual-MiniL-L12-v2       │
 │  └─ Hybrid search: semantic + token-matching fallbacks      │
 ├─────────────────────────────────────────────────────────────┤
-│  Dual Digestion Engine (Isolated process)                   │
+│  Triple Digestion Engine (Isolated process)                   │
 │  ├─ Local Digestion: Ollama-based parsing & summarization    │
-│  └─ Cloud Digestion: Parallel workers via NVIDIA NIM API    │
+│  ├─ Cloud (Prometeo): Parallel workers via NVIDIA NIM API    │
+│  └─ Cloud (Groq): Ultra-fast processing via Groq Cloud       │
 ├─────────────────────────────────────────────────────────────┤
 │  Multimodal Integration                                     │
 │  ├─ Vision: Screen capture & layout-preserving Tesseract OCR │
@@ -102,10 +103,10 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
   - `arquitecto`: Structural system design and code refactoring.
 - Dynamic emotion and academic intent classification.
 
-### 🔀 Hybrid Models & Dual-Digestion
+### 🔀 Hybrid Models & Triple-Digestion
 - Chat and document ingestion are **decoupled**:
-  - Chat via local Ollama models (`qwen3:8b`, `deepseek-r1:14b`) or cloud NVIDIA NIM APIs (`deepseek-v4-pro`, `llama-3.3-70b-instruct`).
-  - Digestion (PDF ingestion) can run **locally** to keep sensitive files off the web, using your choice of downloaded Ollama models, or **in the cloud** using multi-threaded parallel workers for speed.
+  - Chat via local Ollama models (`qwen3:8b`, `deepseek-r1:14b`) or high-performance cloud APIs: **NVIDIA NIM** (`deepseek-v4-pro`, `llama-3.3-70b-instruct`) and **Groq Cloud** (`llama-3.3-70b-versatile`).
+  - Digestion (PDF ingestion) can run **locally** to keep sensitive files off the web, or in the cloud using either **NVIDIA NIM** (multi-threaded parallel workers) or **Groq Cloud** (ultra-fast processing), with a dynamic model selector in the UI.
 
 ### 💾 Multi-Session Chat & Persistent Memory
 - **Persistent Chat Tabs:** Create and delete conversations in the sidebar. Chat histories are saved as JSON files in `memory/Atlas_Memory/chats/` and survive app restarts.
@@ -276,13 +277,15 @@ We prioritize maintaining a secure, lightweight, and robust assistant over "feat
 - [ ] **Enhanced Dashboard:** Display real-time CPU, RAM, and GPU usage in the sidebar.
 
 ### v3.6 (Connectivity & Polish)
-- [ ] **FastAPI Integration:** Introduce a lightweight local REST API to interact with Atlas from external platforms (e.g. custom Discord/Telegram clients).
-- [ ] **Edge TTS Fine-Tuning:** Dropdown selector to choose specific regional voices and customize synthesis speech speed.
-- [ ] **Global Profiler:** Exporting/importing profiles will bundle your saved chat sessions together with your documents.
+- [x] **FastAPI Integration:** Lightweight local REST API to interact with Atlas from external platforms.
+- [x] **Edge TTS Fine-Tuning:** Dropdown selector to choose specific regional voices.
+- [x] **Global Profiler:** Exporting/importing profiles bundled with saved chat sessions.
 
 ### v3.7 (Stability & Resilience)
-- [ ] Comprehensive unit test suites for the `digestion_worker.py` and JSON schema validators for saved chat sessions.
-- [ ] Self-documenting commands index that automatically registers new `!` commands.
+- [x] **Groq Cloud Integration:** Full support for ultra-fast inference and document digestion.
+- [x] **Dynamic Model Selection:** Unified selector for cloud models in both chat and ingestion engines.
+- [x] **System-wide Consistency:** Centralized model defaults and synchronized versioning.
+- [x] **RAG Stability:** Enhanced error handling and validation in the digestion worker.
 
 ### v4.0+ (Long-Term Vision)
 - [ ] **Secure Tool-Calling (Function-Calling):** Safe local function-calling utilizing an explicit, user-confirmed whitelist of tasks (e.g. search specific local folders, run math calculations) with absolutely **no unsafe shell-execution allowed**.

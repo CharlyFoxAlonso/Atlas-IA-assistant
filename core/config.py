@@ -25,7 +25,7 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "3.6"
+VERSION = "3.8"
 NOMBRE = "Atlas"
 CODENAME = "Multi-Nube"
 
@@ -39,6 +39,7 @@ URL_OLLAMA = os.getenv("URL_OLLAMA", "http://127.0.0.1:11434/api/chat")
 # ⚡ MODELO NUBE (NVIDIA API - Prometeo)
 # ============================================
 MODELO_NUBE_DEFAULT = os.getenv("MODELO_NUBE", "meta/llama-3.1-70b-instruct")
+MODELO_GROQ_DEFAULT = os.getenv("MODELO_GROQ", "llama-3.3-70b-versatile")
 URL_NVIDIA = "https://integrate.api.nvidia.com/v1"
 
 MODELOS_NUBE_DISPONIBLES = {
@@ -50,6 +51,15 @@ MODELOS_NUBE_DISPONIBLES = {
     "google/gemma-3-12b-it": "Gemma 3 12B (Google)",
     "google/gemma-4-31b-it": "Gemma 4 31B (Google)",
     "nvidia/nemotron-3-ultra-550b-a55b": "Nemotron 3 Ultra 550B",
+}
+
+MODELOS_GROQ_DISPONIBLES = {
+    "llama-3.3-70b-versatile": "Llama 3.3 70B (Versátil)",
+    "llama-3.3-8b-instant": "Llama 3.3 8B (Instant)",
+    "llama-3.1-70b-versatile": "Llama 3.1 70B (Versátil)",
+    "llama-3.1-8b-instant": "Llama 3.1 8B (Instant)",
+    "gemma2-9b-it": "Gemma 2 9B (Google)",
+    "mixtral-8x7b-32702": "Mixtral 8x7B (Mistral)",
 }
 
 MODELOS_DIGESTION = [
@@ -213,6 +223,10 @@ def set_modelo_local(nuevo_modelo: str) -> dict:
 
 def get_modelo_nube() -> str:
     return MODELO_NUBE_DEFAULT
+
+
+def get_modelo_groq() -> str:
+    return MODELO_GROQ_DEFAULT
 
 
 def obtener_info_modelo(modelo_id: str) -> dict:

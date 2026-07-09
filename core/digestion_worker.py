@@ -1,6 +1,6 @@
 """
 core/digestion_worker.py
-Worker de digestión unificado para Atlas v3.4.
+Worker de digestión unificado para Atlas v3.7.
 Soporta motores: "atlas" (Ollama local) y "prometeo" (NVIDIA API).
 Procesa texto crudo → documento Markdown estructurado para indexación RAG.
 """
@@ -37,8 +37,20 @@ Devuelve SOLO el Markdown estructurado. No incluyas preámbulos como "Aquí est�
 
 MODELOS_NUBE_DIGESTION = [
     "meta/llama-3.1-70b-instruct",
+    "meta/llama-3.1-8b-instruct",
+    "meta/llama-3.3-70b-instruct",
+    "deepseek-ai/deepseek-v4-flash",
     "deepseek-ai/deepseek-v4-pro",
+    "google/gemma-3-12b-it",
+    "google/gemma-4-31b-it",
     "nvidia/nemotron-3-ultra-550b-a55b",
+]
+
+MODELOS_GROQ_DIGESTION = [
+    "llama-3.3-70b-versatile",
+    "llama-3.3-8b-instant",
+    "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
 ]
 
 URL_OLLAMA = os.getenv("URL_OLLAMA", "http://127.0.0.1:11434/api/chat")
@@ -165,13 +177,17 @@ def digerir_documento_con_progreso(
         return
 
     motor = motor.lower()
-    if motor not in ("atlas", "prometeo"):
+    if motor not in ("atlas", "prometeo", "groq"):
         yield {"estado": "error", "mensaje": f"❌ Motor de digestión no válido: {motor}"}
         return
 
     if modelo is None:
         if motor == "prometeo":
-            modelo = MODELOS_NUBE_DIGESTION[0]
+            from core.config import MODELO_NUBE_DEFAULT
+            modelo = MODELO_NUBE_DEFAULT
+        elif motor == "groq":
+            from core.config import MODELO_GROQ_DEFAULT
+            modelo = MODELO_GROQ_DEFAULT
         else:
             from core.config import MODELO_LOCAL
             modelo = MODELO_LOCAL

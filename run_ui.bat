@@ -10,7 +10,7 @@ cd /d "%~dp0"
 
 echo ========================================
 echo   🧠 Atlas UI v3.4 - Iniciando...
-echo   Puerto por defecto: 8501
+echo   Puerto por defecto: 8401
 echo ========================================
 echo.
 
@@ -38,7 +38,7 @@ streamlit run atlas_ui.py --server.port 8501
 goto :end
 
 :run
-"%PY_EXE%" -m streamlit run atlas_ui.py --server.port 8501
+"%PY_EXE%" -m streamlit run atlas_ui.py --server.port 8401
 
 :end
 echo.

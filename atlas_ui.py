@@ -1,7 +1,7 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v3.4 - Interfaz Gráfica Híbrida Completa      ║
-║  06/07/2026 - Atlas + Prometeo + RAG Semántico             ║
+║  🧠 ATLAS UI v3.7 - Interfaz Gráfica Híbrida Completa      ║
+║  09/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Chats Múltiples               ║
 ╚════════════════════════════════════════════════════════════╝
@@ -47,11 +47,61 @@ from core.config import (
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="Atlas v3.4",
+    page_title="Atlas v3.7",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ============================================
+# INICIALIZACIÓN ROBUSTA DE ESTADO
+# ============================================
+def _ensure_state():
+    """Garantiza que TODAS las variables de st.session_state existan.
+    Puede llamarse desde el flujo principal, callbacks, dialogs o modales.
+    Usa 'not in' para no sobrescribir valores ya establecidos."""
+    defaults = {
+        "motor_activo": os.getenv("MOTOR_POR_DEFECTO", "atlas").lower(),
+        "modelo_nube": "meta/llama-3.1-70b-instruct",
+        "modelo_local": os.getenv("MODELO_LOCAL", "qwen3:8b"),
+        "modelo_groq": "llama-3.3-70b-versatile",
+        "voz_activa": False,
+        "agente_actual": "general",
+        "autoconocimiento_cache": None,
+        "examen_activo": None,
+        "mostrar_gestion_modelos": False,
+        "motor_ingestion": "atlas",
+        "modelo_ingestion_nube": "meta/llama-3.1-70b-instruct",
+        "modelo_ingestion_local": "qwen3:8b",
+        "modelo_ingestion_groq": "llama-3.3-70b-versatile",
+        "_mostrar_ayuda": False,
+        "messages": [],
+    }
+    for key, default in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default
+
+    # Validar motor_activo contra opciones válidas
+    if st.session_state["motor_activo"] not in ("atlas", "prometeo", "groq"):
+        st.session_state["motor_activo"] = "atlas"
+
+    # Inicialización de chats (una sola vez por sesión)
+    if "chat_activo" not in st.session_state:
+        chats_existentes = listar_chats()
+        if chats_existentes:
+            datos = activar_chat(chats_existentes[0]["id"])
+            st.session_state["chat_activo"] = chats_existentes[0]["id"]
+            st.session_state["messages"] = datos.get("messages", []) if datos else []
+            hb = obtener_historial_brain()
+            set_historial(hb)
+        else:
+            nuevo_id = crear_chat("Chat principal")
+            datos = activar_chat(nuevo_id)
+            st.session_state["chat_activo"] = nuevo_id
+            st.session_state["messages"] = datos.get("messages", []) if datos else []
+            limpiar_historial()
+
+_ensure_state()
 
 # ============================================
 # CSS PERSONALIZADO
@@ -97,53 +147,12 @@ h1, h2, h3 { color: #e94560; }
 """, unsafe_allow_html=True)
 
 # ============================================
-# ESTADO DE SESIÓN (CHATS MÚLTIPLES)
-# ============================================
-if "chat_activo" not in st.session_state:
-    # Inicializar: si ya existen chats, cargar el último; si no, crear uno nuevo
-    chats_existentes = listar_chats()
-    if chats_existentes:
-        datos = activar_chat(chats_existentes[0]["id"])
-        st.session_state.chat_activo = chats_existentes[0]["id"]
-        st.session_state.messages = datos.get("messages", []) if datos else []
-        hb = obtener_historial_brain()
-        set_historial(hb)
-    else:
-        nuevo_id = crear_chat("Chat principal")
-        datos = activar_chat(nuevo_id)
-        st.session_state.chat_activo = nuevo_id
-        st.session_state.messages = datos.get("messages", []) if datos else []
-        limpiar_historial()
-
-if "voz_activa" not in st.session_state:
-    st.session_state.voz_activa = False
-if "agente_actual" not in st.session_state:
-    st.session_state.agente_actual = "general"
-if "autoconocimiento_cache" not in st.session_state:
-    st.session_state.autoconocimiento_cache = None
-if "motor_activo" not in st.session_state:
-    st.session_state.motor_activo = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()
-if "modelo_nube" not in st.session_state:
-    st.session_state.modelo_nube = "meta/llama-3.1-70b-instruct"
-if "modelo_local" not in st.session_state:
-    st.session_state.modelo_local = os.getenv("MODELO_LOCAL", "qwen3:8b")
-if "examen_activo" not in st.session_state:
-    st.session_state.examen_activo = None
-if "mostrar_gestion_modelos" not in st.session_state:
-    st.session_state.mostrar_gestion_modelos = False
-if "motor_ingestion" not in st.session_state:
-    st.session_state.motor_ingestion = "atlas"
-if "modelo_ingestion_nube" not in st.session_state:
-    st.session_state.modelo_ingestion_nube = "meta/llama-3.1-70b-instruct"
-if "modelo_ingestion_local" not in st.session_state:
-    st.session_state.modelo_ingestion_local = "qwen3:8b"
-
-# ============================================
 # SIDEBAR
 # ============================================
 with st.sidebar:
+    _ensure_state()
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("Atlas v3.4")
+    st.title("Atlas v3.8")
     st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
 
     # ========================================
@@ -289,16 +298,21 @@ with st.sidebar:
         "groq": "🚀 Groq Cloud (Ultra Rápido)"
     }
 
+    motor_activo = st.session_state.get("motor_activo", "atlas")
+    if motor_activo not in motor_opciones:
+        motor_activo = "atlas"
+        st.session_state["motor_activo"] = "atlas"
+
     motor_seleccionado = st.selectbox(
         "Elegí el cerebro:",
         options=list(motor_opciones.keys()),
         format_func=lambda x: motor_opciones[x],
-        index=list(motor_opciones.keys()).index(st.session_state.motor_activo),
+        index=list(motor_opciones.keys()).index(motor_activo),
         key="selector_motor"
     )
 
-    if motor_seleccionado != st.session_state.motor_activo:
-        st.session_state.motor_activo = motor_seleccionado
+    if motor_seleccionado != motor_activo:
+        st.session_state["motor_activo"] = motor_seleccionado
         if motor_seleccionado == "atlas":
             st.success("🧠 Modo Atlas activado")
         elif motor_seleccionado == "prometeo":
@@ -310,7 +324,7 @@ with st.sidebar:
     # ========================================
     # 🏠 MODELO LOCAL (solo si Atlas está activo)
     # ========================================
-    if st.session_state.motor_activo == "atlas":
+    if motor_activo == "atlas":
         st.markdown("---")
         st.markdown("**🏠 Modelo local:**")
 
@@ -454,7 +468,7 @@ with st.sidebar:
     # ========================================
     # ⚡ MODELO DE NUBE (solo si Prometeo está activo)
     # ========================================
-    elif st.session_state.motor_activo == "prometeo":
+    elif motor_activo == "prometeo":
         st.markdown("---")
         st.markdown("**⚡ Modelo de nube:**")
 
@@ -486,32 +500,32 @@ with st.sidebar:
     # ========================================
     # 🚀 MODELO GROQ (solo si Groq está activo)
     # ========================================
-    elif st.session_state.motor_activo == "groq":
+    elif motor_activo == "groq":
         st.markdown("---")
         st.markdown("**🚀 Modelos Groq Cloud:**")
 
         modelos_groq = {
-            "llama-3.1-70b-versatile": "Llama 3.1 70B (Equilibrado - Top)",
+            "llama-3.3-70b-versatile": "Llama 3.3 70B (Equilibrado - Top)",
+            "meta-llama/llama-4-scout-17b-16e-instruct": "Llama 4 Scout 17B (Experimental)",
+            "qwen/qwen3-32b": "Qwen 3 32B (Razonamiento)",
+            "qwen/qwen3.6-27b": "Qwen 3.6 27B (Equilibrado)",
             "llama-3.1-8b-instant": "Llama 3.1 8B (Rápido)",
-            "llama-3.3-70b-versatile": "Llama 3.3 70B (Nuevo)",
-            "gemma2-9b-it": "Gemma 2 9B (Google)",
-            "mixtral-8x7b-32768": "Mixtral 8x7B (MoE)",
-            "qwen-2.5-coder-32b": "Qwen 2.5 Coder 32B (Código)",
+            "openai/gpt-oss-120b": "GPT-OSS 120B (Ultra Grande)",
         }
 
         modelo_groq_sel = st.selectbox(
             "Seleccioná un modelo:",
             options=list(modelos_groq.keys()),
             format_func=lambda x: modelos_groq[x],
-            index=list(modelos_groq.keys()).index(st.session_state.modelo_nube) if st.session_state.modelo_nube in modelos_groq else 0,
+            index=list(modelos_groq.keys()).index(st.session_state.modelo_groq) if st.session_state.modelo_groq in modelos_groq else 0,
             key="selector_modelo_groq"
         )
 
-        if modelo_groq_sel != st.session_state.modelo_nube:
-            st.session_state.modelo_nube = modelo_groq_sel
+        if modelo_groq_sel != st.session_state.modelo_groq:
+            st.session_state.modelo_groq = modelo_groq_sel
             st.info(f"🚀 Modelo: {modelos_groq[modelo_groq_sel]}")
 
-        st.caption(f"⚡ Groq API ({st.session_state.modelo_nube.split('-')[0]})")
+        st.caption(f"⚡ Groq API ({st.session_state.modelo_groq.split('-')[0]})")
 
     # ========================================
     # SECCIÓN: Configuración de Digestión
@@ -523,6 +537,7 @@ with st.sidebar:
     digestion_opciones = {
         "atlas": "🧠 Atlas Local (Ollama)",
         "prometeo": "⚡ Prometeo Nube (NVIDIA)",
+        "groq": "🚀 Groq Cloud (Ultra rápido)",
     }
     motor_dig_sel = st.selectbox(
         "Motor para digerir PDFs/archivos:",
@@ -558,23 +573,36 @@ with st.sidebar:
             st.session_state.modelo_ingestion_local = modelo_local_dig
             st.toast(f"Modelo de digestión: {modelo_local_dig}")
 
-    else:
-        modelos_nube_dig = {
-            "meta/llama-3.1-70b-instruct": "Llama 3.1 70B (Equilibrado)",
-            "meta/llama-3.3-70b-instruct": "Llama 3.3 70B (Nuevo)",
-            "deepseek-ai/deepseek-v4-pro": "DeepSeek V4 Pro (Top)",
-            "nvidia/nemotron-3-ultra-550b-a55b": "Nemotron 3 Ultra 550B",
+    elif st.session_state.motor_ingestion == "groq":
+        modelos_groq_dig = {
+            "llama-3.3-70b-versatile": "Llama 3.3 70B (Versátil - Top)",
+            "llama-3.1-70b-versatile": "Llama 3.1 70B (Versátil)",
+            "llama-3.1-8b-instant": "Llama 3.1 8B (Instant)",
         }
+        modelo_groq_dig = st.selectbox(
+            "Modelo Groq para digestión:",
+            options=list(modelos_groq_dig.keys()),
+            format_func=lambda x: modelos_groq_dig[x],
+            index=list(modelos_groq_dig.keys()).index(st.session_state.modelo_ingestion_groq) if st.session_state.modelo_ingestion_groq in modelos_groq_dig else 0,
+            key="selector_modelo_ingestion_groq",
+        )
+        if modelo_groq_dig != st.session_state.modelo_ingestion_groq:
+            st.session_state.modelo_ingestion_groq = modelo_groq_dig
+            st.toast(f"Modelo de digestión: {modelo_groq_dig}")
+
+    else:
+        # Usar modelos disponibles desde la configuración
+        from core.config import MODELOS_NUBE_DISPONIBLES
         modelo_nube_dig = st.selectbox(
             "Modelo nube para digestión:",
-            options=list(modelos_nube_dig.keys()),
-            format_func=lambda x: modelos_nube_dig[x],
-            index=list(modelos_nube_dig.keys()).index(st.session_state.modelo_ingestion_nube) if st.session_state.modelo_ingestion_nube in modelos_nube_dig else 0,
+            options=list(MODELOS_NUBE_DISPONIBLES.keys()),
+            format_func=lambda x: MODELOS_NUBE_DISPONIBLES[x],
+            index=list(MODELOS_NUBE_DISPONIBLES.keys()).index(st.session_state.modelo_ingestion_nube) if st.session_state.modelo_ingestion_nube in MODELOS_NUBE_DISPONIBLES else 0,
             key="selector_modelo_ingestion_nube",
         )
         if modelo_nube_dig != st.session_state.modelo_ingestion_nube:
             st.session_state.modelo_ingestion_nube = modelo_nube_dig
-            st.toast(f"Modelo de digestión: {modelo_nube_dig}")
+            st.toast(f"Modelo de digestión: {MODELOS_NUBE_DISPONIBLES[modelo_nube_dig]}")
 
     st.divider()
 
@@ -594,6 +622,8 @@ with st.sidebar:
             modelo_dig = None
             if motor_dig == "atlas":
                 modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+            elif motor_dig == "groq":
+                modelo_dig = st.session_state.get("modelo_ingestion_groq", "llama-3.3-70b-versatile")
             else:
                 modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
             progreso_container = st.empty()
@@ -619,7 +649,7 @@ with st.sidebar:
 
     archivos_subidos = st.file_uploader(
         "Soltá tus archivos:",
-        type=['pdf', 'txt', 'md', 'docx', 'png', 'jpg', 'jpeg', 
+        type=['pdf', 'txt', 'md', 'docx', 'epub', 'html', 'htm', 'png', 'jpg', 'jpeg', 
               'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 
               'mp4', 'mov', 'avi', 'mkv', 'webm'],
         accept_multiple_files=True,
@@ -661,6 +691,8 @@ with st.sidebar:
             modelo_dig = None
             if motor_dig == "atlas":
                 modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+            elif motor_dig == "groq":
+                modelo_dig = st.session_state.get("modelo_ingestion_groq", "llama-3.3-70b-versatile")
             else:
                 modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
 
@@ -686,6 +718,48 @@ with st.sidebar:
     st.divider()
 
     # ========================================
+    # 🧪 PROMPT PLAYGROUND (Comparador de Modelos)
+    # ========================================
+    st.subheader("🧪 Prompt Playground")
+    st.caption("Enviá un prompt y compará la respuesta de diferentes motores simultáneamente.")
+
+    with st.expander("Abrir Laboratorio de Pruebas", expanded=False):
+        col_play1, col_play2 = st.columns([3, 1])
+        with col_play1:
+            prompt_play = st.text_area("Prompt de prueba:", placeholder="Ej: Explícame la teoría de la relatividad en una frase...", key="play_prompt")
+        with col_play2:
+            st.markdown("**Modelos a probar:**")
+            test_local = st.checkbox("Local (Atlas)", value=True, key="play_test_local")
+            test_nube = st.checkbox("Nube (Prometeo)", value=True, key="play_test_nube")
+            test_groq = st.checkbox("Groq Cloud", value=True, key="play_test_groq")
+
+        if st.button("🚀 Comparar Respuestas", use_container_width=True):
+            if not prompt_play:
+                st.warning("Escribí un prompt primero")
+            else:
+                from core.brain import pensar_sin_streaming
+                from core.config import MODELO_LOCAL, MODELO_NUBE_DEFAULT, MODELO_GROQ_DEFAULT
+                
+                with st.spinner("Consultando cerebros..."):
+                    resultados = {}
+                    
+                    if test_local:
+                        resultados["Local"] = pensar_sin_streaming(prompt_play, motor="atlas", modelo_local=MODELO_LOCAL)
+                    if test_nube:
+                        resultados["Prometeo"] = pensar_sin_streaming(prompt_play, motor="prometeo", modelo_nube=MODELO_NUBE_DEFAULT)
+                    if test_groq:
+                        resultados["Groq"] = pensar_sin_streaming(prompt_play, motor="groq", modelo_groq=MODELO_GROQ_DEFAULT)
+                    
+                    # Renderizado lado a lado
+                    cols_res = st.columns(len(resultados))
+                    for i, (motor, resp) in enumerate(resultados.items()):
+                        with cols_res[i]:
+                            st.markdown(f"**{motor}**")
+                            st.info(resp)
+
+    st.divider()
+
+    # ========================================
     # SECCIÓN: Auto-conocimiento
     # ========================================
     st.subheader("🪞 Auto-conocimiento")
@@ -704,7 +778,7 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.4
+             ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.7
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -815,18 +889,18 @@ Generado: {ahora_str} | Creador: Charly
     # ========================================
     st.subheader("ℹ️ Sistema")
     st.caption(f"🕐 {datetime.now().strftime('%H:%M:%S')}")
-    st.caption(f"🧠 Motor: {st.session_state.motor_activo.upper()}")
-    if st.session_state.motor_activo == "atlas":
+    st.caption(f"🧠 Motor: {motor_activo.upper()}")
+    if motor_activo == "atlas":
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-    st.caption("📅 Versión: 3.2")
+        st.caption("📅 Versión: 3.7")
 
 # ============================================
 # HEADER PRINCIPAL
 # ============================================
 st.title("Atlas")
-st.caption(f"Asistente híbrido v3.4 | Motor: {st.session_state.motor_activo.upper()} | Escribí, hablá o usá comandos (!ayuda)")
+    st.caption(f"Asistente híbrido v3.8 | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -839,8 +913,10 @@ st.divider()
 # ============================================
 def _render_ayuda_modal():
     """Muestra el panel de comandos en un modal centrado y prolijo."""
-    @st.dialog("🧠 Atlas v3.4 — Comandos", width="large")
+    _ensure_state()
+    @st.dialog("🧠 Atlas v3.7 — Comandos", width="large")
     def modal():
+        _ensure_state()
         st.markdown(
             """
             <div style="font-size:16px; line-height:1.6">
@@ -936,6 +1012,7 @@ def _render_ayuda_modal():
     modal()
 
 def renderizar_examen():
+    _ensure_state()
     if not st.session_state.examen_activo:
         return
 
@@ -953,8 +1030,8 @@ def renderizar_examen():
             correccion = corregir_respuesta(
                 r["pregunta"],
                 r["respuesta_usuario"],
-                motor=st.session_state.motor_activo,
-                modelo_nube=st.session_state.modelo_nube if st.session_state.motor_activo == "prometeo" else None
+                motor=st.session_state.get("motor_activo", "atlas"),
+                modelo_nube=st.session_state.get("modelo_nube", "meta/llama-3.1-70b-instruct") if st.session_state.get("motor_activo", "atlas") == "prometeo" else None
             )
             resultados.append({
                 "pregunta": r["pregunta"],
@@ -1214,8 +1291,8 @@ Ruta de DB: {stats['ruta_db']}""")
                         try:
                             examen_data = ejecutar_examen_completo(
                                 pregunta_examen,
-                                motor=st.session_state.motor_activo,
-                                modelo_nube=st.session_state.modelo_nube if st.session_state.motor_activo == "prometeo" else None
+                                motor=st.session_state.get("motor_activo", "atlas"),
+                                modelo_nube=st.session_state.get("modelo_nube", "meta/llama-3.1-70b-instruct") if st.session_state.get("motor_activo", "atlas") == "prometeo" else None
                             )
                             if not examen_data.get("preguntas"):
                                 st.error("❌ No se pudo generar el examen.")
@@ -1265,29 +1342,30 @@ Ruta de DB: {stats['ruta_db']}""")
     else:
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
-            stop_placeholder = st.empty()
 
             respuesta_completa = ""
             agente_detectado = None
             pensamiento = None
             error_msg = None
-            stopped_by_user = False
 
             # Setup thread communication
             q = Queue()
-            stop_event = threading.Event()
+
+            # Capturar valores de sesión ANTES de lanzar el thread
+            _motor_chat = st.session_state.get("motor_activo", "atlas")
+            _modelo_nube_chat = st.session_state.get("modelo_nube", "meta/llama-3.1-70b-instruct")
+            _modelo_local_chat = st.session_state.get("modelo_local", "qwen3:8b")
+            _modelo_groq_chat = st.session_state.get("modelo_groq", "llama-3.3-70b-versatile")
 
             def worker():
                 try:
                     for p, r in pensar_con_streaming(
                         prompt,
-                        motor=st.session_state.motor_activo,
-                        modelo_nube=st.session_state.modelo_nube if st.session_state.motor_activo == "prometeo" else None,
-                        modelo_local=st.session_state.modelo_local if st.session_state.motor_activo == "atlas" else None
+                        motor=_motor_chat,
+                        modelo_nube=_modelo_nube_chat if _motor_chat == "prometeo" else None,
+                        modelo_local=_modelo_local_chat if _motor_chat == "atlas" else None,
+                        modelo_groq=_modelo_groq_chat if _motor_chat == "groq" else None
                     ):
-                        if stop_event.is_set():
-                            q.put(("stop", None, None))
-                            return
                         q.put(("chunk", p, r))
                     q.put(("done", None, None))
                 except Exception as e:
@@ -1311,33 +1389,20 @@ Ruta de DB: {stats['ruta_db']}""")
                             message_placeholder.markdown(respuesta_completa + "▌")
                     elif msg_type == "done":
                         break
-                    elif msg_type == "stop":
-                        stopped_by_user = True
-                        break
                     elif msg_type == "error":
                         error_msg = r
                         break
                 except Empty:
                     pass
 
-                if stop_placeholder.button("🛑 Detener pensamiento", key=f"stop_{msg_id}"):
-                    stop_event.set()
-                    stop_placeholder.warning("Deteniendo...")
-
                 time.sleep(0.05)
 
             if respuesta_completa:
                 message_placeholder.markdown(respuesta_completa)
-            elif not error_msg and not stopped_by_user:
+            elif not error_msg:
                 message_placeholder.warning("No pude generar respuesta.")
 
-            if stopped_by_user:
-                if len(st.session_state.messages) >= 2:
-                    st.session_state.messages.pop()
-                    if len(st.session_state.messages) > 0:
-                        st.session_state.messages.pop()
-                st.toast("🛑 Generación detenida. Podés reescribir tu mensaje.")
-            elif error_msg:
+            if error_msg:
                 message_placeholder.error(f"❌ Error: {error_msg}")
                 st.session_state.messages.append({"role": "assistant", "content": f"Error: {error_msg}"})
                 agregar_mensaje("assistant", f"Error: {error_msg}")
@@ -1373,4 +1438,4 @@ if st.session_state.pop("_mostrar_ayuda", False):
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v3.6 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 07/07/2026")
+    st.caption("Atlas v3.7 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 09/07/2026")

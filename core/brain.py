@@ -1,5 +1,5 @@
 """
-Cerebro principal de Atlas & Prometeo v3.4
+Cerebro principal de Atlas & Prometeo v3.7
 Con RAG semántico (ChromaDB), detección de capítulos, reglas temporales inteligentes,
 y streaming híbrido (Ollama local / NVIDIA API).
 """
@@ -271,14 +271,19 @@ def _stream_groq(prompt_completo, modelo_groq="llama-3.1-70b-versatile"):
 # FUNCIÓN PRINCIPAL CON INTERCEPTACIÓN DE REGLAS
 # ============================================
 
-def pensar_con_streaming(pregunta, motor=None, modelo_nube=None, modelo_local=None):
+def pensar_con_streaming(pregunta, motor=None, modelo_nube=None, modelo_local=None, modelo_groq=None):
     """Generador principal con interceptación de reglas ANTES de enviar al modelo."""
     if motor is None:
         motor = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()
     if modelo_nube is None:
-        modelo_nube = "meta/llama-3.1-70b-instruct"
+        from core.config import MODELO_NUBE_DEFAULT
+        modelo_nube = MODELO_NUBE_DEFAULT
+    if modelo_groq is None:
+        from core.config import MODELO_GROQ_DEFAULT
+        modelo_groq = MODELO_GROQ_DEFAULT
     if modelo_local is None:
-        modelo_local = os.getenv("MODELO_LOCAL", "qwen3:8b")
+        from core.config import MODELO_LOCAL
+        modelo_local = MODELO_LOCAL
 
     # ⚠️ INTERCEPTACIÓN DE REGLAS: Verificar ANTES de procesar
     debe_forzar, respuesta_forzada = verificar_reglas_y_forzar_respuesta(pregunta)
@@ -434,7 +439,7 @@ Devolvé SOLO la respuesta final sin preámbulos.
     if motor == "prometeo":
         stream_generator = _stream_nube(prompt_final, modelo_nube)
     elif motor == "groq":
-        stream_generator = _stream_groq(prompt_final, modelo_nube)
+        stream_generator = _stream_groq(prompt_final, modelo_groq)
     else:
         stream_generator = _stream_local(prompt_final, modelo_local)
 
@@ -458,6 +463,16 @@ Devolvé SOLO la respuesta final sin preámbulos.
 
     if error_final is not None:
         yield None, f"Error: {str(error_final)}"
+
+
+def pensar_sin_streaming(pregunta, motor=None, modelo_nube=None, modelo_local=None, modelo_groq=None):
+    """Versión simplificada de pensar_con_streaming que devuelve solo la respuesta final."""
+    # Reciclar la lógica de pensar_con_streaming pero capturando el resultado final
+    resultado_final = ""
+    for pensamiento, respuesta in pensar_con_streaming(pregunta, motor, modelo_nube, modelo_local, modelo_groq):
+        if respuesta:
+            resultado_final = respuesta
+    return resultado_final
 
 
 def analizar_para_memoria(pregunta, respuesta):

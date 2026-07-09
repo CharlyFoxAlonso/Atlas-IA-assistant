@@ -51,6 +51,41 @@ def leer_pptx(ruta_archivo: str) -> str:
         return f"[Error leyendo PPTX: {str(e)}]"
 
 
+def leer_epub(ruta_archivo: str) -> str:
+    """Lee un archivo EPUB extrayendo texto de sus documentos HTML."""
+    try:
+        import ebooklib
+        from ebooklib import epub
+        from bs4 import BeautifulSoup
+        
+        book = epub.read_epub(ruta_archivo)
+        texto = []
+        for item in book.get_items():
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                soup = BeautifulSoup(item.get_content(), "html.parser")
+                # Eliminar scripts y estilos
+                for script in soup(["script", "style"]):
+                    script.decompose()
+                texto.append(soup.get_text())
+        return "\n\n".join(texto)
+    except Exception as e:
+        return f"[Error leyendo EPUB: {str(e)}]"
+
+
+def leer_html(ruta_archivo: str) -> str:
+    """Lee un archivo HTML y extrae el texto limpio."""
+    try:
+        from bs4 import BeautifulSoup
+        with open(ruta_archivo, 'r', encoding='utf-8', errors='ignore') as f:
+            soup = BeautifulSoup(f.read(), "html.parser")
+            # Eliminar scripts y estilos
+            for script in soup(["script", "style"]):
+                script.decompose()
+            return soup.get_text(separator=" ")
+    except Exception as e:
+        return f"[Error leyendo HTML: {str(e)}]"
+
+
 def leer_imagen(ruta_archivo: str) -> str:
     """Lee una imagen y extrae texto con OCR."""
     try:
@@ -88,7 +123,7 @@ def leer_pdf(ruta_archivo: str) -> str:
 def leer_archivo(ruta_archivo: str) -> str:
     """
     Detecta el tipo de archivo y lo lee con el método apropiado.
-    Soporta: PDF, DOCX, PPTX, TXT, MD, PNG, JPG, JPEG
+    Soporta: PDF, DOCX, PPTX, TXT, MD, PNG, JPG, JPEG, EPUB, HTML
     """
     if not os.path.exists(ruta_archivo):
         return f"[Error: Archivo no encontrado: {ruta_archivo}]"
@@ -107,6 +142,10 @@ def leer_archivo(ruta_archivo: str) -> str:
         return leer_texto(ruta_archivo)
     elif extension in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
         return leer_imagen(ruta_archivo)
+    elif extension == '.epub':
+        return leer_epub(ruta_archivo)
+    elif extension in ['.html', '.htm']:
+        return leer_html(ruta_archivo)
     else:
         return f"[Tipo de archivo no soportado: {extension}]"
 
