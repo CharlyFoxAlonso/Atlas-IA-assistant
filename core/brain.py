@@ -242,6 +242,31 @@ def _stream_nube(prompt_completo, modelo_nube="meta/llama-3.1-70b-instruct"):
         yield f"❌ Error en Prometeo: {e}"
 
 
+def _stream_groq(prompt_completo, modelo_groq="llama-3.1-70b-versatile"):
+    """Streaming desde Groq Cloud (Ultra rápido)."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        yield "❌ Error: No se encontró GROQ_API_KEY en .env"
+        return
+
+    try:
+        from groq import Groq
+        client = Groq(api_key=api_key)
+        stream = client.chat.completions.create(
+            model=modelo_groq,
+            messages=[{"role": "user", "content": prompt_completo}],
+            temperature=0.3,
+            max_tokens=2048,
+            stream=True
+        )
+        for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        log_seguridad("STREAM_GROQ_ERROR", str(e))
+        yield f"❌ Error en Groq: {e}"
+
+
 # ============================================
 # FUNCIÓN PRINCIPAL CON INTERCEPTACIÓN DE REGLAS
 # ============================================
@@ -408,6 +433,8 @@ Devolvé SOLO la respuesta final sin preámbulos.
 
     if motor == "prometeo":
         stream_generator = _stream_nube(prompt_final, modelo_nube)
+    elif motor == "groq":
+        stream_generator = _stream_groq(prompt_final, modelo_nube)
     else:
         stream_generator = _stream_local(prompt_final, modelo_local)
 

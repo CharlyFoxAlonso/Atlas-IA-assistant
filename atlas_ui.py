@@ -285,7 +285,8 @@ with st.sidebar:
     st.subheader("🧠⚡ Motor de IA")
     motor_opciones = {
         "atlas": "🧠 Atlas Local (Privacidad 100%)",
-        "prometeo": "⚡ Prometeo Nube (Velocidad)"
+        "prometeo": "⚡ Prometeo Nube (NVIDIA API)",
+        "groq": "🚀 Groq Cloud (Ultra Rápido)"
     }
 
     motor_seleccionado = st.selectbox(
@@ -300,8 +301,10 @@ with st.sidebar:
         st.session_state.motor_activo = motor_seleccionado
         if motor_seleccionado == "atlas":
             st.success("🧠 Modo Atlas activado")
-        else:
+        elif motor_seleccionado == "prometeo":
             st.success("⚡ Modo Prometeo activado")
+        else:
+            st.success("🚀 Modo Groq activado")
         st.rerun()
 
     # ========================================
@@ -479,6 +482,36 @@ with st.sidebar:
             st.info(f"Modelo: {modelos_nube[modelo_sel]}")
 
         st.caption(f"☁️ NVIDIA API ({st.session_state.modelo_nube.split('/')[-1]})")
+
+    # ========================================
+    # 🚀 MODELO GROQ (solo si Groq está activo)
+    # ========================================
+    elif st.session_state.motor_activo == "groq":
+        st.markdown("---")
+        st.markdown("**🚀 Modelos Groq Cloud:**")
+
+        modelos_groq = {
+            "llama-3.1-70b-versatile": "Llama 3.1 70B (Equilibrado - Top)",
+            "llama-3.1-8b-instant": "Llama 3.1 8B (Rápido)",
+            "llama-3.3-70b-versatile": "Llama 3.3 70B (Nuevo)",
+            "gemma2-9b-it": "Gemma 2 9B (Google)",
+            "mixtral-8x7b-32768": "Mixtral 8x7B (MoE)",
+            "qwen-2.5-coder-32b": "Qwen 2.5 Coder 32B (Código)",
+        }
+
+        modelo_groq_sel = st.selectbox(
+            "Seleccioná un modelo:",
+            options=list(modelos_groq.keys()),
+            format_func=lambda x: modelos_groq[x],
+            index=list(modelos_groq.keys()).index(st.session_state.modelo_nube) if st.session_state.modelo_nube in modelos_groq else 0,
+            key="selector_modelo_groq"
+        )
+
+        if modelo_groq_sel != st.session_state.modelo_nube:
+            st.session_state.modelo_nube = modelo_groq_sel
+            st.info(f"🚀 Modelo: {modelos_groq[modelo_groq_sel]}")
+
+        st.caption(f"⚡ Groq API ({st.session_state.modelo_nube.split('-')[0]})")
 
     # ========================================
     # SECCIÓN: Configuración de Digestión
@@ -1340,4 +1373,4 @@ if st.session_state.pop("_mostrar_ayuda", False):
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v3.4 | RAG Semántico + Reglas Temporales + Modelos Locales + Chats Múltiples | 06/07/2026")
+    st.caption("Atlas v3.6 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 07/07/2026")

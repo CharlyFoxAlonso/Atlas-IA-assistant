@@ -25,9 +25,9 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "3.4"
+VERSION = "3.6"
 NOMBRE = "Atlas"
-CODENAME = "Limpio"
+CODENAME = "Multi-Nube"
 
 # ============================================
 # 🧠 MODELO LOCAL (Ollama)
