@@ -10,6 +10,8 @@ import streamlit as st
 import os
 import time
 import json
+import threading
+from queue import Queue, Empty
 from datetime import datetime
 
 # Importar módulos de Atlas
@@ -1230,48 +1232,93 @@ Ruta de DB: {stats['ruta_db']}""")
     else:
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
+            stop_placeholder = st.empty()
+
             respuesta_completa = ""
             agente_detectado = None
             pensamiento = None
+            error_msg = None
+            stopped_by_user = False
 
-            try:
-                for parte_pensamiento, parte_respuesta in pensar_con_streaming(
-                    prompt,
-                    motor=st.session_state.motor_activo,
-                    modelo_nube=st.session_state.modelo_nube if st.session_state.motor_activo == "prometeo" else None,
-                    modelo_local=st.session_state.modelo_local if st.session_state.motor_activo == "atlas" else None
-                ):
-                    if parte_pensamiento and parte_pensamiento.startswith("[Agente:"):
-                        agente_detectado = parte_pensamiento
-                        st.session_state.agente_actual = parte_pensamiento.replace("[Agente: ", "").split("]")[0].strip()
-                        continue
-                    if parte_pensamiento and not pensamiento:
-                        pensamiento = parte_pensamiento
-                    if parte_respuesta:
-                        respuesta_completa = parte_respuesta
+            # Setup thread communication
+            q = Queue()
+            stop_event = threading.Event()
 
+            def worker():
+                try:
+                    for p, r in pensar_con_streaming(
+                        prompt,
+                        motor=st.session_state.motor_activo,
+                        modelo_nube=st.session_state.modelo_nube if st.session_state.motor_activo == "prometeo" else None,
+                        modelo_local=st.session_state.modelo_local if st.session_state.motor_activo == "atlas" else None
+                    ):
+                        if stop_event.is_set():
+                            q.put(("stop", None, None))
+                            return
+                        q.put(("chunk", p, r))
+                    q.put(("done", None, None))
+                except Exception as e:
+                    q.put(("error", None, str(e)))
+
+            t = threading.Thread(target=worker, daemon=True)
+            t.start()
+
+            msg_id = len(st.session_state.messages)
+
+            while True:
+                try:
+                    msg_type, p, r = q.get(timeout=0.1)
+                    if msg_type == "chunk":
+                        if p and p.startswith("[Agente:"):
+                            agente_detectado = p
+                        if p and not pensamiento:
+                            pensamiento = p
+                        if r:
+                            respuesta_completa = r
+                            message_placeholder.markdown(respuesta_completa + "▌")
+                    elif msg_type == "done":
+                        break
+                    elif msg_type == "stop":
+                        stopped_by_user = True
+                        break
+                    elif msg_type == "error":
+                        error_msg = r
+                        break
+                except Empty:
+                    pass
+
+                if stop_placeholder.button("🛑 Detener pensamiento", key=f"stop_{msg_id}"):
+                    stop_event.set()
+                    stop_placeholder.warning("Deteniendo...")
+
+                time.sleep(0.05)
+
+            if respuesta_completa:
+                message_placeholder.markdown(respuesta_completa)
+            elif not error_msg and not stopped_by_user:
+                message_placeholder.warning("No pude generar respuesta.")
+
+            if stopped_by_user:
+                if len(st.session_state.messages) >= 2:
+                    st.session_state.messages.pop()
+                    if len(st.session_state.messages) > 0:
+                        st.session_state.messages.pop()
+                st.toast("🛑 Generación detenida. Podés reescribir tu mensaje.")
+            elif error_msg:
+                message_placeholder.error(f"❌ Error: {error_msg}")
+                st.session_state.messages.append({"role": "assistant", "content": f"Error: {error_msg}"})
+                agregar_mensaje("assistant", f"Error: {error_msg}")
+            elif respuesta_completa:
                 if agente_detectado:
                     st.caption(agente_detectado)
-
                 if pensamiento:
                     with st.expander("💭 Pensamiento de Atlas"):
                         st.markdown(pensamiento)
-
-                if respuesta_completa:
-                    message_placeholder.markdown(respuesta_completa)
-                    if st.session_state.voz_activa:
-                        hablar(respuesta_completa)
-                else:
-                    message_placeholder.warning("No pude generar respuesta.")
-                    respuesta_completa = "Sin respuesta"
-
+                message_placeholder.markdown(respuesta_completa)
+                if st.session_state.voz_activa and respuesta_completa:
+                    hablar(respuesta_completa)
                 st.session_state.messages.append({"role": "assistant", "content": respuesta_completa})
                 agregar_mensaje("assistant", respuesta_completa)
-
-            except Exception as e:
-                message_placeholder.error(f"❌ Error: {str(e)}")
-                st.session_state.messages.append({"role": "assistant", "content": f"Error: {str(e)}"})
-                agregar_mensaje("assistant", f"Error: {str(e)}")
 
 # ============================================
 # SECCIÓN DE EXAMEN
