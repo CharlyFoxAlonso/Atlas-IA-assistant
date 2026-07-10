@@ -9,6 +9,7 @@ Las URLs encontradas se persisten para revisión manual en la UI.
 import os
 import json
 from datetime import datetime
+from urllib.parse import urlparse as _urlparse
 from core.web_search import buscar_web
 
 RUTA_RECOMENDACIONES = "memory/Atlas_Memory/sandbox/recomendaciones.json"
@@ -81,7 +82,6 @@ def _deduplicar_por_url(resultados: list) -> list:
 
 def _extraer_dominio(url: str) -> str:
     """Extrae el nombre del dominio para etiquetar la fuente."""
-    from urllib.parse import urlparse as _urlparse
     try:
         netloc = _urlparse(url).netloc.replace("www.", "")
         return netloc.split(".")[0] if netloc else "desconocido"

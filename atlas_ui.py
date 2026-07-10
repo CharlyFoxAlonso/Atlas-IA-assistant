@@ -1,6 +1,6 @@
-"""
+﻿"""
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v3.7 - Interfaz Gráfica Híbrida Completa      ║
+║  🧠 ATLAS UI v3.9 - Interfaz Gráfica Híbrida Completa      ║
 ║  09/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Chats Múltiples               ║
@@ -47,7 +47,7 @@ from core.config import (
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="Atlas v3.7",
+    page_title="Atlas v3.9",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -152,7 +152,7 @@ h1, h2, h3 { color: #e94560; }
 with st.sidebar:
     _ensure_state()
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("Atlas v3.8")
+    st.title("Atlas v3.9")
     st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
 
     # ========================================
@@ -610,34 +610,88 @@ with st.sidebar:
     # SECCIÓN: Ingesta Web
     # ========================================
     st.subheader("🌐 Ingesta Web (URLs)")
-    url_ingestion = st.text_input("URL del PDF:", placeholder="https://...", key="url_ingestion")
-    categoria_ingestion = st.selectbox("Categoría:", ["Estudio", "Derecho", "Investigacion", "General"], key="categoria_ingestion")
-
-    if st.button("🚀 Iniciar Ingesta Web", use_container_width=True, key="btn_ingestion"):
-        if not url_ingestion:
-            st.error("Ingresá una URL")
-        else:
-            from core.ingestion_manager import procesar_pipeline_ingestion
-            motor_dig = st.session_state.get("motor_ingestion", "atlas")
-            modelo_dig = None
-            if motor_dig == "atlas":
-                modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
-            elif motor_dig == "groq":
-                modelo_dig = st.session_state.get("modelo_ingestion_groq", "llama-3.3-70b-versatile")
+    
+    tab_simple, tab_crawler = st.tabs(["📄 Página Única", "🕷️ Rastreo Inteligente"])
+    
+    with tab_simple:
+        url_ingestion = st.text_input("URL del PDF/Página:", placeholder="https://...", key="url_ingestion")
+        categoria_ingestion = st.selectbox("Categoría:", ["Estudio", "Derecho", "Investigacion", "General"], key="categoria_ingestion")
+        
+        if st.button("🚀 Iniciar Ingesta Web", use_container_width=True, key="btn_ingestion"):
+            if not url_ingestion:
+                st.error("Ingresá una URL")
             else:
-                modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
-            progreso_container = st.empty()
-            try:
-                for paso in procesar_pipeline_ingestion(url_ingestion, categoria_ingestion,
-                                                        motor=motor_dig, modelo=modelo_dig):
-                    if paso["estado"] == "error":
-                        progreso_container.error(paso["mensaje"]); break
-                    elif paso["estado"] == "completado":
-                        progreso_container.success(paso["mensaje"])
-                    else:
-                        progreso_container.info(paso["mensaje"])
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                from core.ingestion_manager import procesar_pipeline_ingestion
+                import time
+                motor_dig = st.session_state.get("motor_ingestion", "atlas")
+                modelo_dig = None
+                if motor_dig == "atlas":
+                    modelo_dig = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+                elif motor_dig == "groq":
+                    modelo_dig = st.session_state.get("modelo_ingestion_groq", "llama-3.3-70b-versatile")
+                else:
+                    modelo_dig = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
+                
+                progreso_container = st.empty()
+                start_time = time.time()
+                
+                try:
+                    for paso in procesar_pipeline_ingestion(url_ingestion, categoria_ingestion,
+                                                            motor=motor_dig, modelo=modelo_dig):
+                        elapsed = time.time() - start_time
+                        timer_str = f"⏱️ {elapsed:.1f}s"
+                        
+                        if paso["estado"] == "error":
+                            progreso_container.error(f"{timer_str} | {paso['mensaje']}"); break
+                        elif paso["estado"] == "completado":
+                            progreso_container.success(f"{timer_str} | {paso['mensaje']}")
+                        else:
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+
+    with tab_crawler:
+        st.caption("Navega automáticamente por un sitio, filtra por tema y organiza en subcarpetas.")
+        
+        # Selector de carpeta raíz
+        from core.local_ingestion_manager import detectar_carpetas_atlas_memory
+        carpetas_raiz = detectar_carpetas_atlas_memory()
+        
+        url_crawl = st.text_input("URL Inicial:", placeholder="https://docs.nvidia.com/nim/", key="url_crawl")
+        tema_crawl = st.text_input("Tema Objetivo:", placeholder="Ej: Optimización de LLMs", key="tema_crawl")
+        raiz_crawl = st.selectbox("Carpeta Raíz de Destino:", options=carpetas_raiz, key="raiz_crawl")
+        max_paginas = st.slider("Máximo de páginas a rastrear:", 1, 100, 20, key="max_paginas")
+        
+        if st.button("🕷️ Iniciar Rastreo Inteligente", use_container_width=True, key="btn_crawl"):
+            if not url_crawl or not tema_crawl:
+                st.error("Por favor, completá la URL y el Tema.")
+            else:
+                from core.web_crawler import WebCrawler
+                import time
+                
+                # Convertir ruta relativa de carpeta en ruta absoluta
+                ruta_absoluta_raiz = os.path.join("memory/Atlas_Memory", raiz_crawl)
+                
+                crawler = WebCrawler(root_folder=ruta_absoluta_raiz, theme=tema_crawl, max_pages=max_paginas)
+                progreso_container = st.empty()
+                start_time = time.time()
+                
+                try:
+                    for paso in crawler.crawl(url_crawl):
+                        elapsed = time.time() - start_time
+                        timer_str = f"⏱️ {elapsed:.1f}s"
+                        
+                        if paso["estado"] == "completado":
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "info":
+                            progreso_container.caption(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "error":
+                            progreso_container.error(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "finalizado":
+                            progreso_container.success(f"{timer_str} | {paso['mensaje']}")
+                except Exception as e:
+                    st.error(f"❌ Error crítico en el Crawler: {str(e)}")
+
 
     st.divider()
 
@@ -686,6 +740,7 @@ with st.sidebar:
             st.warning("Soltá archivos primero")
         else:
             from core.local_ingestion_manager import procesar_archivo_local
+            import time
 
             motor_dig = st.session_state.get("motor_ingestion", "atlas")
             modelo_dig = None
@@ -702,17 +757,22 @@ with st.sidebar:
             for archivo in archivos_subidos:
                 st.markdown(f"**Procesando:** `{archivo.name}` → `{ruta_destino}`")
                 progreso_container = st.empty()
+                start_time = time.time()
                 try:
                     for paso in procesar_archivo_local(archivo, ruta_destino,
-                                                       motor=motor_dig, modelo=modelo_dig):
+                                                        motor=motor_dig, modelo=modelo_dig):
+                        elapsed = time.time() - start_time
+                        timer_str = f"⏱️ {elapsed:.1f}s"
+                        
                         if paso["estado"] == "error":
-                            progreso_container.error(paso["mensaje"]); break
+                            progreso_container.error(f"{timer_str} | {paso['mensaje']}"); break
                         elif paso["estado"] == "completado":
-                            progreso_container.success(paso["mensaje"])
+                            progreso_container.success(f"{timer_str} | {paso['mensaje']}")
                         else:
-                            progreso_container.info(paso["mensaje"])
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
+                st.divider()
                 st.divider()
 
     st.divider()
@@ -778,7 +838,7 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-             ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.7
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v3.9
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -900,7 +960,7 @@ Generado: {ahora_str} | Creador: Charly
 # HEADER PRINCIPAL
 # ============================================
 st.title("Atlas")
-    st.caption(f"Asistente híbrido v3.8 | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.caption(f"Asistente híbrido v3.9 | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -914,7 +974,7 @@ st.divider()
 def _render_ayuda_modal():
     """Muestra el panel de comandos en un modal centrado y prolijo."""
     _ensure_state()
-    @st.dialog("🧠 Atlas v3.7 — Comandos", width="large")
+    @st.dialog("🧠 Atlas v3.9 — Comandos", width="large")
     def modal():
         _ensure_state()
         st.markdown(
@@ -1438,4 +1498,4 @@ if st.session_state.pop("_mostrar_ayuda", False):
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v3.7 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 09/07/2026")
+    st.caption("Atlas v3.9 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 09/07/2026")

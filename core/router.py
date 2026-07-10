@@ -1,6 +1,6 @@
-"""
+﻿"""
 Router inteligente: el MODELO decide qué agente usar.
-Atlas v3.4 - Detección mejorada de emociones, logros y derecho.
+Atlas v3.9 - Detección mejorada de emociones, logros y derecho.
 """
 import os
 import re as _re

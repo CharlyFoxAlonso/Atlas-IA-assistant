@@ -1,12 +1,12 @@
-"""
+﻿"""
 core/chat_manager.py
-Gestor de sesiones de chat múltiples para Atlas v3.4.
+Gestor de sesiones de chat múltiples para Atlas v3.9.
 Cada chat tiene su propio historial, motor y metadata.
 Se persisten en memory/Atlas_Memory/chats/{chat_id}.json
 """
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from core.security import log_seguridad
 
 CHATS_DIR = "memory/Atlas_Memory/chats"
@@ -23,7 +23,7 @@ def _ruta_chat(chat_id: str) -> str:
 
 
 def _timestamp_id() -> str:
-    return datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
 
 
 def crear_chat(nombre: str = "Nuevo chat", motor: str = "atlas",

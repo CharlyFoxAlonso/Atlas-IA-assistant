@@ -1,15 +1,15 @@
-@echo off
+﻿@echo off
 setlocal
 
 REM ============================================
-REM 🧠 Atlas CLI - v3.4 launcher
+REM 🧠 Atlas CLI - v3.9 launcher
 REM Ejecuta run.py -> atlas_chat.py (terminal interactiva)
 REM ============================================
 
 cd /d "%~dp0"
 
 echo ========================================
-echo   🧠 Atlas CLI v3.4 - Terminal interactiva
+echo   🧠 Atlas CLI v3.9 - Terminal interactiva
 echo ========================================
 echo.
 

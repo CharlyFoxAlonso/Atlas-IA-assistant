@@ -34,8 +34,8 @@ def _get_collection():
         return _coleccion
 
     import chromadb
-    import os
-    os.environ["ANONYMIZED_TELEMETRY"] = "False"
+    import os as _os
+    _os.environ["ANONYMIZED_TELEMETRY"] = "False"
     from chromadb.utils import embedding_functions
 
     try:

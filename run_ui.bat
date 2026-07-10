@@ -1,15 +1,15 @@
-@echo off
+﻿@echo off
 setlocal
 
 REM ============================================
-REM 🧠 Atlas UI - v3.4 launcher
+REM 🧠 Atlas UI - v3.9 launcher
 REM Activa el venv si existe; si no, usa python del PATH.
 REM ============================================
 
 cd /d "%~dp0"
 
 echo ========================================
-echo   🧠 Atlas UI v3.4 - Iniciando...
+echo   🧠 Atlas UI v3.9 - Iniciando...
 echo   Puerto por defecto: 8401
 echo ========================================
 echo.

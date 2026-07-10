@@ -1,7 +1,7 @@
-"""
+﻿"""
 core/web_search.py
 Búsqueda web en cadena con fallback.
-Atlas v3.4 — intento automático entre varios backends.
+Atlas v3.9 — intento automático entre varios backends.
 
 Jerarquía (intentamos en orden):
   1. Tavily (gratis con TAVILY_API_KEY)      — primera opción, optimizado para IA

@@ -1,8 +1,8 @@
-"""
+﻿"""
 core/prometeo_worker.py
 Shim de compatibilidad. Delega al digestion_worker unificado (v3.4).
 Mantenido para no romper imports de código anterior.
-Atlas v3.4
+Atlas v3.9
 """
 from core.digestion_worker import (
     digerir_documento_con_progreso,

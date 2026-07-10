@@ -1,5 +1,5 @@
-"""
-Atlas Chat v3.8 - CLI Principal
+﻿"""
+Atlas Chat v3.9 - CLI Principal
 Con soporte para modelos locales (Ollama) y nube (NVIDIA/Prometeo).
 Comandos para gestión de modelos locales.
 """
@@ -20,7 +20,8 @@ from core.config import (
     eliminar_modelo_local,
     set_modelo_local,
     detectar_hardware,
-    MODELO_LOCAL
+    MODELO_LOCAL,
+    MODELO_NUBE_DEFAULT
 )
 
 # ============================================
@@ -28,7 +29,7 @@ from core.config import (
 # ============================================
 INTERVALO_ANALISIS = 5
 MOTOR_ACTIVO = os.getenv("MOTOR_POR_DEFECTO", "atlas").lower()
-MODELO_NUBE_ACTIVO = "meta/llama-3.1-70b-instruct"
+MODELO_NUBE_ACTIVO = MODELO_NUBE_DEFAULT
 
 
 # ============================================
@@ -76,7 +77,7 @@ def mostrar_ayuda():
 ║     • 🗣️ General → Conversacional (por defecto)             ║
 ║     • 📊 Estadística → Si preguntás sobre estadística       ║
 ║     • 🌐 Researcher → Si necesitás info de la web            ║
-║     • 💭 Psicólogo → Si hablás de emociones                 ║
+║     • 💭 Mentor → Si hablás de emociones                 ║
 ║     • 🏛️ Arquitecto → Si pedís razonamiento profundo        ║
 ║                                                              ║
 ║  ⚙️ COMANDOS:                                               ║

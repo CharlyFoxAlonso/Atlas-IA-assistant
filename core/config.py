@@ -25,7 +25,7 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "3.8"
+VERSION = "3.9"
 NOMBRE = "Atlas"
 CODENAME = "Multi-Nube"
 
@@ -445,13 +445,13 @@ def _recomendar_modelo(ram_gb: float, vram_gb: float) -> str:
     if ram_gb == 0:
         return "No se pudo detectar RAM"
     if vram_gb >= 24:
-        return "llama3.1:70b (Q4) - aprovecha tu GPU"
+        return "qwen3:30b-a3b (MoE) o llama3.1:70b (descarga manual) - aprovecha tu GPU"
     if vram_gb >= 16:
         return "qwen3:14b o gemma3:12b"
     if vram_gb >= 8:
         return "qwen3:8b (actual) o mistral:7b"
     if ram_gb >= 64:
-        return "llama3.1:70b (Q4) en CPU"
+        return "llama3.1:70b (descarga manual Q4) en CPU"
     if ram_gb >= 32:
         return "qwen3:30b-a3b (MoE) - IDEAL para tu hardware"
     if ram_gb >= 16:

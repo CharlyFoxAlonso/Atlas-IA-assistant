@@ -1,4 +1,4 @@
-# 🧠 Atlas v3.8 - AI Assistant System
+﻿# 🧠 Atlas v3.9 - AI Assistant System
 
 <div align="center">
 
@@ -56,7 +56,7 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       ATLAS v3.7 - CORE                     │
+│                       ATLAS v3.9 - CORE                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Router Model → Classifies intent & assigns specialized agent│
 ├─────────────────────────────────────────────────────────────┤
@@ -65,7 +65,7 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 │  └─ CLOUD (Nube)   → NVIDIA NIM / Groq Cloud API            │
 ├─────────────────────────────────────────────────────────────┤
 │  Semantic RAG (ChromaDB) with Lazy-Loading                  │
-│  ├─ Embeddings: paraphrase-multilingual-MiniL-L12-v2       │
+│  ├─ Embeddings: paraphrase-multilingual-MiniLM-L12-v2      │
 │  └─ Hybrid search: semantic + token-matching fallbacks      │
 ├─────────────────────────────────────────────────────────────┤
 │  Triple Digestion Engine (Isolated process)                   │
@@ -78,7 +78,7 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 │  ├─ Audio: Groq API (Whisper-large-v3) or local Vosk engine │
 │  └─ Voice: Edge TTS synthesis or pyttsx3 offline fallback   │
 ├─────────────────────────────────────────────────────────────┤
-│  Persistent Multi-Session UI (Streamlit v1.59)              │
+│  Persistent Multi-Session UI (Streamlit)                    │
 │  ├─ Persistent chats saved as isolated JSON sessions        │
 │  └─ Automated background reflection logging to diary files   │
 └─────────────────────────────────────────────────────────────┘
@@ -117,6 +117,27 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 - Path traversal verification using strict `os.path.commonpath` comparison.
 - Prompt injection mitigation with configurable pattern filters.
 - Native logger that captures security events and logs them in real-time.
+
+---
+
+## 🔧 Changelog v3.9
+
+### New Features
+- **Web Crawler (`core/web_crawler.py`)**: Intelligent web crawling engine with theme-based filtering, automatic subfolder organization, and configurable page limits. Integrated into the Streamlit UI sidebar under "Rastreo Inteligente".
+- **Timer display in UI**: All ingestion operations (web, local, crawler) now show elapsed time during processing.
+
+### Bugfixes
+- **`core/models.py`**: Fixed hardcoded local model (`qwen3:8b`) to use `MODELO_LOCAL` from `config.py`. The router now respects user model changes.
+- **`main_api.py`**: Added missing `MODELO_GROQ_DEFAULT` import. Groq motor in API no longer throws `NameError`.
+- **`core/self_awareness.py`**: Fixed internal version metadata (2.9 → 3.9), corrected invalid imports (`ddgs` → `duckduckgo_search`, `python-dotenv` → `dotenv`), removed phantom dependencies (`pdfplumber`, `sounddevice`).
+- **`core/config.py`**: Updated hardware recommendation for 24GB+ VRAM to reference models actually available in the catalog.
+- **`atlas_chat.py`**: `MODELO_NUBE_ACTIVO` now pulls from `config.py` instead of hardcoded value. Agent name in help text changed from obsolete "Psicólogo" to "Mentor".
+- **`core/chat_manager.py`**: Replaced deprecated `datetime.utcnow()` with `datetime.now(timezone.utc)`.
+- **`core/self_improvement.py`**: Moved `urllib.parse.urlparse` import to module level.
+- **`core/vector_store.py`**: Removed redundant `import os` inside `_get_collection()`.
+
+### Version Sync
+- All 30+ source files, launchers, and documentation now reference v3.9 consistently (previously had mixed v3.4/v3.7/v3.8 references).
 
 ---
 
@@ -195,9 +216,9 @@ No need to remember long terminal commands. Use the pre-configured launchers:
 When using the terminal or chat input, you can type special commands starting with `!`:
 - `!ayuda` or `!help` - Display available commands.
 - `!indexar` - Rebuild the semantic RAG index from `memory/Atlas_Memory/`.
-- `!memoria` - Force memory analysis on the active thread.
-- `!ver_memoria` - Review saved markdown memory files.
-- `!reglas` - View or add temporary behavior rules.
+- `!analizar` - Force memory analysis on pending conversations.
+- `!categorias` - List available memory categories.
+- `!modelos` - View and manage downloaded Ollama models.
 - `!autoconocer` - Generate a detailed system architecture report.
 
 ---

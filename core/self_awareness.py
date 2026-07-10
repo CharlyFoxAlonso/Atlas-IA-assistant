@@ -1,6 +1,6 @@
-"""
+﻿"""
 core/self_awareness.py
-Módulo de auto-conocimiento de Atlas v3.7.
+Módulo de auto-conocimiento de Atlas v3.9.
 Genera informes técnicos completos con código real de los archivos.
 Incluye sistema de modelos locales y detección de hardware.
 """
@@ -125,7 +125,7 @@ def obtener_arquitectura_detallada():
 
     arquitectura = {
         "metadata": {
-            "version": "2.9",
+            "version": "3.8",
             "timestamp": datetime.now().isoformat(),
             "directorio_actual": os.getcwd(),
         },
@@ -257,11 +257,11 @@ def obtener_arquitectura_detallada():
     # 5. VERIFICAR DEPENDENCIAS
     # ========================================
     paquetes = [
-        "requests", "ddgs", "PIL", "pyautogui", "pytesseract",
+        "requests", "duckduckgo_search", "PIL", "pyautogui", "pytesseract",
         "SpeechRecognition", "vosk", "edge_tts", "pyttsx3",
-        "pygame", "pypdf", "pdfplumber", "streamlit",
-        "sounddevice", "chromadb", "sentence_transformers",
-        "openai", "python-dotenv", "groq", "pdf2image"
+        "pygame", "pypdf", "streamlit",
+        "chromadb", "sentence_transformers",
+        "openai", "dotenv", "groq", "pdf2image"
     ]
 
     for paquete in paquetes:
@@ -325,7 +325,7 @@ def generar_reporte_completo(incluir_codigo=True, max_lineas_codigo=50):
     # ENCABEZADO
     # ========================================
     lineas.append("=" * 70)
-    lineas.append("  ATLAS v3.7 - INFORME TÉCNICO DE AUTO-CONOCIMIENTO")
+    lineas.append("  ATLAS v3.9 - INFORME TÉCNICO DE AUTO-CONOCIMIENTO")
     lineas.append("=" * 70)
     lineas.append(f"  Fecha: {arq['metadata']['timestamp']}")
     lineas.append(f"  Directorio: {arq['metadata']['directorio_actual']}")
@@ -515,7 +515,7 @@ def generar_reporte_completo(incluir_codigo=True, max_lineas_codigo=50):
     lineas.append("  FIN DEL INFORME")
     lineas.append("=" * 70)
     lineas.append("")
-    lineas.append("  Este informe fue generado automáticamente por Atlas v3.7.")
+    lineas.append("  Este informe fue generado automáticamente por Atlas v3.9.")
     lineas.append("  Puede ser compartido con otro modelo de IA para obtener")
     lineas.append("  asistencia técnica, revisión de código o sugerencias.")
     lineas.append("")
