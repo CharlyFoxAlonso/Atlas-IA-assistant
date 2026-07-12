@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/pdf_reader.py
 Lector de PDFs inteligente con soporte OCR (Tesseract + Poppler).
 Configurado para procesar libros completos (hasta 600 páginas).

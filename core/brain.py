@@ -1,4 +1,4 @@
-﻿"""
+"""
 Cerebro principal de Atlas & Prometeo v3.9
 Con RAG semántico (ChromaDB), detección de capítulos, reglas temporales inteligentes,
 y streaming híbrido (Ollama local / NVIDIA API).

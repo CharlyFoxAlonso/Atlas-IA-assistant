@@ -1,4 +1,4 @@
-﻿"""
+"""
 Atlas Chat v3.9 - CLI Principal
 Con soporte para modelos locales (Ollama) y nube (NVIDIA/Prometeo).
 Comandos para gestión de modelos locales.

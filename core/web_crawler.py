@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/web_crawler.py
 Módulo de rastreo inteligente de contenido web para Atlas v3.9.
 Permite la ingesta recursiva de sitios web basada en un tema, 
@@ -29,13 +29,13 @@ class WebCrawler:
         """
         Usa el cerebro de Atlas para determinar si el contenido es relevante para el tema.
         """
-        prompt = f\"\"\"
+        prompt = f"""
         Analiza el siguiente fragmento de texto y determina si es relevante para el tema: '{self.theme}'.
         Responde ÚNICAMENTE con 'SÍ' o 'NO'.
         
         Texto:
         {text[:2000]}
-        \"\"\"
+        """
         try:
             # Usamos el motor más rápido (Groq) para el filtrado masivo
             res = pensar_sin_streaming(prompt, motor="groq").strip().upper()
@@ -48,14 +48,14 @@ class WebCrawler:
         """
         Usa el cerebro de Atlas para sugerir una subcarpeta basada en el contenido.
         """
-        prompt = f\"\"\"
+        prompt = f"""
         Basado en el siguiente texto, sugiere un nombre corto (1-3 palabras) para una carpeta que categorice este contenido dentro del tema '{self.theme}'.
         El nombre debe ser simple, sin espacios (usa guiones bajos) y en minúsculas.
         Responde ÚNICAMENTE con el nombre de la carpeta.
         
         Texto:
         {text[:2000]}
-        \"\"\"
+        """
         try:
             res = pensar_sin_streaming(prompt, motor="groq").strip().lower()
             # Limpiar cualquier carácter no deseado
@@ -116,8 +116,9 @@ class WebCrawler:
                 subfolder = self._get_subfolder_name(texto_limpio)
                 full_path = os.path.join(self.root_folder, subfolder)
                 
-                # Crear carpeta si no existe
-                crear_subcarpeta(full_path)
+                # Crear carpeta si no existe (crear_subcarpeta espera ruta relativa a Atlas_Memory)
+                ruta_relativa = os.path.relpath(full_path, "memory/Atlas_Memory")
+                crear_subcarpeta(ruta_relativa)
                 
                 # 4. Digerir y Guardar
                 nombre_archivo = urlparse(url).path.replace('/', '_').strip('_') or "index"
@@ -133,7 +134,7 @@ class WebCrawler:
                 
                 # Guardar el archivo físicamente
                 with open(os.path.join(full_path, nombre_final), "w", encoding="utf-8") as f:
-                    f.write(f"# Fuente: {url}\\n\\n{texto_digerido}")
+                    f.write(f"# Fuente: {url}\n\n{texto_digerido}")
                 
                 self.processed_count += 1
                 yield {

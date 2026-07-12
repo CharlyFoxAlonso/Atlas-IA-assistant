@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/digestion_worker.py
 Worker de digestión unificado para Atlas v3.9.
 Soporta motores: "atlas" (Ollama local) y "prometeo" (NVIDIA API).
@@ -203,7 +203,12 @@ def digerir_documento_con_progreso(
 
     log_seguridad("DIGESTION_INICIADA", f"motor={motor} modelo={modelo} archivo={nombre_original}")
 
-    nombre_motor = "Atlas Local" if motor == "atlas" else "Prometeo Nube"
+    if motor == "atlas":
+        nombre_motor = "Atlas Local"
+    elif motor == "groq":
+        nombre_motor = "Groq Cloud"
+    else:
+        nombre_motor = "Prometeo Nube"
 
     if len(texto_crudo) > 80000:
         chunks = _chunk_text(texto_crudo)

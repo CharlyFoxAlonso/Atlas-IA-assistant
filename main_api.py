@@ -1,4 +1,4 @@
-﻿import os
+import os
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Atlas & Prometeo - Gestor de Modelos Híbridos (models.py)
 Atlas v3.9 - Rutea el pensamiento hacia el modelo local (Ollama) o la nube (NVIDIA).
 """

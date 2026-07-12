@@ -83,7 +83,7 @@ def crear_distribucion():
     # ========================================
     print("[4/5] Comprimiendo...")
     timestamp = datetime.now().strftime("%Y%m%d")
-    zip_name = f"Atlas_v2.0_{timestamp}.zip"
+    zip_name = f"Atlas_v3.9_{timestamp}.zip"
     zip_path = os.path.join(raiz_atlas, zip_name)
     
     # Eliminar ZIP anterior si existe
@@ -190,7 +190,7 @@ def verificar_requisitos():
         return True
     else:
         print("[WARN] Faltan archivos. Completalos antes de continuar.\n")
-        return True  # Permitir continuar igual
+        return False
 
 
 if __name__ == "__main__":
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     
     confirmar = input("Continuar? (s/n): ").strip().lower()
     
-    if confirmar not in ["s", "si", "si"]:
+    if confirmar not in ["s", "si", "sí"]:
         print("\n[CANCELADO]\n")
         sys.exit(0)
     

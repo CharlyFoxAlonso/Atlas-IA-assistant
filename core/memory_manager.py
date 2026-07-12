@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/memory_manager.py
 Gestión de memoria persistente y análisis de conversaciones.
 Atlas v3.9

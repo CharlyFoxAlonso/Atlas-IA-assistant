@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/audio_transcriber.py
 Transcripción ultra-rápida de Audio y Video usando Groq API (Whisper-v3).
 Soporta: MP3, WAV, M4A, AAC, OGG, FLAC, MP4, MOV, AVI, MKV, WEBM

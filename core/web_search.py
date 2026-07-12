@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/web_search.py
 Búsqueda web en cadena con fallback.
 Atlas v3.9 — intento automático entre varios backends.

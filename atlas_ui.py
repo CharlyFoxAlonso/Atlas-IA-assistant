@@ -1,4 +1,4 @@
-﻿"""
+"""
 ╔════════════════════════════════════════════════════════════╗
 ║  🧠 ATLAS UI v3.9 - Interfaz Gráfica Híbrida Completa      ║
 ║  09/07/2026 - Atlas + Prometeo + RAG Semántico             ║
@@ -19,7 +19,7 @@ from core.brain import pensar_con_streaming, limpiar_historial, ver_historial, H
 from core.vision import analizar_pantalla
 from core.speech_input import escuchar, probar_microfono
 from core.speech_output import hablar, listar_voces_disponibles
-from core.memory_manager import listar_categorias, guardar_en_memoria, procesar_historial_para_memoria, CATEGORIAS
+from core.memory_manager import listar_categorias, procesar_historial_para_memoria, CATEGORIAS
 from core.router import listar_agentes
 from core.security import reporte_seguridad_completo
 from core.diary_manager import agregar_entrada, leer_diario_hoy, buscar_en_diario
@@ -28,19 +28,16 @@ from core.vector_store import obtener_estadisticas
 from core.exam_mode import ejecutar_examen_completo, corregir_respuesta, generar_informe_final
 from core.chat_manager import (
     listar_chats, crear_chat, activar_chat, eliminar_chat,
-    chat_activo_id, chat_activo_datos, agregar_mensaje,
-    guardar_chat, renombrar_chat,
+    chat_activo_datos, agregar_mensaje,
+    guardar_chat,
     obtener_historial_brain, guardar_historial_brain
 )
 from core.config import (
     obtener_catalogo_completo,
-    verificar_modelo_local,
-    descargar_modelo_local,
     eliminar_modelo_local,
     set_modelo_local,
     detectar_hardware,
-    MODELO_LOCAL,
-    MODELOS_LOCALES_DISPONIBLES
+    MODELO_LOCAL
 )
 
 # ============================================
@@ -284,7 +281,12 @@ with st.sidebar:
 
     if st.button("🗣️ Listar Voces", use_container_width=True):
         with st.expander("Voces disponibles"):
-            listar_voces_disponibles()
+            voces = listar_voces_disponibles()
+            if voces:
+                for v in voces:
+                    st.write(f"  • {v['short_name']} - {v['gender']}")
+            else:
+                st.warning("No se pudieron cargar las voces.")
 
     st.divider()
 
@@ -954,7 +956,7 @@ Generado: {ahora_str} | Creador: Charly
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-        st.caption("📅 Versión: 3.7")
+        st.caption("📅 Versión: 3.9")
 
 # ============================================
 # HEADER PRINCIPAL

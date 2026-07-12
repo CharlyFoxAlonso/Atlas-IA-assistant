@@ -30,7 +30,7 @@ def limpiar_atlas():
     # ========================================
     print("[1/5] Copiando codigo base...")
     
-    carpetas_codigo = ["core", "config"]
+    carpetas_codigo = ["core", "agents"]
     for carpeta in carpetas_codigo:
         if os.path.exists(carpeta):
             shutil.copytree(carpeta, os.path.join(clean_dir, carpeta))
@@ -162,9 +162,9 @@ def limpiar_atlas():
     
     print("   [OK] Prompts base creados (5 archivos)")
     
-    # Prompts de agentes
+    # Prompts de agentes (nombres en minúsculas según router.py)
     escribir_archivo(
-        os.path.join(prompts_dir, "Agente_General.md"),
+        os.path.join(prompts_dir, "agente_general.md"),
         [
             "# Agente General",
             "",
@@ -176,9 +176,9 @@ def limpiar_atlas():
             "- Util y honesto",
         ]
     )
-    
+
     escribir_archivo(
-        os.path.join(prompts_dir, "Agente_Estadistica.md"),
+        os.path.join(prompts_dir, "agente_estadistica.md"),
         [
             "# Agente Estadistica",
             "",
@@ -190,9 +190,9 @@ def limpiar_atlas():
             "- Enfocado en utilidad practica",
         ]
     )
-    
+
     escribir_archivo(
-        os.path.join(prompts_dir, "Agente_Researcher.md"),
+        os.path.join(prompts_dir, "agente_researcher.md"),
         [
             "# Agente Researcher",
             "",
@@ -204,23 +204,24 @@ def limpiar_atlas():
             "- Objetivo",
         ]
     )
-    
+
     escribir_archivo(
-        os.path.join(prompts_dir, "Agente_Psicologo.md"),
+        os.path.join(prompts_dir, "agente_mentor.md"),
         [
-            "# Agente Psicologo",
+            "# Agente Mentor",
             "",
-            "Sos consejero empatico. NO sos psicologo profesional.",
+            "Sos un mentor empatico. NO sos psicologo ni profesional de salud mental.",
             "",
             "## Estilo",
             "- Empatico y calido",
             "- Escucha activa",
             "- No juzgues",
+            "- Ayudas a Charly a reflexionar sobre emociones y logros",
         ]
     )
-    
+
     escribir_archivo(
-        os.path.join(prompts_dir, "Agente_Arquitecto.md"),
+        os.path.join(prompts_dir, "agente_arquitecto.md"),
         [
             "# Agente Arquitecto Mental - Oraculo",
             "",
@@ -242,7 +243,7 @@ def limpiar_atlas():
         ("02_Memoria/Decisiones", "Decisiones.md", ["# Decisiones", ""]),
         ("03_Conocimiento/Estudio", None, None),
         ("03_Conocimiento/Estadistica", None, None),
-        ("04_Univercidad", "Registro.md", ["# Universidad", ""]),
+        ("04_Universidad", "Registro.md", ["# Universidad", ""]),
         ("05_Proyectos", "Registro.md", ["# Proyectos", ""]),
         ("06_Diario", "Registro.md", ["# Diario", ""]),
         ("07_Salud", "Registro.md", ["# Salud", ""]),
@@ -327,37 +328,53 @@ def limpiar_atlas():
     escribir_archivo(
         os.path.join(clean_dir, "requirements.txt"),
         [
-            "# Atlas - Dependencias",
+            "# Atlas v3.9 - Dependencias",
             "# Instalacion: pip install -r requirements.txt",
             "",
-            "# Core",
-            "requests>=2.31.0",
+            "# UI",
+            "streamlit>=1.36.0,<2.0.0",
+            "fastapi>=0.115.0,<1.0.0",
+            "uvicorn>=0.30.0,<1.0.0",
+            "",
+            "# LLM y APIs",
+            "openai>=1.50.0,<2.0.0",
+            "requests>=2.32.0,<3.0.0",
+            "python-dotenv>=1.0.0,<2.0.0",
+            "",
+            "# RAG y embeddings",
+            "chromadb>=0.5.0,<0.6.0",
+            "sentence-transformers>=3.0.0,<4.0.0",
+            "numpy>=2.0.0,<3.0.0",
             "",
             "# Busqueda web",
-            "ddgs>=1.0.0",
+            "duckduckgo-search>=6.1.0,<8.0.0",
             "",
-            "# OCR y vision",
-            "Pillow>=10.0.0",
-            "pyautogui>=0.9.54",
-            "pytesseract>=0.3.10",
+            "# Procesamiento de documentos",
+            "pypdf>=4.0.0,<6.0.0",
+            "python-docx>=1.1.0,<2.0.0",
+            "python-pptx>=0.6.21,<2.0.0",
+            "pdf2image>=1.17.0,<2.0.0",
+            "pytesseract>=0.3.10,<1.0.0",
+            "Pillow>=10.0.0,<12.0.0",
+            "beautifulsoup4>=4.12.0,<5.0.0",
             "",
-            "# Voz",
-            "SpeechRecognition>=3.10.0",
-            "pyaudio>=0.2.13",
-            "vosk>=0.3.45",
-            "edge-tts>=6.1.0",
-            "pyttsx3>=2.90",
-            "pygame>=2.5.0",
+            "# Audio",
+            "groq>=0.10.0,<1.0.0",
+            "pydub>=0.25.1,<1.0.0",
+            "SpeechRecognition>=3.10.0,<4.0.0",
+            "vosk>=0.3.45,<1.0.0",
+            "pyaudio>=0.2.14,<1.0.0",
+            "edge-tts>=6.1.10,<8.0.0",
+            "pyttsx3>=2.90,<3.0.0",
+            "pygame>=2.5.0,<3.0.0",
             "",
-            "# PDF",
-            "pypdf2>=3.0.0",
-            "pdfplumber>=0.10.0",
+            "# Vision",
+            "pyautogui>=0.9.54,<1.0.0",
             "",
-            "# UI",
-            "streamlit>=1.30.0",
-             "",
-             "# Seguridad",
-         ]
+            "# Seguridad y utilidades",
+            "cryptography>=42.0.0,<50.0.0",
+            "psutil>=5.9.0,<7.0.0",
+        ]
     )
     
     print("   [OK] requirements.txt creado")
@@ -366,7 +383,7 @@ def limpiar_atlas():
     # 5. CREAR CONFIG
     # ========================================
     config = {
-        "version": "2.0",
+        "version": "3.9",
         "fecha_creacion": datetime.now().isoformat(),
         "modelo_defecto": "qwen3:8b",
         "idioma": "es",

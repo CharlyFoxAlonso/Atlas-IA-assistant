@@ -1,4 +1,4 @@
-from core.pdf_reader import leer_pdf
+from core.universal_loader import leer_archivo_con_info
 from core.models import preguntar
 
 
@@ -9,13 +9,12 @@ def investigar_pdf(ruta_pdf):
     Devuelve:
         Texto con resumen, conceptos clave, fórmulas, preguntas de examen, etc.
     """
-    # 1. Leer el PDF
-    data = leer_pdf(ruta_pdf)
+    data = leer_archivo_con_info(ruta_pdf)
     
-    if not data["ok"]:
+    if not data.get("ok"):
         return f"❌ Error leyendo PDF: {data.get('error', 'Error desconocido')}"
     
-    texto = data["texto"]
+    texto = data.get("contenido", "")
     
     if not texto or len(texto.strip()) < 100:
         return f"⚠️ El PDF no tiene suficiente texto extraíble ({len(texto)} caracteres)"

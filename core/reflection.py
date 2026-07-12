@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/reflection.py
 Módulo de reflexión y autoanálisis de Atlas.
 Analiza conversaciones pasadas para identificar patrones y áreas de mejora.

@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/chat_manager.py
 Gestor de sesiones de chat múltiples para Atlas v3.9.
 Cada chat tiene su propio historial, motor y metadata.

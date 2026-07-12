@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/ingestion_manager.py
 Orquesta el flujo de Ingesta Web -> RAG.
 Con PARALELISMO (4 workers) para máxima velocidad en la digestión.

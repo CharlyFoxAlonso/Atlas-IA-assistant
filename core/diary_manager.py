@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/diary_manager.py
 Gestiona el diario personal de Charly.
 Agrega entradas con fecha, permite leer y buscar.
@@ -91,7 +91,10 @@ def leer_ultimas_entradas(n_entradas: int = 5) -> str:
     entradas = contenido.split("---")
     
     # Tomar las últimas N entradas (excluyendo el encabezado)
-    ultimas = entradas[-(n_entradas + 1):-1] if len(entradas) > n_entradas else entradas[1:]
+    if len(entradas) > n_entradas:
+        ultimas = entradas[-(n_entradas):]
+    else:
+        ultimas = entradas[1:] if len(entradas) > 1 else entradas
     return "---".join(ultimas)
 
 

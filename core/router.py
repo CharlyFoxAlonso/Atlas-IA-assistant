@@ -1,4 +1,4 @@
-﻿"""
+"""
 Router inteligente: el MODELO decide qué agente usar.
 Atlas v3.9 - Detección mejorada de emociones, logros y derecho.
 """

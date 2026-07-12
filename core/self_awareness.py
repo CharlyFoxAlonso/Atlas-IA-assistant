@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/self_awareness.py
 Módulo de auto-conocimiento de Atlas v3.9.
 Genera informes técnicos completos con código real de los archivos.
@@ -8,29 +8,29 @@ import os
 import json
 from datetime import datetime
 
-# Archivos core y su descripción (SIN espacios en keys ni values)
+# Archivos core y su descripción
 ARCHIVOS_CORE = {
     "brain.py": "Cerebro principal - genera respuestas con streaming híbrido",
     "router.py": "Router inteligente - detecta qué agente usar",
     "models.py": "Conexión con Ollama y NVIDIA - envía prompts",
     "config.py": "Configuración centralizada - modelos, URLs, hardware",
     "memory_manager.py": "Gestor de memoria - analiza y guarda conversaciones",
-    "web_search.py": "Búsqueda web - DuckDuckGo",
+    "web_search.py": "Búsqueda web - DuckDuckGo/Tavily/SearXNG",
+    "web_crawler.py": "Rastreo web inteligente - crawling temático",
     "vision.py": "Visión - captura pantalla y OCR",
     "speech_input.py": "Oídos - reconocimiento de voz (Google/Vosk)",
     "speech_output.py": "Voz - síntesis de voz (Edge TTS/pyttsx3)",
     "security.py": "Seguridad - validación de rutas y contenido",
     "file_loader.py": "Cargador de archivos - wrapper de universal_loader",
-    "universal_loader.py": "Cargador universal - PDF, DOCX, PPTX, imágenes",
+    "universal_loader.py": "Cargador universal - PDF, DOCX, PPTX, imágenes, EPUB, HTML",
     "pdf_reader.py": "Lector de PDFs - pypdf + OCR con Poppler",
     "audio_transcriber.py": "Transcriptor de audio/video - Groq Whisper",
-    "media_processor.py": "Procesador de medios - FFmpeg",
     "indexer.py": "Indexador - construye índice semántico ChromaDB",
     "vector_store.py": "Motor de búsqueda semántica - ChromaDB",
     "pdf_scraper.py": "Descargador web - validación y extracción",
     "ingestion_manager.py": "Ingesta web - pipeline URL → RAG",
     "local_ingestion_manager.py": "Ingesta local - pipeline Drag&Drop → RAG",
-    "prometeo_worker.py": "Worker de digestión - paralelismo NVIDIA",
+    "digestion_worker.py": "Worker de digestión unificado - local/cloud",
     "exam_mode.py": "Modo examen - RAG + generación de preguntas",
     "diary_manager.py": "Diario personal - entradas con fecha",
     "temp_rules.py": "Reglas temporales - interceptación inteligente",
@@ -39,9 +39,8 @@ ARCHIVOS_CORE = {
     "self_improvement.py": "Auto-mejora - busca mejores prácticas",
     "profile_manager.py": "Perfiles - exportar/importar configuración",
     "reflection.py": "Reflexión - analiza conversaciones pasadas",
+    "chat_manager.py": "Gestor de chats múltiples - persistencia JSON",
     "utils.py": "Utilidades - verificar internet, etc.",
-    "files.py": "Gestión de archivos - listar, leer",
-    "memory.py": "Búsqueda en memoria - score matching",
     "ocr.py": "OCR - Tesseract wrapper"
 }
 

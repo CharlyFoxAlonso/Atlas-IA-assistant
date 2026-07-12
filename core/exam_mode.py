@@ -1,11 +1,10 @@
-﻿"""
+"""
 core/exam_mode.py - Atlas v3.9 (búsqueda híbrida + parsing robusto)
 Modo Examen Interactivo Completo con RAG Semántico + fallback por nombre de archivo.
 Soporta motor local (Ollama) y Prometeo (NVIDIA API).
 """
 import os
 import re
-import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from core.brain import buscar_en_rag_semantico
@@ -287,7 +286,7 @@ def _dividir_por_preguntas(texto: str) -> list:
     bloques = re.split(r'(?=PREGUNTA\s+\d+\s*:)', texto, flags=re.IGNORECASE)
     bloques = [b.strip() for b in bloques if b.strip()]
     if len(bloques) <= 1:
-        bloques = re.split(r'(?=P[Pp]regunta\s*\d+)', texto)
+        bloques = re.split(r'(?=[Pp]regunta\s*\d+)', texto)
         bloques = [b.strip() for b in bloques if b.strip()]
     return bloques
 

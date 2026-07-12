@@ -10,26 +10,51 @@ import zipfile
 def restaurar_backup():
     """
     Restaura Atlas desde un backup ZIP.
+    Busca backups primero en la raiz de Atlas (donde vive este script), luego en CWD.
     """
     print("\n🔧 Restaurando Atlas desde backup...")
     print("=" * 60)
-    
-    # Buscar el backup más reciente
-    backups = [f for f in os.listdir(".") if f.startswith("Atlas_Backup_") and f.endswith(".zip")]
-    
+
+    # Determinar directorio raiz de Atlas (donde está este script)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    atlas_root = os.path.dirname(script_dir)
+
+    # Buscar backups primero en raiz de Atlas, luego en CWD
+    candidatos = [atlas_root, "."]
+    backups = []
+    for d in candidatos:
+        if os.path.isdir(d):
+            backups.extend(
+                os.path.join(d, f)
+                for f in os.listdir(d)
+                if f.startswith("Atlas_Backup_") and f.endswith(".zip")
+            )
+
     if not backups:
         print("❌ No se encontró ningún backup (Atlas_Backup_*.zip)")
+        print("   Buscado en:", atlas_root, "(raiz) y", os.getcwd(), "(CWD)")
         return False
-    
-    backup_mas_reciente = sorted(backups)[-1]
+
+    backup_mas_reciente = sorted([os.path.basename(b) for b in backups])[-1]
+    ruta_backup = (
+        os.path.join(atlas_root, backup_mas_reciente)
+        if os.path.exists(os.path.join(atlas_root, backup_mas_reciente))
+        else backup_mas_reciente
+    )
     print(f"📦 Backup detectado: {backup_mas_reciente}")
-    
+
+    # Cambiar a la raiz de Atlas para extraer ahi
+    cwd_original = os.getcwd()
+    os.chdir(atlas_root)
+
     # Descomprimir
     print("📂 Descomprimiendo...")
-    with zipfile.ZipFile(backup_mas_reciente, 'r') as zipf:
-        zipf.extractall(".")
-    
-    print("✅ Archivos extraídos")
+    try:
+        with zipfile.ZipFile(ruta_backup, 'r') as zipf:
+            zipf.extractall(".")
+        print("✅ Archivos extraídos")
+    finally:
+        os.chdir(cwd_original)
     
     # Instalar dependencias
     print("\n📦 Instalando dependencias...")

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Módulo de visión de Atlas.
 Captura pantalla y extrae texto con OCR.
 Atlas v3.9
@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from PIL import Image
 import pyautogui
+from core.security import log_seguridad
 
 # Carpeta para guardar capturas temporales - ✅ CORREGIDO: agregado #
 CAPTURAS_DIR = "memory/Atlas_Memory/temp/capturas"
@@ -31,7 +32,8 @@ def capturar_pantalla():
         screenshot.save(ruta_captura)
         return ruta_captura
     except Exception as e:
-        return None, f"Error capturando pantalla: {str(e)}"
+        log_seguridad("VISION_ERROR", f"Error capturando pantalla: {str(e)}")
+        return None
 
 
 def extraer_texto_ocr(ruta_imagen):

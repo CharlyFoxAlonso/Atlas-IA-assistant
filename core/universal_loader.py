@@ -1,4 +1,4 @@
-﻿"""
+"""
 core/universal_loader.py
 Cargador universal de archivos: PDF, DOCX, PPTX, TXT, MD, Imágenes
 Optimizado para manejar archivos grandes sin saturar RAM.
