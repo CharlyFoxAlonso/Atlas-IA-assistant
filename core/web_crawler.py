@@ -16,6 +16,12 @@ from core.digestion_worker import digerir_documento
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+URLS_SKIP = (
+    "/search?", "/graphs/", "/blob/", "/tree/", "/pulse/",
+    "/issues/", "/pull/", "/projects/", "/wiki/", "/settings",
+    "/actions", "/discussions", "/releases/tag",
+)
+
 class WebCrawler:
     def __init__(self, root_folder, theme, max_pages=20):
         self.root_folder = root_folder
@@ -24,6 +30,20 @@ class WebCrawler:
         self.visited = set()
         self.queue = []
         self.processed_count = 0
+
+    @staticmethod
+    def _debe_skip_url(url):
+        parsed = urlparse(url)
+        path = parsed.path.lower()
+        return any(p in path for p in URLS_SKIP)
+
+    @staticmethod
+    def _tiene_contenido_util(texto):
+        palabras = texto.split()
+        if len(palabras) < 40:
+            return False
+        largas = sum(1 for p in palabras if len(p) > 5)
+        return largas >= 5
 
     def _is_relevant(self, text):
         """
@@ -90,7 +110,11 @@ class WebCrawler:
             
             self.visited.add(url)
             logger.info(f"Rastreando: {url}")
-            
+
+            if self._debe_skip_url(url):
+                yield {"estado": "info", "mensaje": f"⏩ Saltando URL sin contenido útil: {url}"}
+                continue
+
             try:
                 resp = requests.get(url, timeout=10, headers={'User-Agent': 'AtlasBot/3.9'})
                 if resp.status_code != 200:
@@ -105,6 +129,10 @@ class WebCrawler:
                 texto_limpio = soup.get_text(separator=" ", strip=True)
                 
                 if not texto_limpio or len(texto_limpio) < 200:
+                    continue
+
+                if not self._tiene_contenido_util(texto_limpio):
+                    yield {"estado": "info", "mensaje": f"⏩ Página sin contenido sustancial: {url}"}
                     continue
 
                 # 2. Filtrar Relevancia

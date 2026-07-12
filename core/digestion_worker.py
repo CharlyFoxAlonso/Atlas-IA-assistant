@@ -93,20 +93,47 @@ Parte {numero} de {total}
 TEXTO CRUDO A PROCESAR:
 {chunk}
 """
-    try:
-        response = client.chat.completions.create(
-            model=modelo,
-            messages=[
-                {"role": "system", "content": PROMPT_DIGESTION},
-                {"role": "user", "content": prompt_usuario},
-            ],
-            temperature=0.2,
-            max_tokens=4096,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"Error NVIDIA chunk {numero}/{total}: {e}")
-        return f"\n\n⚠️ Error procesando parte {numero}: {str(e)}\n"
+    response = client.chat.completions.create(
+        model=modelo,
+        messages=[
+            {"role": "system", "content": PROMPT_DIGESTION},
+            {"role": "user", "content": prompt_usuario},
+        ],
+        temperature=0.2,
+        max_tokens=4096,
+    )
+    contenido = response.choices[0].message.content
+    if not contenido:
+        raise RuntimeError("NVIDIA devolvió contenido vacío")
+    return contenido
+
+
+def _procesar_chunk_groq(chunk: str, modelo: str, numero: int, total: int) -> str:
+    """Procesa un chunk via Groq Cloud API."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY no configurada en .env")
+
+    from groq import Groq
+
+    prompt_usuario = f"""
+Nombre original del archivo: (documento en proceso)
+Parte {numero} de {total}
+
+TEXTO CRUDO A PROCESAR:
+{chunk}
+"""
+    client = Groq(api_key=api_key)
+    response = client.chat.completions.create(
+        model=modelo,
+        messages=[
+            {"role": "system", "content": PROMPT_DIGESTION},
+            {"role": "user", "content": prompt_usuario},
+        ],
+        temperature=0.2,
+        max_tokens=4096,
+    )
+    return response.choices[0].message.content
 
 
 def _procesar_chunk_ollama(chunk: str, modelo: str, numero: int, total: int) -> str:
@@ -118,27 +145,26 @@ Parte {numero} de {total}
 TEXTO CRUDO A PROCESAR:
 {chunk}
 """
-    try:
-        resp = requests.post(
-            URL_OLLAMA,
-            json={
-                "model": modelo,
-                "messages": [
-                    {"role": "system", "content": PROMPT_DIGESTION},
-                    {"role": "user", "content": prompt_usuario},
-                ],
-                "stream": False,
-                "options": {"temperature": 0.2},
-            },
-            timeout=300,
-        )
-        if resp.status_code != 200:
-            return f"\n\n⚠️ Error Ollama chunk {numero}: HTTP {resp.status_code}\n"
-        data = resp.json()
-        return data.get("message", {}).get("content", "")
-    except Exception as e:
-        logger.error(f"Error Ollama chunk {numero}/{total}: {e}")
-        return f"\n\n⚠️ Error procesando parte {numero}: {str(e)}\n"
+    resp = requests.post(
+        URL_OLLAMA,
+        json={
+            "model": modelo,
+            "messages": [
+                {"role": "system", "content": PROMPT_DIGESTION},
+                {"role": "user", "content": prompt_usuario},
+            ],
+            "stream": False,
+            "options": {"temperature": 0.2},
+        },
+        timeout=300,
+    )
+    if resp.status_code != 200:
+        raise RuntimeError(f"Ollama devolvió HTTP {resp.status_code}")
+    data = resp.json()
+    contenido = data.get("message", {}).get("content", "")
+    if not contenido:
+        raise RuntimeError("Ollama devolvió contenido vacío")
+    return contenido
 
 
 def _verificar_modelo_ollama(modelo: str) -> bool:
@@ -227,6 +253,11 @@ def digerir_documento_con_progreso(
                     executor.submit(_procesar_chunk_nvidia, client, c, modelo, i + 1, total_chunks): i
                     for i, c in enumerate(chunks)
                 }
+            elif motor == "groq":
+                futures = {
+                    executor.submit(_procesar_chunk_groq, c, modelo, i + 1, total_chunks): i
+                    for i, c in enumerate(chunks)
+                }
             else:
                 futures = {
                     executor.submit(_procesar_chunk_ollama, c, modelo, i + 1, total_chunks): i
@@ -266,6 +297,8 @@ def digerir_documento_con_progreso(
             if motor == "prometeo":
                 client = _get_client_nvidia()
                 texto_final = _procesar_chunk_nvidia(client, texto_crudo, modelo, 1, 1)
+            elif motor == "groq":
+                texto_final = _procesar_chunk_groq(texto_crudo, modelo, 1, 1)
             else:
                 texto_final = _procesar_chunk_ollama(texto_crudo, modelo, 1, 1)
 

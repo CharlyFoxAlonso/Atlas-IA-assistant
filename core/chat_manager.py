@@ -144,6 +144,14 @@ def agregar_mensaje(rol: str, contenido: str, chat_id: str = None):
     if datos is None:
         return
     datos.setdefault("messages", []).append({"role": rol, "content": contenido})
+
+    if rol == "user" and datos.get("nombre") == "Nuevo chat":
+        palabras = contenido.strip().split()
+        preview = " ".join(palabras[:3])
+        if len(preview) > 35:
+            preview = preview[:32] + "..."
+        datos["nombre"] = preview
+
     _guardar(cid, datos)
 
 
