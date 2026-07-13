@@ -13,6 +13,7 @@ ENV/
 .env.local
 .env.production
 *.env
+!.env.example
 
 # ==========================================
 # ARCHIVOS COMPILADOS DE PYTHON
@@ -39,14 +40,24 @@ build/
 # ==========================================
 # DATOS PERSONALES Y MEMORIA (PRIVADO)
 # ==========================================
+# Toda memoria nueva es privada por defecto. Los archivos que ya estaban
+# versionados siguen bajo seguimiento hasta una migracion explicita.
+memory/Atlas_Memory/**
+memory/*.json
+
+# Nombres historicos y corregidos (compatibilidad durante la migracion)
 memory/Atlas_Memory/01_Perfil/
 memory/Atlas_Memory/02_Memoria/
 memory/Atlas_Memory/03_Conocimiento/
 memory/Atlas_Memory/04_Univercidad/
+memory/Atlas_Memory/04_Universidad/
 memory/Atlas_Memory/05_Finanzas/
+memory/Atlas_Memory/05_Proyectos/
 memory/Atlas_Memory/06_Diario/
 memory/Atlas_Memory/07_Salud/
+memory/Atlas_Memory/07_Proyectos/
 memory/Atlas_Memory/08_Proyectos/
+memory/Atlas_Memory/08_Finanzas/
 memory/Atlas_Memory/09_Multimedia/
 memory/Atlas_Memory/10_Inbox_crudo/
 memory/Atlas_Memory/11_Automatizaciones/
@@ -67,6 +78,10 @@ vector_db/
 # LOGS Y TEMPORALES
 # ==========================================
 *.log
+logs/
+cache/
+downloads/
+backups/
 temp/
 tmp/
 captures/
@@ -96,6 +111,9 @@ desktop.ini
 # ==========================================
 models/
 *.gguf
+*.bin
+*.onnx
+*.safetensors
 
 # ==========================================
 # ATLAS INSTALADOR (legacy)

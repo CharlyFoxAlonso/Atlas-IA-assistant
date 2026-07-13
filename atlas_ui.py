@@ -39,6 +39,12 @@ from core.config import (
     detectar_hardware,
     MODELO_LOCAL
 )
+from core.system import Healer, diagnosticar_sistema
+
+SYSTEM_UI_REPAIRS = {
+    "folders": "Preparar carpetas de Atlas",
+    "config": "Crear configuración mínima si falta",
+}
 
 # ============================================
 # CONFIGURACIÓN DE PÁGINA
@@ -73,6 +79,10 @@ def _ensure_state():
         "modelo_ingestion_groq": "llama-3.3-70b-versatile",
         "_mostrar_ayuda": False,
         "messages": [],
+        "system_diagnosis": None,
+        "system_diagnosis_error": None,
+        "system_repair_preview": None,
+        "system_repair_component": "folders",
     }
     for key, default in defaults.items():
         if key not in st.session_state:
@@ -99,6 +109,138 @@ def _ensure_state():
             limpiar_historial()
 
 _ensure_state()
+
+
+def _refresh_system_diagnosis():
+    """Actualiza el diagnóstico de solo lectura almacenado en la sesión."""
+    try:
+        st.session_state.system_diagnosis = diagnosticar_sistema()
+        st.session_state.system_diagnosis_error = None
+    except Exception as exc:
+        st.session_state.system_diagnosis = None
+        st.session_state.system_diagnosis_error = f"{type(exc).__name__}: {exc}"
+
+
+def _render_system_status_panel():
+    """Renderiza Doctor y reparaciones simples sin ejecutar la CLI."""
+    st.subheader("Estado del sistema")
+    st.caption("Diagnóstico local. No muestra claves ni modifica el equipo.")
+
+    if st.session_state.system_diagnosis is None and not st.session_state.system_diagnosis_error:
+        with st.spinner("Revisando Atlas..."):
+            _refresh_system_diagnosis()
+
+    if st.button("Actualizar diagnóstico", use_container_width=True, key="system_refresh"):
+        with st.spinner("Actualizando diagnóstico..."):
+            _refresh_system_diagnosis()
+
+    error = st.session_state.system_diagnosis_error
+    diagnosis = st.session_state.system_diagnosis
+    if error:
+        st.error(f"No se pudo completar el diagnóstico: {error}")
+        return
+    if not diagnosis:
+        st.warning("El diagnóstico todavía no está disponible.")
+        return
+
+    ready = bool(diagnosis.get("ready_to_start"))
+    score = int(diagnosis.get("health_score", 0))
+    col_health, col_ready = st.columns(2)
+    with col_health:
+        st.metric("Salud", f"{score}/100")
+    with col_ready:
+        st.metric("Inicio", "Listo" if ready else "Revisar")
+
+    python_info = diagnosis.get("python", {})
+    if python_info.get("in_venv"):
+        st.success(f"Entorno privado activo · Python {python_info.get('version', '?')}")
+    elif diagnosis.get("execution_mode") == "packaged":
+        st.success("Atlas se ejecuta como aplicación empaquetada.")
+    else:
+        st.warning(
+            f"Python global {python_info.get('version', 'desconocido')}. "
+            "Para desarrollo, iniciá Atlas desde .venv."
+        )
+
+    for issue in diagnosis.get("critical_issues", []):
+        st.error(issue)
+    for warning in diagnosis.get("warnings", []):
+        st.warning(warning)
+
+    capabilities = diagnosis.get("capabilities", {})
+    enabled = [name for name, available in capabilities.items() if available]
+    disabled = [name for name, available in capabilities.items() if not available]
+    with st.expander("Capacidades detectadas", expanded=False):
+        if enabled:
+            st.markdown("**Disponibles**")
+            st.write(", ".join(enabled))
+        if disabled:
+            st.markdown("**En modo degradado**")
+            st.write(", ".join(disabled))
+
+    with st.expander("Reparaciones seguras", expanded=False):
+        st.caption(
+            "Primero se simula la acción. Aplicarla requiere una confirmación explícita."
+        )
+        component = st.selectbox(
+            "Acción",
+            options=list(SYSTEM_UI_REPAIRS),
+            format_func=lambda value: SYSTEM_UI_REPAIRS[value],
+            key="system_repair_component",
+        )
+
+        if st.button("Simular reparación", use_container_width=True, key="system_repair_simulate"):
+            try:
+                preview = Healer(diagnosis=diagnosis, dry_run=True).fix(component)
+                st.session_state.system_repair_preview = preview.to_dict()
+            except Exception as exc:
+                st.session_state.system_repair_preview = {
+                    "component": component,
+                    "success": False,
+                    "dry_run": True,
+                    "message": "No se pudo simular la reparación",
+                    "errors": [f"{type(exc).__name__}: {exc}"],
+                    "actions": [],
+                }
+
+        preview = st.session_state.system_repair_preview
+        if preview and preview.get("component") == component:
+            if preview.get("success"):
+                st.info(preview.get("message", "Simulación completada"))
+            else:
+                st.error(preview.get("message", "La simulación falló"))
+            for action in preview.get("actions", []):
+                target = action.get("target", action.get("action", "acción"))
+                st.caption(f"• {action.get('status', 'planned')}: {target}")
+            for repair_error in preview.get("errors", []):
+                st.error(repair_error)
+
+            confirm_key = f"system_repair_confirm_{component}"
+            confirmed = st.checkbox(
+                "Confirmo que deseo aplicar esta reparación",
+                key=confirm_key,
+            )
+            if st.button(
+                "Aplicar reparación",
+                type="primary",
+                use_container_width=True,
+                disabled=not confirmed,
+                key=f"system_repair_apply_{component}",
+            ):
+                try:
+                    with st.spinner("Aplicando reparación..."):
+                        result = Healer(diagnosis=diagnosis, dry_run=False).fix(component)
+                    st.session_state.system_repair_preview = result.to_dict()
+                    _refresh_system_diagnosis()
+                    if result.success:
+                        st.success(result.message or "Reparación completada")
+                    else:
+                        st.error(result.message or "La reparación no pudo completarse")
+                except Exception as exc:
+                    st.error(f"No se pudo aplicar la reparación: {type(exc).__name__}: {exc}")
+
+    with st.expander("Diagnóstico técnico (JSON)", expanded=False):
+        st.json(diagnosis, expanded=False)
 
 # ============================================
 # CSS PERSONALIZADO
@@ -674,7 +816,21 @@ with st.sidebar:
                 # Convertir ruta relativa de carpeta en ruta absoluta
                 ruta_absoluta_raiz = os.path.join("memory/Atlas_Memory", raiz_crawl)
                 
-                crawler = WebCrawler(root_folder=ruta_absoluta_raiz, theme=tema_crawl, max_pages=max_paginas)
+                motor_crawl = st.session_state.get("motor_ingestion", "atlas")
+                if motor_crawl == "atlas":
+                    modelo_crawl = st.session_state.get("modelo_ingestion_local", "qwen3:8b")
+                elif motor_crawl == "groq":
+                    modelo_crawl = st.session_state.get("modelo_ingestion_groq", "llama-3.3-70b-versatile")
+                else:
+                    modelo_crawl = st.session_state.get("modelo_ingestion_nube", "meta/llama-3.1-70b-instruct")
+
+                crawler = WebCrawler(
+                    root_folder=ruta_absoluta_raiz,
+                    theme=tema_crawl,
+                    max_pages=max_paginas,
+                    motor=motor_crawl,
+                    modelo=modelo_crawl,
+                )
                 progreso_container = st.empty()
                 start_time = time.time()
                 
@@ -921,6 +1077,13 @@ Generado: {ahora_str} | Creador: Charly
                     st.error(f"❌ {resultado}")
             except Exception as e:
                 st.error(f"❌ Error: {e}")
+
+    st.divider()
+
+    # ========================================
+    # SECCIÓN: Estado operativo de Atlas
+    # ========================================
+    _render_system_status_panel()
 
     st.divider()
 
