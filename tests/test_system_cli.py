@@ -18,7 +18,7 @@ from core.system.result_types import LaunchResult, RepairResult
 
 def diagnosis(ready=True, warnings=None, in_venv=True):
     return {
-        "atlas_version": "3.9",
+        "atlas_version": "4.0",
         "health_score": 90,
         "ready_to_start": ready,
         "execution_mode": "development",

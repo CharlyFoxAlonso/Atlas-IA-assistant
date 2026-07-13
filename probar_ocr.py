@@ -1,7 +1,7 @@
 """
 probar_ocr.py
 Smoke test para verificar OCR con Tesseract.
-Atlas v3
+Atlas v4
 """
 import os
 import sys

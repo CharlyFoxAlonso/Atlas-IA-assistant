@@ -1,4 +1,4 @@
-# 🛠️ Developer Guide - Atlas v3.9
+# 🛠️ Developer Guide - Atlas v4
 
 This guide provides the technical details necessary to extend and maintain Atlas.
 

@@ -25,7 +25,7 @@ from core.system.result_types import CheckResult, DiagnosisResult
 # Doctor must also work before Atlas dependencies (including python-dotenv) exist.
 # Keep these dependency-free defaults aligned with core.config until a manifest
 # becomes the single source of product metadata.
-VERSION = "3.9"
+VERSION = "4.0"
 MODELO_LOCAL = os.getenv("MODELO_LOCAL", "qwen3:8b")
 URL_OLLAMA = os.getenv("URL_OLLAMA", "http://127.0.0.1:11434/api/chat")
 

@@ -1,7 +1,7 @@
 """
 core/indexer.py
 Construye el índice semántico de ChromaDB desde los archivos de Atlas_Memory.
-Atlas v3 - Indexa TODAS las carpetas de Atlas_Memory (no solo 03_Conocimiento)
+Atlas v4 - Indexa TODAS las carpetas de Atlas_Memory (no solo 03_Conocimiento)
 """
 import os
 import sys

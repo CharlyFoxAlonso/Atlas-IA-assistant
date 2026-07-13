@@ -1,7 +1,7 @@
 """
 core/config.py
 ========================================
-CONFIGURACIÓN CENTRALIZADA DE ATLAS v3
+CONFIGURACIÓN CENTRALIZADA DE ATLAS v4
 ========================================
 
 Este archivo es el ÚNICO lugar donde se definen:
@@ -25,7 +25,7 @@ load_dotenv()
 # ============================================
 # VERSIÓN E IDENTIDAD
 # ============================================
-VERSION = "3.9"
+VERSION = "4.0"
 NOMBRE = "Atlas"
 CODENAME = "Multi-Nube"
 

@@ -1,6 +1,6 @@
 """
 core/digestion_worker.py
-Worker de digestión unificado para Atlas v3.9.
+Worker de digestión unificado para Atlas v4.
 Soporta motores: "atlas" (Ollama local) y "prometeo" (NVIDIA API).
 Procesa texto crudo → documento Markdown estructurado para indexación RAG.
 """

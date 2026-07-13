@@ -83,7 +83,7 @@ def crear_distribucion():
     # ========================================
     print("[4/5] Comprimiendo...")
     timestamp = datetime.now().strftime("%Y%m%d")
-    zip_name = f"Atlas_v3.9_{timestamp}.zip"
+    zip_name = f"Atlas_v4_{timestamp}.zip"
     zip_path = os.path.join(raiz_atlas, zip_name)
     
     # Eliminar ZIP anterior si existe

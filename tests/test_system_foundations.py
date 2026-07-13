@@ -22,7 +22,7 @@ from core.system.result_types import CheckResult, CommandResult, DiagnosisResult
 class ResultTypeTests(unittest.TestCase):
     def test_nested_results_are_json_serializable(self):
         result = DiagnosisResult(
-            atlas_version="3.9",
+            atlas_version="4.0",
             timestamp="2026-07-12T00:00:00Z",
             health_score=90,
             ready_to_start=True,

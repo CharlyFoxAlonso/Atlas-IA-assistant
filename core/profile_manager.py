@@ -1,7 +1,7 @@
 """
 core/profile_manager.py
 Gestiona perfiles de usuario: exportar, importar, crear nuevos.
-Atlas v3.9
+Atlas v4
 """
 import os
 import json

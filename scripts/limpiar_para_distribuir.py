@@ -328,7 +328,7 @@ def limpiar_atlas():
     escribir_archivo(
         os.path.join(clean_dir, "requirements.txt"),
         [
-            "# Atlas v3.9 - Dependencias",
+            "# Atlas v4 - Dependencias",
             "# Instalacion: pip install -r requirements.txt",
             "",
             "# UI",
@@ -383,7 +383,7 @@ def limpiar_atlas():
     # 5. CREAR CONFIG
     # ========================================
     config = {
-        "version": "3.9",
+        "version": "4.0",
         "fecha_creacion": datetime.now().isoformat(),
         "modelo_defecto": "qwen3:8b",
         "idioma": "es",

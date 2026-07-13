@@ -11,7 +11,7 @@ from core.vision import analizar_pantalla
 from core.memory_manager import procesar_historial_para_memoria
 from core.config import MODELO_LOCAL, MODELO_NUBE_DEFAULT, MODELO_GROQ_DEFAULT
 
-app = FastAPI(title="Atlas API v3.9", description="API para acceso remoto a Atlas")
+app = FastAPI(title="Atlas API v4", description="API para acceso remoto a Atlas")
 
 # --- Modelos de Datos ---
 class ChatRequest(BaseModel):
@@ -27,7 +27,7 @@ class ChatCreateRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"status": "online", "version": "v3.9", "name": "Atlas API"}
+    return {"status": "online", "version": "v4", "name": "Atlas API"}
 
 @app.get("/chats")
 async def get_chats():

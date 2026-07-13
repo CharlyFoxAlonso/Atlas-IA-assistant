@@ -1,4 +1,4 @@
-# 🏗️ Architecture Guide - Atlas v3.9
+# 🏗️ Architecture Guide - Atlas v4
 
 Atlas is a hybrid AI orchestration system designed to balance high-performance cloud inference with absolute local privacy.
 

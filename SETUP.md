@@ -1,4 +1,4 @@
-﻿# 🚀 SETUP — Atlas v3.9
+﻿# 🚀 SETUP — Atlas v4
 
 > Pasos exactos para correr Atlas en una PC Windows nueva.
 
@@ -159,4 +159,4 @@ pip list
 
 ---
 
-Última actualización: **v3.9**
+Última actualización: **v4**

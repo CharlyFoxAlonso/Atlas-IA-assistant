@@ -1,4 +1,4 @@
-﻿# 🧠 Atlas v3.9 - AI Assistant System
+﻿# 🧠 Atlas v4 - AI Assistant System
 
 <div align="center">
 
@@ -56,7 +56,7 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                       ATLAS v3.9 - CORE                     │
+│                        ATLAS v4 - CORE                      │
 ├─────────────────────────────────────────────────────────────┤
 │  Router Model → Classifies intent & assigns specialized agent│
 ├─────────────────────────────────────────────────────────────┤
@@ -120,7 +120,18 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ---
 
-## 🔧 Changelog v3.9
+## 🔧 Changelog v4
+
+### Runtime Foundation
+- **`core/system`**: Doctor, Healer and Launcher share typed contracts, safe command execution and operational diagnostics.
+- **Technical CLI**: `python -m core.system` provides human and JSON output, explicit `--apply` repairs and dry-run launch behavior.
+- **Streamlit diagnostics**: The UI exposes safe health checks and previews without duplicating system logic.
+- **Web crawler hardening**: URL validation, redirect controls, bounded downloads and safer path handling.
+- **Version identity**: Runtime metadata uses `4.0`; user-facing product labels use `v4`.
+
+---
+
+## 🔧 Changelog v3.9 (historical)
 
 ### New Features
 - **Web Crawler (`core/web_crawler.py`)**: Intelligent web crawling engine with theme-based filtering, automatic subfolder organization, and configurable page limits. Integrated into the Streamlit UI sidebar under "Rastreo Inteligente".
@@ -291,7 +302,7 @@ C:\Users\delfa\Documents\Atlas\
 
 We prioritize maintaining a secure, lightweight, and robust assistant over "feature creep". Here is our realistic development timeline:
 
-### v3.5 (Upcoming Minor Release)
+### v4.1 (Next Minor Release)
 - [ ] **EPUB & HTML support** inside `core/universal_loader.py`.
 - [ ] **Chat Session Exporter:** Export the active chat to Markdown (`.md`) or structured PDF directly from the UI.
 - [ ] **Prompt Playground:** Sandbox in the UI to test a single prompt against all downloaded local models simultaneously to evaluate responses.
@@ -308,7 +319,7 @@ We prioritize maintaining a secure, lightweight, and robust assistant over "feat
 - [x] **System-wide Consistency:** Centralized model defaults and synchronized versioning.
 - [x] **RAG Stability:** Enhanced error handling and validation in the digestion worker.
 
-### v4.0+ (Long-Term Vision)
+### v4.x (Long-Term Vision)
 - [ ] **Secure Tool-Calling (Function-Calling):** Safe local function-calling utilizing an explicit, user-confirmed whitelist of tasks (e.g. search specific local folders, run math calculations) with absolutely **no unsafe shell-execution allowed**.
 
 ---

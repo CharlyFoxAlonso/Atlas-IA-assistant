@@ -1,6 +1,6 @@
 """
 core/self_improvement.py
-Rastreador de mejoras para Atlas v3.
+Rastreador de mejoras para Atlas v4.
 Busca en la web (foros, noticias, documentación) recomendaciones de
 actualización o mejora, **sin modificar código**.
 Las URLs encontradas se persisten para revisión manual en la UI.

@@ -1,4 +1,4 @@
-# Atlas v3.9 — Dependencias curadas
+# Atlas v4 — Dependencias curadas
 # =======================================================
 # Probadas con Python 3.11/3.12/3.13 (no usar 3.14 por
 # falta de wheels para chromadb/sentence-transformers).
