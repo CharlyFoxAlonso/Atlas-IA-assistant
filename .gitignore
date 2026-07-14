@@ -45,6 +45,9 @@ build/
 memory/Atlas_Memory/**
 memory/*.json
 
+# Datos de prueba exclusivos de Atlas Auditor (siempre locales)
+memory/Atlas_Auditor_Test/**
+
 # Nombres historicos y corregidos (compatibilidad durante la migracion)
 memory/Atlas_Memory/01_Perfil/
 memory/Atlas_Memory/02_Memoria/
