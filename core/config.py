@@ -196,6 +196,17 @@ N_RESULTS_DEFAULT = 5
 UMBRAL_SEMANTICO = 200
 
 # ============================================
+# 🗂️ INDEXACIÓN INCREMENTAL (Atlas v4.1)
+# ============================================
+# El manifiesto vive junto a la base vectorial que describe (vector_db/),
+# es un dato local (gitignored) y no contiene contenido de documentos.
+INDEX_MANIFEST_PATH = os.path.join(CHROMA_PATH, "index_manifest.json")
+INDEX_SCHEMA_VERSION = 1
+INDEX_SUPPORTED_EXTENSIONS = {'.md', '.pdf', '.txt', '.docx', '.pptx'}
+# Carpetas que el indexador ignora dentro de BASE_MEMORIA
+INDEX_IGNORED_DIRS = {'__pycache__', 'temp_ingestion', 'temp_local_ingestion'}
+
+# ============================================
 # 💬 HISTORIAL Y ANÁLISIS
 # ============================================
 MAX_HISTORIAL = 5
