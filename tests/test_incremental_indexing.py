@@ -45,6 +45,7 @@ class FakeCollection:
         self.store = {}  # id -> {"document": str, "metadata": dict}
         self.add_calls = 0
         self.delete_calls = 0
+        self.fallar_add = False  # simular fallo del backend en add()
 
     def get(self, where=None, ids=None):
         if ids is not None:
@@ -57,6 +58,8 @@ class FakeCollection:
 
     def add(self, documents, ids, metadatas):
         self.add_calls += 1
+        if self.fallar_add:
+            raise RuntimeError("fallo simulado del backend en add()")
         for doc, cid, md in zip(documents, ids, metadatas):
             self.store[cid] = {"document": doc, "metadata": dict(md)}
 
@@ -530,6 +533,112 @@ class ErrorIndiceTests(CasoBase):
         res2 = self.indexar(ruta)
         self.assertEqual(res2.status, "indexed")
         self.assertGreater(self.fake.count(), 0)
+
+
+# ============================================
+# AUD-02 FALLOS PARCIALES: delete OK → add falla
+# ============================================
+
+class FalloParcialDeleteAddTests(CasoBase):
+    """
+    Reproducción del escenario: v1 indexada → archivo cambia a v2 →
+    la reindexación elimina los chunks de v1 → col.add de v2 falla →
+    el manifiesto sigue describiendo v1 → la sync posterior debe recuperar.
+    """
+
+    def test_delete_ok_add_falla_y_sync_posterior_recupera(self):
+        # 1-3. v1 escrita, indexada, confirmada en chunks y manifiesto
+        ruta = escribir(self.base, "doc.md", CONTENIDO_BASE)
+        r1 = self.sync()
+        self.assertEqual(r1.indexed_new, 1)
+        self.assertGreater(self.fake.count(), 0)
+        hash_v1 = IndexManifest.load(self.manifest_path).get("doc.md").content_sha256
+
+        # 4-5. v2: contenido, hash y tamaño distintos; mtime confiable
+        contenido_v2 = CONTENIDO_BASE + "\n\nCapítulo 7: versión dos con más texto."
+        escribir(self.base, "doc.md", contenido_v2)
+        stat = os.stat(ruta)
+        os.utime(ruta, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+        self.assertNotEqual(hash_v1, sha256_de(ruta))
+
+        # 6-7. delete permitido, siguiente add falla
+        self.fake.fallar_add = True
+        deletes_antes = self.fake.delete_calls
+        r2 = self.sync()
+
+        # 8-10. Resultado failed; chunks v1 eliminados; manifiesto sigue en v1
+        self.assertEqual(r2.failed, 1)
+        self.assertGreater(self.fake.delete_calls, deletes_antes,
+                           "el delete de v1 ocurrió antes del fallo")
+        self.assertEqual(self.fake.count(), 0,
+                         "v1 eliminada y v2 nunca agregada: índice vacío")
+        entry = IndexManifest.load(self.manifest_path).get("doc.md")
+        self.assertEqual(entry.content_sha256, hash_v1,
+                         "el manifiesto conserva la última versión buena (v1)")
+        self.assertEqual(entry.last_operation, "failed")
+        self.assertIsNotNone(entry.last_error)
+
+        # 11-16. Backend sano: la sync posterior reintenta v2 y reconcilia
+        self.fake.fallar_add = False
+        r3 = self.sync()
+
+        self.assertEqual(r3.failed, 0)
+        self.assertEqual(r3.reindexed_modified, 1,
+                         "reintenta v2 porque el archivo ya no coincide con v1")
+        entry3 = IndexManifest.load(self.manifest_path).get("doc.md")
+        self.assertEqual(entry3.content_sha256, sha256_de(ruta))
+        self.assertEqual(entry3.last_operation, "indexed")
+        # Chroma y manifiesto alineados, sin duplicación
+        self.assertEqual(self.fake.count(), entry3.chunk_count)
+        ids_doc = self.fake.ids_de("doc.md")
+        self.assertEqual(len(ids_doc), len(set(ids_doc)))
+        textos = [row["document"] for row in self.fake.store.values()]
+        self.assertTrue(any("versión dos" in t for t in textos))
+
+
+# ============================================
+# AUD-02b FALLO PARCIAL: add OK → manifest.save falla
+# ============================================
+
+class FalloManifestSaveTests(CasoBase):
+    """
+    Escenario: v1 indexada → v2 modificada → reindexación OK en Chroma →
+    manifest.save falla → el manifiesto en disco sigue en v1 →
+    la sync posterior debe reconciliar sin duplicación permanente.
+    """
+
+    def test_add_ok_save_falla_y_sync_reconcilia(self):
+        ruta = escribir(self.base, "doc.md", CONTENIDO_BASE)
+        self.sync()
+        hash_v1 = IndexManifest.load(self.manifest_path).get("doc.md").content_sha256
+
+        contenido_v2 = CONTENIDO_BASE + "\n\nSegunda versión con contenido adicional."
+        escribir(self.base, "doc.md", contenido_v2)
+        stat = os.stat(ruta)
+        os.utime(ruta, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000_000))
+
+        # add ocurre; el guardado del manifiesto falla
+        with mock.patch.object(IndexManifest, "save",
+                               side_effect=OSError("disco lleno simulado")):
+            r2 = self.sync()
+
+        self.assertGreaterEqual(r2.failed, 1,
+                                "el fallo del manifiesto se reporta, no se oculta")
+        # Chroma ya tiene v2; el manifiesto EN DISCO sigue describiendo v1
+        entry_disco = IndexManifest.load(self.manifest_path).get("doc.md")
+        self.assertEqual(entry_disco.content_sha256, hash_v1)
+
+        # Sync posterior: detecta el desfasaje (stat/hash != v1), reindexa
+        # con deduplicación y guarda el manifiesto
+        r3 = self.sync()
+        self.assertEqual(r3.failed, 0)
+        self.assertEqual(r3.reindexed_modified, 1)
+        entry3 = IndexManifest.load(self.manifest_path).get("doc.md")
+        self.assertEqual(entry3.content_sha256, sha256_de(ruta))
+        self.assertEqual(self.fake.count(), entry3.chunk_count)
+        ids_doc = self.fake.ids_de("doc.md")
+        self.assertEqual(len(ids_doc), len(set(ids_doc)),
+                         "sin duplicación permanente")
 
 
 # ============================================
