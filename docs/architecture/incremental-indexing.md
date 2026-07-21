@@ -155,9 +155,26 @@ registrado en el manifiesto que ya no existe en disco.
   guardando igual que antes.
 - `agregar_documento()` sin `doc_id` en metadata conserva el
   comportamiento histórico exacto (borrado previo por `nombre`).
+- **Versión de ChromaDB:** `requirements.txt` declara
+  `chromadb>=0.5.0,<0.6.0`. El flujo completo (indexar, reindexar sin
+  duplicar, buscar, eliminar por `doc_id`, eliminar por metadata legacy
+  `ruta`, sincronizar nuevo/modificado/eliminado) fue **probado con
+  ChromaDB 0.5.23** sobre una base temporal con el modelo de embeddings
+  cacheado. No se verificaron otras versiones del rango.
 
 ## 9. Recuperación ante errores
 
+- **Fallo parcial delete → add:** si al reindexar una versión 2 el
+  borrado de la versión 1 ocurre pero el `add` falla, Chroma queda
+  temporalmente sin ese documento, pero el manifiesto conserva los
+  campos hash/tamaño/mtime de la **última versión buena** (el fallo sólo
+  anota `last_error`). La sincronización posterior detecta que el archivo
+  ya no coincide con esa versión y reintenta la nueva. Verificado con
+  test de regresión: recupera sin duplicación permanente.
+- **Fallo de `manifest.save` tras un `add` exitoso:** el manifiesto en
+  disco queda desfasado respecto de Chroma; la sincronización posterior
+  detecta el desfasaje (stat/hash), reindexa con deduplicación (borrado
+  previo + IDs deterministas) y guarda. Sin duplicación permanente.
 - Fallo del loader o del backend al indexar: el documento queda en estado
   `failed` con el error, la sincronización continúa con el resto y el
   manifiesto **no registra un éxito inexistente** (si ya existía una
