@@ -368,8 +368,15 @@ def sincronizar_indice(memoria_base: Optional[str] = None,
     manifiesto: indexa nuevos, reindexa modificados, omite sin cambios,
     retira eliminados y reporta fallidos sin detenerse.
 
-    La decisión definitiva es el SHA-256 del contenido; tamaño y mtime
-    sólo se usan como atajo para no releer archivos intactos.
+    Detección de cambios: Atlas usa tamaño y mtime como atajo rápido.
+    Cuando ambos coinciden con el manifiesto, el documento se considera
+    sin cambios SIN volver a leerlo ni calcular hash. Si alguno difiere,
+    recién entonces calcula el SHA-256 del contenido para distinguir un
+    cambio real de una modificación meramente temporal (ej.: un "touch").
+    Compromiso aceptado: un proceso externo capaz de alterar el contenido
+    preservando exactamente tamaño y mtime produciría un falso "sin
+    cambios"; para una app personal local se acepta a cambio del
+    rendimiento, y la reconstrucción explícita sigue disponible.
     """
     return _sincronizar(memoria_base, manifest_path, forzar=False)
 
@@ -432,7 +439,8 @@ def _sincronizar(memoria_base: Optional[str],
                     log_seguridad("INDEX_DOCUMENT_SKIPPED", rel)
                     continue
 
-                # Decisión definitiva: SHA-256 del contenido.
+                # stat difiere: verificar con SHA-256 si el contenido
+                # cambió de verdad o fue sólo una modificación temporal.
                 try:
                     digest = _sha256_archivo(ruta)
                 except OSError as e:

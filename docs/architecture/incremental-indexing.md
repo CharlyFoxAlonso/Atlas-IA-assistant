@@ -107,14 +107,27 @@ que describe; no contiene contenido de documentos).
 
 ## 6. Detección de cambios
 
-1. **Atajo:** si `size_bytes` y `modified_time_ns` coinciden con el
-   manifiesto, el archivo se omite sin abrirlo.
-2. **Decisión definitiva:** si cambiaron mtime o tamaño, se compara el
-   **SHA-256 del contenido**. Si coincide, sólo se actualiza el mtime en
-   el manifiesto (no se reindexa). Si difiere, se reindexa ese documento.
+Atlas utiliza **tamaño y mtime como atajo rápido**:
+
+1. Si `size_bytes` y `modified_time_ns` coinciden con el manifiesto, el
+   documento se considera **sin cambios sin volver a leerlo** (no se
+   abre, no se calcula hash, no se recalculan embeddings).
+2. Si alguno de los dos difiere, recién entonces Atlas calcula el
+   **SHA-256 del contenido** para distinguir un cambio real de una
+   modificación meramente temporal:
+   - hash igual → sólo se actualiza el mtime en el manifiesto (no se
+     reindexa);
+   - hash distinto → se reindexa ese documento.
 3. No se usa MD5 para integridad del manifiesto. (El MD5 histórico de
    `local_ingestion_manager._generar_hash_archivo` sólo genera sufijos de
    nombre de archivo; no es una decisión de integridad.)
+
+**Limitación aceptada:** un proceso externo capaz de alterar el contenido
+de un archivo preservando exactamente su tamaño y su mtime produciría un
+falso "sin cambios". Esto **no** es protección criptográfica completa:
+para una aplicación personal local el riesgo se acepta como compromiso
+de rendimiento, y la reconstrucción completa explícita (`!indexar`)
+sigue disponible como vía de verificación total.
 
 ## 7. Eliminación
 
@@ -193,14 +206,18 @@ tamaño y el costo de los documentos (PDFs, embeddings reales).
   naturales para el siguiente.
 - El manifiesto registra un único `embedding_model`/`collection`
   informativo; no fuerza reindexación si cambian (decisión postergada).
+- **Falso "sin cambios" por preservación de tamaño+mtime:** un proceso
+  externo que altere el contenido conservando exactamente tamaño y mtime
+  no sería detectado por el atajo rápido. Riesgo aceptado para una app
+  personal local (ver sección 6); no es protección criptográfica completa.
 
 ## 12. Decisiones descartadas
 
 - **Base de datos nueva (SQLite) para el manifiesto:** descartada por
   alcance; un JSON atómico es suficiente para miles de documentos.
 - **Detectar cambios sólo por mtime:** descartado; mtime cambia por
-  copias/backsups sin cambio de contenido. SHA-256 es la decisión
-  definitiva, mtime/tamaño sólo un atajo.
+  copias/backups sin cambio de contenido. Cuando tamaño o mtime difieren,
+  el SHA-256 del contenido decide si hubo un cambio real (ver sección 6).
 - **Usar el basename como identidad:** descartado; colisiona entre
   carpetas. La identidad es la ruta relativa normalizada.
 - **Borrar y recrear la colección en la reconstrucción:** descartado por
