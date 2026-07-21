@@ -197,17 +197,43 @@ categoria: "{categoria}"
         with open(ruta_final, "w", encoding="utf-8") as f:
             f.write(metadata + texto_procesado)
         
-        # PASO 5: Re-indexar
-        yield {"estado": "indexando", "mensaje": "🔄 Reconstruyendo índice..."}
+        # PASO 5: Indexar SOLO el documento recién creado (Atlas v4.1)
+        yield {"estado": "indexando", "mensaje": "🔍 Indexando documento nuevo..."}
+        error_indexacion = None
         try:
-            from core.indexer import construir_indice
-            construir_indice()
-        except Exception:
-            pass
-        
+            from core.indexer import indexar_archivo
+            resultado_idx = indexar_archivo(ruta_final)
+            if resultado_idx.status == "indexed":
+                log_seguridad(
+                    "LOCAL_INGESTION_INDEXED",
+                    f"{nombre_final}: {resultado_idx.chunk_count} chunks"
+                )
+            else:
+                error_indexacion = resultado_idx.error
+        except Exception as e:
+            # indexar_archivo no debería lanzar, pero el límite queda protegido.
+            error_indexacion = f"{type(e).__name__}: {e}"
+
+        if error_indexacion is not None:
+            # El Markdown YA está guardado: NO se borra. Queda pendiente de
+            # indexación y una sincronización posterior lo recuperará.
+            log_seguridad(
+                "LOCAL_INGESTION_INDEX_FAILED",
+                f"{nombre_final}: {error_indexacion}"
+            )
+            yield {
+                "estado": "advertencia",
+                "mensaje": (f"⚠️ Guardado, pero la indexación falló: {error_indexacion}. "
+                            f"Queda pendiente; se reintentará con !indexar sync.")
+            }
+
+        mensaje_final = f"✅ {nombre_original} procesado y guardado en {categoria}"
+        if error_indexacion is not None:
+            mensaje_final += " (pendiente de indexación)"
+
         yield {
-            "estado": "completado", 
-            "mensaje": f"✅ {nombre_original} procesado y guardado en {categoria}",
+            "estado": "completado",
+            "mensaje": mensaje_final,
             "archivo": nombre_final,
             "ruta": ruta_final
         }
