@@ -1159,7 +1159,8 @@ def _render_ayuda_modal():
         with tab_rag:
             st.markdown("#### 🔄 Sistema y RAG Semántico")
             cmd_list = [
-                ("`!indexar`", "Reconstruye el índice semántico desde `memory/Atlas_Memory/`."),
+                ("`!indexar`", "Reconstrucción completa del índice semántico desde `memory/Atlas_Memory/`."),
+                ("`!indexar sync`", "Sincronización incremental: procesa sólo archivos nuevos, modificados o eliminados."),
                 ("`!limpiar` o `!limpiar_historial`", "Borra el historial de la sesión actual."),
                 ("`!historial`", "Informa cantidad de mensajes acumulados."),
                 ("`!categorias`", "Lista las categorías de memoria persistente."),
@@ -1431,15 +1432,36 @@ Ruta de DB: {stats['ruta_db']}""")
                             else:
                                 st.info("No encontré nada.")
 
-            # !INDEXAR
+            # !INDEXAR [sync|rebuild]
             elif comando == "!indexar":
-                with st.spinner("🔄 Reconstruyendo índice semántico..."):
-                    try:
-                        from core.indexer import construir_indice
-                        indice = construir_indice()
-                        st.success(f"✅ {len(indice)} archivos indexados en ChromaDB")
-                    except Exception as e:
-                        st.error(f"❌ Error: {e}")
+                sub_idx = args[0].lower() if args else "rebuild"
+                if sub_idx == "sync":
+                    with st.spinner("🔄 Sincronización incremental (sólo cambios)..."):
+                        try:
+                            from core.indexer import sincronizar_indice
+                            sync = sincronizar_indice()
+                            st.success(
+                                f"✅ Escaneados: {sync.scanned} · "
+                                f"Nuevos: {sync.indexed_new} · "
+                                f"Modificados: {sync.reindexed_modified} · "
+                                f"Sin cambios: {sync.skipped_unchanged} · "
+                                f"Retirados: {sync.removed_deleted} · "
+                                f"Fallidos: {sync.failed} "
+                                f"({sync.duration_seconds:.1f}s)"
+                            )
+                            for item in sync.items:
+                                if item.status == "failed":
+                                    st.warning(f"⚠️ {item.path}: {item.error}")
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                else:
+                    with st.spinner("🔄 Reconstruyendo índice semántico completo (todos los documentos)..."):
+                        try:
+                            from core.indexer import construir_indice
+                            indice = construir_indice()
+                            st.success(f"✅ {len(indice)} archivos indexados en ChromaDB")
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
             # !LIMPIAR
             elif comando in ["!limpiar", "!limpiar_historial"]:
