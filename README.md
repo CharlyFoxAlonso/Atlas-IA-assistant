@@ -90,6 +90,8 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ### 🧠 Advanced Semantic RAG
 - Automatically indexes PDFs, DOCX, PPTX, TXT, MD, and images.
+- **Incremental indexing (v4.1):** ingesting a new file indexes only that file — it no longer rebuilds the whole library. A local manifest (`vector_db/index_manifest.json`) tracks each document's SHA-256, so unchanged files are never re-read or re-embedded, modified files are re-indexed individually, and deleted files are removed from the index.
+- `!indexar` keeps its meaning: an explicit **full rebuild**. `!indexar sync` runs the **incremental synchronization** (new/modified/deleted only).
 - Implements smart chunking with chapter and section boundary detection.
 - Uses **lazy-loaded ChromaDB & SentenceTransformers** to keep memory footprint light and start times ultra-fast.
 - Fallback text search using contextual score matching when vector DB is uninitialized.
@@ -121,6 +123,15 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 ---
 
 ## 🔧 Changelog v4
+
+### v4.1 — Performance cut 1: incremental indexing (in progress)
+- **Ingestion no longer rebuilds the library:** local file ingestion indexes only the newly saved Markdown via `indexar_archivo()`.
+- **Incremental synchronization:** new `sincronizar_indice()` detects new, modified, unchanged, deleted and failed documents using a SHA-256 manifest; `!indexar sync` exposes it in CLI and Streamlit.
+- **Stable document identity:** documents are keyed by normalized relative path; chunks use deterministic IDs (`{doc_id}:chunk:{i}`); re-indexing replaces instead of duplicating.
+- **Explicit deletion:** `eliminar_documento_indexado()` removes chunks of files gone from disk (idempotent).
+- **Full rebuild preserved:** `!indexar` / `reconstruir_indice_completo()` remain available as explicit maintenance.
+- Details: `docs/architecture/incremental-indexing.md`. Benchmark: `scripts/benchmark_indexing.py`.
+- *Note: v4.1 is not finished; this is its first cut.*
 
 ### Runtime Foundation
 - **`core/system`**: Doctor, Healer and Launcher share typed contracts, safe command execution and operational diagnostics.
