@@ -186,6 +186,66 @@ class IndexacionIndividualTests(CasoBase):
 
 
 # ============================================
+# AUD-01 CONTENCIÓN DE RUTAS
+# ============================================
+
+class ContencionRutasTests(CasoBase):
+    """indexar_archivo() no debe aceptar archivos fuera de memoria_base."""
+
+    def _verificar_rechazo_sin_side_effects(self, ruta, fuente_externa):
+        espia_loader = mock.Mock()
+        espia_agregar = mock.Mock()
+        with mock.patch.object(indexer, "leer_archivo_con_info", espia_loader), \
+             mock.patch.object(indexer, "agregar_documento", espia_agregar):
+            res = self.indexar(ruta)
+
+        self.assertEqual(res.status, "failed")
+        self.assertIn("fuera de la base", res.error)
+        espia_loader.assert_not_called()
+        espia_agregar.assert_not_called()
+        # Manifiesto no creado ni alterado
+        self.assertFalse(os.path.exists(self.manifest_path))
+        # Fuente externa intacta
+        self.assertTrue(os.path.exists(fuente_externa))
+        with open(fuente_externa, encoding="utf-8") as f:
+            self.assertIn("Texto de prueba", f.read())
+        return res
+
+    def test_ruta_relativa_con_dotdot_rechazada(self):
+        fuera = escribir(self.tmp.name, "fuera.md")
+        ruta_escape = os.path.join(self.base, "..", "fuera.md")
+        self._verificar_rechazo_sin_side_effects(ruta_escape, fuera)
+
+    def test_ruta_absoluta_externa_rechazada(self):
+        hermano = os.path.join(self.tmp.name, "otro_lugar")
+        os.makedirs(hermano)
+        fuera = escribir(hermano, "documento.md")
+        self._verificar_rechazo_sin_side_effects(fuera, fuera)
+
+    def test_prefijo_similar_rechazado(self):
+        # Atlas_Memory_Evil NO es descendiente de Atlas_Memory
+        evil = self.base + "_Evil"
+        fuera = escribir(evil, "documento.md")
+        self._verificar_rechazo_sin_side_effects(fuera, fuera)
+
+    def test_ruta_valida_interna_sigue_indexando(self):
+        ruta = escribir(self.base, "carpeta/doc_valido.md")
+        res = self.indexar(ruta)
+        self.assertEqual(res.status, "indexed")
+        self.assertEqual(res.path, "carpeta/doc_valido.md")
+        self.assertGreater(self.fake.count(), 0)
+
+    def test_symlink_externo_rechazado(self):
+        fuera = escribir(self.tmp.name, "objetivo_externo.md")
+        enlace = os.path.join(self.base, "enlace.md")
+        try:
+            os.symlink(fuera, enlace)
+        except (OSError, NotImplementedError) as e:
+            self.skipTest(f"el entorno no permite crear symlinks: {e}")
+        self._verificar_rechazo_sin_side_effects(enlace, fuera)
+
+
+# ============================================
 # 18.2 ARCHIVO SIN CAMBIOS
 # ============================================
 

@@ -23,6 +23,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional, Set
 
 # Agregar la carpeta raíz al path para que funcione como script directo
@@ -117,6 +118,31 @@ def _normalizar_ruta_relativa(ruta: str) -> str:
 def _ruta_relativa(ruta_archivo: str, memoria_base: str) -> str:
     """Ruta relativa normalizada respecto de Atlas_Memory."""
     return _normalizar_ruta_relativa(os.path.relpath(ruta_archivo, memoria_base))
+
+
+def _resolver_contenida_en_base(ruta_archivo: str, memoria_base: str) -> Optional[str]:
+    """
+    Verifica que el archivo quede contenido dentro de la base de memoria.
+
+    Resuelve base y archivo (incluidos '..', separadores y, cuando el
+    sistema lo permite, symlinks/junctions) y exige que el archivo sea
+    descendiente de la base. No se usa comparación de strings con
+    startswith(): un prefijo similar tipo 'Atlas_Memory_Evil' no es
+    descendiente de 'Atlas_Memory'.
+
+    Returns:
+        La ruta relativa normalizada con '/' si está contenida;
+        None si queda fuera o si la ruta ES la propia base.
+    """
+    base_resolved = Path(memoria_base).resolve(strict=False)
+    file_resolved = Path(ruta_archivo).resolve(strict=False)
+    try:
+        rel = file_resolved.relative_to(base_resolved)
+    except ValueError:
+        return None
+    if not rel.parts or str(rel) == ".":
+        return None
+    return rel.as_posix()
 
 
 def _sha256_archivo(ruta: str) -> str:
@@ -247,6 +273,17 @@ def indexar_archivo(ruta_archivo: str,
     if not os.path.isfile(ruta):
         error = f"archivo no encontrado: {ruta}"
         log_seguridad("INDEX_FILE_FAILED", error)
+        return IndexResult(
+            os.path.basename(ruta), STATUS_FAILED, 0,
+            time.perf_counter() - inicio, error,
+        )
+
+    # Contención: el archivo debe quedar dentro de la base de memoria.
+    # Se verifica ANTES de tocar loader, backend vectorial y manifiesto.
+    rel_contenida = _resolver_contenida_en_base(ruta, base)
+    if rel_contenida is None:
+        error = "archivo fuera de la base de memoria"
+        log_seguridad("INDEX_FILE_REJECTED", f"{ruta}: {error}")
         return IndexResult(
             os.path.basename(ruta), STATUS_FAILED, 0,
             time.perf_counter() - inicio, error,
