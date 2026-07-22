@@ -183,6 +183,10 @@ registrado en el manifiesto que ya no existe en disco.
 - Fallo de indexación tras una ingestión local: el Markdown **no se
   borra**, la UI informa "guardado, pendiente de indexación" y una
   `!indexar sync` posterior lo recupera.
+- Fallo de indexación tras una ingestión web, tanto de URL individual
+  como del crawler: el Markdown **no se borra**, el evento informa que
+  queda pendiente y el resto del lote continúa. Una `!indexar sync`
+  posterior puede incorporarlo.
 - Los errores se registran en `atlas_security.log` con tipo y mensaje;
   no hay `except Exception: pass` en el camino de indexación.
 
@@ -217,10 +221,10 @@ tamaño y el costo de los documentos (PDFs, embeddings reales).
   consistentes.** Si la base se borra a mano pero el manifiesto queda, la
   sincronización omitiría documentos ya registrados. En ese caso, usar
   `!indexar` (reconstrucción) o borrar también el manifiesto.
-- **La ingesta por URL (`core/ingestion_manager.py`) y el crawler
-  (`core/web_crawler.py`) siguen invocando una reconstrucción completa**
-  al finalizar. Quedaron fuera del alcance de este corte; son candidatas
-  naturales para el siguiente.
+- La ingesta por URL (`core/ingestion_manager.py`) y el crawler
+  (`core/web_crawler.py`) indexan cada Markdown nuevo mediante
+  `indexar_archivo()`. No ejecutan reconstrucción completa en el flujo
+  normal.
 - El manifiesto registra un único `embedding_model`/`collection`
   informativo; no fuerza reindexación si cambian (decisión postergada).
 - **Falso "sin cambios" por preservación de tamaño+mtime:** un proceso
@@ -239,5 +243,3 @@ tamaño y el costo de los documentos (PDFs, embeddings reales).
   carpetas. La identidad es la ruta relativa normalizada.
 - **Borrar y recrear la colección en la reconstrucción:** descartado por
   riesgo de pérdida de datos; la reconstrucción reemplaza por identidad.
-- **Cambiar la ingesta URL y el crawler en este corte:** postergado para
-  mantener el alcance pequeño y reversible.

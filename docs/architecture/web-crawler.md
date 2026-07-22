@@ -6,7 +6,7 @@
 
 ## Propósito
 
-El crawler recorre páginas HTML de un único origen, descubre enlaces, filtra contenido por tema, organiza el material, lo digiere con el motor elegido por el usuario y actualiza el índice semántico una vez al finalizar.
+El crawler recorre páginas HTML de un único origen, descubre enlaces, filtra contenido por tema, organiza el material, lo digiere con el motor elegido por el usuario e indexa individualmente cada Markdown después de guardarlo.
 
 No es un navegador general, un descargador de archivos ni una herramienta para explorar redes internas.
 
@@ -27,7 +27,7 @@ URL inicial
           ├─ digestión con motor/modelo seleccionado
           └─ archivo Markdown con hash de URL
                     │
-                    └─ reindexación única al terminar
+                    └─ indexación incremental de ese artefacto
 ```
 
 ## Límites predeterminados
@@ -88,7 +88,17 @@ Si el clasificador falla, la página no se guarda. Esta política cerrada evita 
 
 Los enlaces se descubren aunque la página actual sea corta o no sea relevante. Esto permite atravesar portadas e índices sin guardar su contenido.
 
-Una página guardada todavía no se anuncia como “indexada”. Primero se archiva. Al finalizar el lote, Atlas reconstruye el índice una sola vez y reporta por separado si esa operación tuvo éxito.
+Una página guardada todavía no se anuncia como “indexada”. Primero se archiva y luego se llama a `indexar_archivo()` con la ruta exacta del Markdown. El crawler expone el callable aditivo `file_indexer(path)` para que las pruebas sustituyan el backend sin cargar ChromaDB real. El parámetro histórico `reindexer` sigue aceptándose para compatibilidad del constructor, pero no se invoca porque no recibe una ruta y representaba la reconstrucción completa.
+
+La indexación tiene un límite de error separado del procesamiento de la página. Si devuelve un resultado fallido o lanza una excepción, el Markdown permanece en disco, se emite una advertencia y el crawler continúa con las siguientes páginas. Una ejecución posterior de `sincronizar_indice()` o `!indexar sync` detecta esos archivos pendientes y permite recuperarlos.
+
+El resumen final conserva `guardadas`, `solicitudes`, `omitidas` y el campo legado `reindexado`, y agrega `indexadas`, `fallidas_indexacion` y `estado_indice`. `reindexado` es verdadero cuando al menos un artefacto fue indexado correctamente. Los estados agregados significan:
+
+- `actualizado`: hubo al menos una indexación y ninguna falló;
+- `parcial`: hubo indexaciones exitosas y fallidas;
+- `sin_cambios`: no se indexó ningún archivo.
+
+La reconstrucción completa no forma parte de la ingesta web normal. Permanece disponible exclusivamente como acción manual de mantenimiento mediante `!indexar`/`!indexar rebuild` y `reconstruir_indice_completo()`.
 
 ## Pruebas
 
@@ -106,6 +116,10 @@ Escenarios cubiertos:
 - límite independiente de solicitudes;
 - colisiones de query;
 - enlaces externos.
+- indexación individual de una o varias páginas;
+- páginas omitidas sin intento de indexación;
+- conservación del Markdown ante resultado fallido o excepción;
+- continuidad del lote y estados de resumen completo, parcial y sin cambios.
 
 ## Trabajo futuro
 
@@ -115,5 +129,4 @@ Escenarios cubiertos:
 - Caché HTTP y reanudación.
 - Backoff específico para HTTP 429 y 503.
 - Política configurable de robots y crawl-delay.
-- Índice incremental para evitar reconstrucciones completas.
 
