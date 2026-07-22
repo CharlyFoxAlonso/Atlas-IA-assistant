@@ -17,6 +17,7 @@ from pathlib import Path
 from unittest import mock
 
 import core.indexer as indexer
+import core.ingestion_manager as im
 import core.local_ingestion_manager as lim
 from core.index_manifest import IndexManifest
 from core.indexer import (
@@ -725,7 +726,91 @@ class IngestionLocalTests(unittest.TestCase):
 
 
 # ============================================
-# 18.11 RECONSTRUCCIÓN COMPLETA
+# 18.11 INTEGRACIÓN CON INGESTA DE URL
+# ============================================
+
+class IngestionWebURLTests(unittest.TestCase):
+
+    @staticmethod
+    def _fake_digerir(**kwargs):
+        yield {"estado": "procesando", "mensaje": "fake"}
+        yield {"estado": "completado", "texto": "# Digerido\n\n" + CONTENIDO_BASE}
+
+    def _ejecutar(self, tmp, index_effect):
+        rag_base = os.path.join(tmp, "Atlas_Memory", "03_Conocimiento")
+        temp_dir = os.path.join(tmp, "temp_ingestion")
+        os.makedirs(rag_base)
+        descargado = os.path.join(tmp, "descarga.html")
+        Path(descargado).write_text("html sintético", encoding="utf-8")
+
+        download = {
+            "exito": True,
+            "ruta": descargado,
+            "texto": CONTENIDO_BASE,
+            "nombre": "pagina.html",
+        }
+        index_patch = (
+            {"side_effect": index_effect}
+            if isinstance(index_effect, BaseException)
+            else {"return_value": index_effect}
+        )
+        with mock.patch.object(im, "RAG_BASE_PATH", rag_base), \
+             mock.patch.object(im, "TEMP_DIR", temp_dir), \
+             mock.patch.object(im, "validar_fuente", return_value={
+                 "valido": True, "es_confiable": True, "razon": "ok"
+             }), \
+             mock.patch.object(im, "descargar_y_extraer", return_value=download), \
+             mock.patch.object(im, "digerir_documento_con_progreso",
+                               side_effect=lambda **kw: self._fake_digerir(**kw)), \
+             mock.patch("core.indexer.indexar_archivo", **index_patch) as indexar, \
+             mock.patch("core.indexer.construir_indice") as rebuild:
+            eventos = list(im.procesar_pipeline_ingestion(
+                "https://example.com/pagina", categoria="Estudio"
+            ))
+
+        return Path(rag_base), eventos, indexar, rebuild
+
+    def test_ingesta_url_indexa_solo_el_markdown_final(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rag_base, eventos, indexar, rebuild = self._ejecutar(
+                tmp, IndexResult("pagina.md", "indexed", chunk_count=5)
+            )
+
+            guardados = list(rag_base.rglob("Ingestion_*.md"))
+            self.assertEqual(len(guardados), 1)
+            indexar.assert_called_once_with(str(guardados[0]))
+            rebuild.assert_not_called()
+            self.assertTrue(any(e["estado"] == "indexado" for e in eventos))
+            self.assertTrue(eventos[-1]["indexado"])
+            self.assertEqual(eventos[-1]["chunks"], 5)
+
+    def test_ingesta_url_resultado_fallido_conserva_markdown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rag_base, eventos, _, rebuild = self._ejecutar(
+                tmp, IndexResult("pagina.md", "failed", error="backend caído")
+            )
+
+            self.assertEqual(len(list(rag_base.rglob("Ingestion_*.md"))), 1)
+            rebuild.assert_not_called()
+            self.assertTrue(any(e["estado"] == "advertencia" for e in eventos))
+            self.assertFalse(eventos[-1]["indexado"])
+            self.assertIn("pendiente de indexación", eventos[-1]["mensaje"])
+
+    def test_ingesta_url_excepcion_conserva_markdown_y_reporta(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            rag_base, eventos, _, rebuild = self._ejecutar(
+                tmp, RuntimeError("fallo inesperado")
+            )
+
+            self.assertEqual(len(list(rag_base.rglob("Ingestion_*.md"))), 1)
+            rebuild.assert_not_called()
+            warning = next(e for e in eventos if e["estado"] == "advertencia")
+            self.assertIn("RuntimeError", warning["error"])
+            self.assertFalse(eventos[-1]["indexado"])
+
+
+# ============================================
+# 18.12 RECONSTRUCCIÓN COMPLETA
 # ============================================
 
 class ReconstruccionTests(CasoBase):
