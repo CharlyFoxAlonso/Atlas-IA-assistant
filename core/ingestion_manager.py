@@ -111,21 +111,62 @@ hash_url: "{_generar_hash_url(url)}"
         with open(ruta_final, "w", encoding="utf-8") as f:
             f.write(contenido_final)
         
-        # PASO 5: Re-indexar
-        yield {"estado": "indexando", "mensaje": "🔄 Reconstruyendo índice de búsqueda..."}
+        # PASO 5: Indexar SOLO el artefacto web recién creado
+        yield {"estado": "indexando", "mensaje": "🔍 Indexando documento nuevo...", "archivo": ruta_final}
+        error_indexacion = None
+        chunks_indexados = 0
         try:
-            from core.indexer import construir_indice
-            construir_indice()
-            log_seguridad("INGESTION_EXITOSA", f"Documento archivado y re-indexado: {nombre_final}")
-        except Exception:
-            log_seguridad("INGESTION_EXITOSA", f"Documento archivado (sin re-indexado): {nombre_final}")
+            from core.indexer import indexar_archivo
+            resultado_idx = indexar_archivo(ruta_final)
+            if resultado_idx.status == "indexed":
+                chunks_indexados = resultado_idx.chunk_count
+                log_seguridad(
+                    "INGESTION_WEB_INDEXED",
+                    f"{nombre_final}: {chunks_indexados} chunks"
+                )
+                yield {
+                    "estado": "indexado",
+                    "mensaje": f"✅ Documento indexado ({chunks_indexados} chunks)",
+                    "archivo": ruta_final,
+                    "chunks": chunks_indexados,
+                }
+            else:
+                error_indexacion = resultado_idx.error or "resultado de indexación fallido"
+        except Exception as exc:
+            # indexar_archivo no debería lanzar, pero el límite queda protegido.
+            error_indexacion = f"{type(exc).__name__}: {exc}"
+
+        if error_indexacion is not None:
+            # El Markdown ya está guardado y una sincronización incremental
+            # posterior puede recuperarlo.
+            log_seguridad(
+                "INGESTION_WEB_INDEX_FAILED",
+                f"{nombre_final}: {error_indexacion}"
+            )
+            yield {
+                "estado": "advertencia",
+                "mensaje": (
+                    f"⚠️ Documento guardado, pero pendiente de indexación: "
+                    f"{error_indexacion}. Se reintentará con !indexar sync."
+                ),
+                "archivo": ruta_final,
+                "error": error_indexacion,
+            }
+
+        if error_indexacion is None:
+            mensaje_final = "✅ Documento procesado, archivado e indexado exitosamente"
+        else:
+            mensaje_final = "⚠️ Documento procesado y archivado (pendiente de indexación)"
         
         yield {
             "estado": "completado", 
-            "mensaje": "✅ Documento procesado y archivado exitosamente",
+            "mensaje": mensaje_final,
             "archivo": nombre_final,
             "ruta": ruta_final,
-            "categoria": categoria
+            "categoria": categoria,
+            "indexado": error_indexacion is None,
+            "chunks": chunks_indexados,
+            "error_indexacion": error_indexacion,
         }
         
     except Exception as e:

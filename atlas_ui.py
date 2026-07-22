@@ -841,6 +841,12 @@ with st.sidebar:
                         
                         if paso["estado"] == "completado":
                             progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "indexando":
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "indexado":
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "advertencia":
+                            progreso_container.warning(f"{timer_str} | {paso['mensaje']}")
                         elif paso["estado"] == "info":
                             progreso_container.caption(f"{timer_str} | {paso['mensaje']}")
                         elif paso["estado"] == "error":
