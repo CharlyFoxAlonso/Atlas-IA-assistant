@@ -29,27 +29,27 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 | ATLAS-TD-001 | Parámetro `reindexer` aceptado pero ignorado | LOW | OPEN | Web crawler |
 | ATLAS-TD-002 | Estado acumulado al reutilizar `WebCrawler` | LOW | OPEN | Web crawler |
 | ATLAS-TD-003 | Resumen ambiguo cuando todas las indexaciones fallan | LOW | OPEN | Web crawler / UI |
-| ATLAS-TD-004 | Versionado distribuido y cadenas hardcodeadas | MEDIUM | OPEN | Configuración / UI / CLI / API |
-| ATLAS-TD-005 | Ausencia de prueba central de coherencia de versión | LOW | OPEN | Tests / versión |
-| ATLAS-TD-006 | README y changelog desalineados con el estado real | MEDIUM | OPEN | README |
-| ATLAS-TD-007 | Roadmap mezcla funciones terminadas, parciales y pendientes | MEDIUM | OPEN | Roadmap |
-| ATLAS-TD-008 | Documentación pública todavía identifica la versión como v4 | MEDIUM | OPEN | Documentación |
+| ATLAS-TD-004 | Versionado distribuido y cadenas hardcodeadas | MEDIUM | RESOLVED | Configuración / UI / CLI / API |
+| ATLAS-TD-005 | Ausencia de prueba central de coherencia de versión | LOW | RESOLVED | Tests / versión |
+| ATLAS-TD-006 | README y changelog desalineados con el estado real | MEDIUM | RESOLVED | README |
+| ATLAS-TD-007 | Roadmap mezcla funciones terminadas, parciales y pendientes | MEDIUM | RESOLVED | Roadmap |
+| ATLAS-TD-008 | Documentación pública todavía identifica la versión como v4 | MEDIUM | RESOLVED | Documentación |
 | ATLAS-TD-009 | Comandos y puertos documentados no siempre coinciden | MEDIUM | OPEN | Documentación / launchers |
-| ATLAS-TD-010 | Referencia documental a `prometeo_worker.py` inexistente | LOW | OPEN | Guía de desarrollo |
-| ATLAS-TD-011 | Uso incorrecto de “Prometheus” en lugar de “Prometeo” | LOW | OPEN | README |
+| ATLAS-TD-010 | Referencia documental a `prometeo_worker.py` inexistente | LOW | RESOLVED | Guía de desarrollo |
+| ATLAS-TD-011 | Uso incorrecto de “Prometheus” en lugar de “Prometeo” | LOW | RESOLVED | README |
 | ATLAS-TD-012 | Rutas locales personales en archivos rastreados | MEDIUM | OPEN | Docs / scripts |
-| ATLAS-TD-013 | Defaults y etiquetas públicas acoplados a “Charly” | MEDIUM | OPEN | UI / CLI / perfil |
+| ATLAS-TD-013 | Defaults y etiquetas públicas acoplados a “Charly” | MEDIUM | RESOLVED | UI / CLI / perfil |
 | ATLAS-TD-014 | Identidad interna del perfil acoplada a `Perfil_Charly.md` | LOW | OPEN | Memoria / perfil |
-| ATLAS-TD-015 | Manual HTML v2.0 obsoleto todavía rastreado | MEDIUM | OPEN | Documentación |
-| ATLAS-TD-016 | Capturas de una interfaz anterior todavía rastreadas | LOW | OPEN | Documentación |
-| ATLAS-TD-017 | RFC-0011 no marcado como reemplazado por v4.1 | MEDIUM | OPEN | RFC / versión |
+| ATLAS-TD-015 | Manual HTML v2.0 obsoleto todavía rastreado | MEDIUM | RESOLVED | Documentación |
+| ATLAS-TD-016 | Capturas de una interfaz anterior todavía rastreadas | LOW | RESOLVED | Documentación |
+| ATLAS-TD-017 | RFC-0011 no marcado como reemplazado por v4.1 | MEDIUM | RESOLVED | RFC / versión |
 | ATLAS-TD-018 | README enlaza una licencia inexistente | MEDIUM | OPEN | README / publicación |
-| ATLAS-TD-019 | Ausencia de registro central de deuda técnica | MEDIUM | IN_PROGRESS | Gobernanza |
-| ATLAS-TD-020 | Documentos históricos no están claramente marcados | LOW | OPEN | Documentación histórica |
+| ATLAS-TD-019 | Ausencia de registro central de deuda técnica | MEDIUM | RESOLVED | Gobernanza |
+| ATLAS-TD-020 | Documentos históricos no están claramente marcados | LOW | RESOLVED | Documentación histórica |
 
 ---
 
-# Deudas abiertas
+# Detalle de deudas
 
 ## ATLAS-TD-001 — Parámetro `reindexer` aceptado pero ignorado
 
@@ -101,7 +101,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ## ATLAS-TD-004 — Versionado distribuido y cadenas hardcodeadas
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Plan de cierre documental Atlas v4.1
 - **Componentes:** configuración, UI, CLI, API, launchers y reportes internos.
@@ -118,13 +118,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Actualizar consumidores y evitar cadenas técnicas duplicadas cuando sea seguro.
 - **Prueba de aceptación:** UI, CLI, API, doctor y self-awareness muestran una versión coherente.
 - **Versión objetivo:** Corte 3 de Atlas v4.1.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `fe199a0`.
+- **Evidencia:** `core.config.VERSION` y Doctor informan `4.1.0`; UI, CLI, API, launchers, User-Agent y reportes usan la identidad v4.1; las búsquedas residuales solo muestran historia o versiones de terceros.
 
 ---
 
 ## ATLAS-TD-005 — Ausencia de prueba central de coherencia de versión
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `LOW`
 - **Origen:** Plan de cierre documental Atlas v4.1
 - **Componente:** tests.
@@ -133,13 +136,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Crear un test de coherencia que compruebe `4.1.0` en ambas fuentes y en consumidores críticos que puedan probarse sin iniciar servicios.
 - **Prueba de aceptación:** El test falla si una fuente se desvía.
 - **Versión objetivo:** Corte 3 de Atlas v4.1.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `fe199a0`.
+- **Evidencia:** `tests/test_version_consistency.py` valida config, Doctor, título FastAPI y respuesta de versión; 4 pruebas pasan y la suite completa pasa.
 
 ---
 
 ## ATLAS-TD-006 — README y changelog desalineados con el estado real
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Plan de cierre documental Atlas v4.1
 - **Componente:** `README.md`
@@ -148,13 +154,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Reescribir la sección actual y distinguir funcionalidades implementadas, probadas, aceptadas, parciales y pendientes.
 - **Prueba de aceptación:** Cada claim importante del README tiene evidencia en código, tests o documentación.
 - **Versión objetivo:** Corte 3 de Atlas v4.1.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** README identifica v4.1 como release candidate y registra indexación incremental local/web, EPUB/HTML, Prompt Playground y dashboard básico sin afirmar publicación ni aceptación.
 
 ---
 
 ## ATLAS-TD-007 — Roadmap mezcla funciones terminadas, parciales y pendientes
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Plan de cierre documental Atlas v4.1
 - **Componente:** Roadmap dentro de `README.md`
@@ -172,13 +181,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
   - largo plazo.
 - **Prueba de aceptación:** Cada item del roadmap tiene estado y evidencia verificables.
 - **Versión objetivo:** Corte 3 de Atlas v4.1.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** roadmap separa entregado, parcial, seguimientos L1–L3 v4.1.x y pendientes reales de v4.2; Chat Session Exporter continúa pendiente.
 
 ---
 
 ## ATLAS-TD-008 — Documentación pública todavía identifica la versión como v4
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Plan de cierre documental Atlas v4.1
 - **Componentes conocidos:**
@@ -195,7 +207,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Actualizar solo referencias vigentes; conservar referencias históricas.
 - **Prueba de aceptación:** Las búsquedas de `Atlas v4` dejan únicamente documentos históricos o contextos explícitamente justificados.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** títulos públicos, SETUP, `requirements.txt` y `.env.example` usan Atlas v4.1; RFC-0011 y la bitácora v3.8 quedan marcados como históricos.
 
 ---
 
@@ -211,12 +226,13 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Prueba de aceptación:** README, launcher y guía de desarrollo coinciden.
 - **Versión objetivo:** Corte 3.
 - **Commit de resolución:** pendiente.
+- **Progreso en Corte 3 (2026-07-22):** la documentación vigente identifica 8401 como puerto principal, pero los fallbacks sin `.venv` de `run_ui.bat` todavía usan 8501. Permanece abierta porque corregir ese comportamiento excede el alcance documental y de cadenas visibles de este corte.
 
 ---
 
 ## ATLAS-TD-010 — Referencia a `prometeo_worker.py` inexistente
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `LOW`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Componente:** `docs/DEV_GUIDE.md`
@@ -225,13 +241,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Sustituir por el componente real o eliminar la referencia.
 - **Prueba de aceptación:** Toda ruta o módulo mencionado existe o está marcado explícitamente como histórico.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** `docs/DEV_GUIDE.md` referencia `core/digestion_worker.py`, componente existente con `ThreadPoolExecutor`; no quedan referencias activas al archivo inexistente fuera de este registro histórico.
 
 ---
 
 ## ATLAS-TD-011 — Uso incorrecto de “Prometheus”
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `LOW`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Componente:** `README.md`
@@ -240,7 +259,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Reemplazar la referencia por “Prometeo”.
 - **Prueba de aceptación:** No quedan coincidencias públicas injustificadas de “Prometheus”.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** la búsqueda case-insensitive de `prometheus` en README no devuelve coincidencias; la identidad vigente usa Prometeo.
 
 ---
 
@@ -261,12 +283,13 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Prueba de aceptación:** `git grep -F "C:\Users\"` no devuelve coincidencias accidentales en archivos rastreados actuales.
 - **Versión objetivo:** Corte 3.
 - **Commit de resolución:** pendiente.
+- **Progreso en Corte 3 (2026-07-22):** `README.md`, `SETUP.md`, `docs/installation/development.md` y `scripts/crear_distribucion.py` usan `<ruta-del-repo>` desde `215f7ba`. Permanece abierta: `probar_researcher.py` conserva una ruta personal y el corte prohíbe ampliar el cambio a scripts personales adicionales.
 
 ---
 
 ## ATLAS-TD-013 — Defaults y etiquetas públicas acoplados a “Charly”
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Auditoría de identidad Atlas v4.1
 - **Componentes conocidos:**
@@ -280,7 +303,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Restricción:** No cambiar todavía rutas persistentes ni identificadores internos.
 - **Prueba de aceptación:** UI y CLI no usan “charly” como valor predeterminado; tests cubren el default genérico.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `27bd860`.
+- **Evidencia:** defaults públicos usan `usuario`, etiquetas y prompts quedaron neutralizados, y `tests/test_public_identity.py` pasa. Se preservan `cargar_perfil_charly()` y `Perfil_Charly.md` por compatibilidad de ATLAS-TD-014.
 
 ---
 
@@ -305,7 +331,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ## ATLAS-TD-015 — Manual HTML v2.0 obsoleto todavía rastreado
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Archivo:** `Atlas_Manual_Usuario.html`
@@ -314,13 +340,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Restricción:** No archivar, mover, restaurar ni reemplazar.
 - **Prueba de aceptación:** El archivo deja de estar rastreado y no quedan enlaces vigentes hacia él.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `cb01d45`.
+- **Evidencia:** `Atlas_Manual_Usuario.html` fue eliminado y `git ls-files` confirma que ya no está rastreado; no quedan enlaces públicos vigentes.
 
 ---
 
 ## ATLAS-TD-016 — Capturas de una interfaz anterior todavía rastreadas
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `LOW`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Archivos candidatos:**
@@ -332,13 +361,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Eliminar las que no tengan consumidores actuales y conservar solo material vigente.
 - **Prueba de aceptación:** Cada imagen conservada tiene un uso actual demostrado; las eliminadas no dejan enlaces rotos.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `cb01d45`.
+- **Evidencia:** las cuatro capturas candidatas fueron eliminadas; README ya no las referencia y `git ls-files docs/*.png` no lista esos archivos.
 
 ---
 
 ## ATLAS-TD-017 — RFC-0011 no marcado como reemplazado por v4.1
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Auditoría de versionado Atlas v4.1
 - **Archivo:** `docs/rfcs/RFC-0011-atlas-v4-versioning.md`
@@ -347,7 +379,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Añadir nota con la decisión vigente sin reescribir retroactivamente la decisión original.
 - **Prueba de aceptación:** El lector puede distinguir la decisión histórica de la versión actual.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** RFC-0011 comienza con `Estado: Superseded`, explica la decisión v4.1 y conserva intacto el contenido histórico posterior.
 
 ---
 
@@ -364,12 +399,15 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Prueba de aceptación:** README no afirma una licencia inexistente.
 - **Versión objetivo:** Corte 3 para el enlace; decisión legal en corte separado.
 - **Commit de resolución:** pendiente.
+- **Progreso en Corte 3 (2026-07-22, `215f7ba`):**
+  - Se retiró el enlace o badge roto.
+  - La selección y publicación de una licencia continúa pendiente.
 
 ---
 
 ## ATLAS-TD-019 — Ausencia de registro central de deuda técnica
 
-- **Estado:** `IN_PROGRESS`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Gobernanza de Atlas
 - **Componente:** documentación del proyecto.
@@ -382,13 +420,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
   - los prompts lo consultan;
   - los commits de resolución actualizan su estado.
 - **Versión objetivo:** Corte de registro de deuda.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `9397d9b`.
+- **Evidencia:** `docs/TECHNICAL_DEBT.md` existe, contiene IDs y estados, fue consultado antes del corte y registra aquí las resoluciones con sus SHA reales.
 
 ---
 
 ## ATLAS-TD-020 — Documentos históricos no están claramente marcados
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `LOW`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Ejemplo conocido:** `docs/TECHNICAL_LOG_V3_8.md`
@@ -396,13 +437,16 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Añadir un banner de documento histórico o moverlos a una ubicación histórica sin romper enlaces.
 - **Prueba de aceptación:** Los documentos anteriores indican claramente su versión y estado.
 - **Versión objetivo sugerida:** Corte 3 o limpieza documental posterior.
-- **Commit de resolución:** pendiente.
+- **Fecha de resolución:** 2026-07-22.
+- **Corte:** Atlas v4.1 Corte 3.
+- **Commit de resolución:** `215f7ba`.
+- **Evidencia:** `docs/TECHNICAL_LOG_V3_8.md` incluye el banner histórico obligatorio y RFC-0011 diferencia su decisión histórica del estado vigente.
 
 ---
 
 # Historial de deudas resueltas
 
-Todavía no se registran deudas de Atlas como `RESOLVED` en este documento. Las primeras resoluciones deben añadirse conservando su entrada original, el commit y la evidencia de aceptación.
+Atlas v4.1 Corte 3 resolvió, con evidencia en sus entradas originales: ATLAS-TD-004, 005, 006, 007, 008, 010, 011, 013, 015, 016, 017, 019 y 020.
 
 ---
 
