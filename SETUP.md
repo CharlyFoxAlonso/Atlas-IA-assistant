@@ -1,4 +1,4 @@
-﻿# 🚀 SETUP — Atlas v4
+﻿# 🚀 SETUP — Atlas v4.1
 
 > Pasos exactos para correr Atlas en una PC Windows nueva.
 
@@ -17,7 +17,7 @@
 ### 1.1. Abrir CMD
 
 ```cmd
-cd C:\Users\delfa\Documents\Atlas
+cd <ruta-del-repo>
 ```
 
 ### 1.2. Crear el entorno virtual con Python 3.13
@@ -83,7 +83,7 @@ Ya con todo instalado:
 ### Opción B — Manual con CMD
 
 ```cmd
-cd C:\Users\delfa\Documents\Atlas
+cd <ruta-del-repo>
 .venv\Scripts\activate
 
 :: UI web
@@ -110,7 +110,7 @@ Debería imprimir: `Atlas core OK`.
 ### Reinstalar todo desde cero (rápido)
 
 ```cmd
-cd C:\Users\delfa\Documents\Atlas
+cd <ruta-del-repo>
 deactivate
 rmdir /s /q .venv
 py -3.13 -m venv .venv
@@ -159,4 +159,4 @@ pip list
 
 ---
 
-Última actualización: **v4**
+Última actualización: **v4.1**

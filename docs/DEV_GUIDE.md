@@ -1,4 +1,4 @@
-# 🛠️ Developer Guide - Atlas v4
+# 🛠️ Developer Guide - Atlas v4.1
 
 This guide provides the technical details necessary to extend and maintain Atlas.
 
@@ -33,4 +33,4 @@ Adjust the following constants in `core/config.py`:
 ## 3. Deployment & Maintenance
 - **Updating Models:** Use `ollama pull <model>` and then update `MODELOS_LOCALES_DISPONIBLES` in `config.py` with the new metadata.
 - **Security:** Any new file access must be passed through `core.security.validar_ruta()` to prevent path traversal attacks.
-- **Performance:** For large-scale ingestion, use the `prometeo_worker.py` parallel processing logic.
+- **Performance:** For large-scale ingestion, use the parallel processing logic in `core/digestion_worker.py`.

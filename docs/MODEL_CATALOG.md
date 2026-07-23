@@ -1,4 +1,4 @@
-# 📊 Model Catalog - Atlas v4
+# 📊 Model Catalog - Atlas v4.1
 
 Atlas supports a wide range of models across three different execution environments.
 

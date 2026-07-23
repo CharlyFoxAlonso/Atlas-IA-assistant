@@ -1,4 +1,4 @@
-﻿# 🧠 Atlas v4 - AI Assistant System
+﻿# 🧠 Atlas v4.1 - AI Assistant System
 
 <div align="center">
 
@@ -8,7 +8,6 @@
 [![Ollama](https://img.shields.io/badge/Ollama-Local_LLMs-green.svg)](https://ollama.ai/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-red.svg)](https://streamlit.io/)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-orange.svg)](https://www.trychroma.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
 
@@ -26,13 +25,15 @@
 - [Use Cases](#-use-cases)
 - [Project Structure](#-structure-of-the-project)
 - [Roadmap (Sane & Realistic)](#-roadmap)
-- [License](#-licence)
+- [Licencia](#-licencia)
 
 ---
 
 ## 🎯 Description
 
 Atlas is an **advanced AI assistant system** that seamlessly combines local models (100% privacy) with high-performance cloud APIs (maximum power). It implements:
+
+Atlas v4.1 is currently a **release candidate**.
 
 - **Semantic RAG (Retrieval-Augmented Generation)** powered by ChromaDB for contextual document search.
 - **Intelligent multi-agent system** with dynamic intent routing based on user input.
@@ -56,7 +57,7 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        ATLAS v4 - CORE                      │
+│                       ATLAS v4.1 - CORE                     │
 ├─────────────────────────────────────────────────────────────┤
 │  Router Model → Classifies intent & assigns specialized agent│
 ├─────────────────────────────────────────────────────────────┤
@@ -115,30 +116,24 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 - **Automated Reflection:** At the end of chat sessions, Atlas evaluates key milestones, insights, or personal progress, storing them directly in a markdown personal diary under `memory/Atlas_Memory/06_Diario/`.
 - Dynamic rule interception using customizable temporary rule sets.
 
-### 🛡️ Audited Security
+### 🛡️ Security Controls
 - Path traversal verification using strict `os.path.commonpath` comparison.
 - Prompt injection mitigation with configurable pattern filters.
 - Native logger that captures security events and logs them in real-time.
 
 ---
 
-## 🔧 Changelog v4
+## 🔧 Changelog
 
-### v4.1 — Performance cut 1: incremental indexing (in progress)
-- **Ingestion no longer rebuilds the library:** local file ingestion indexes only the newly saved Markdown via `indexar_archivo()`.
-- **Incremental synchronization:** new `sincronizar_indice()` detects new, modified, unchanged, deleted and failed documents using a SHA-256 manifest; `!indexar sync` exposes it in CLI and Streamlit.
-- **Stable document identity:** documents are keyed by normalized relative path; chunks use deterministic IDs (`{doc_id}:chunk:{i}`); re-indexing replaces instead of duplicating.
-- **Explicit deletion:** `eliminar_documento_indexado()` removes chunks of files gone from disk (idempotent).
-- **Full rebuild preserved:** `!indexar` / `reconstruir_indice_completo()` remain available as explicit maintenance.
-- Details: `docs/architecture/incremental-indexing.md`. Benchmark: `scripts/benchmark_indexing.py`.
-- *Note: v4.1 is not finished; this is its first cut.*
-
-### Runtime Foundation
-- **`core/system`**: Doctor, Healer and Launcher share typed contracts, safe command execution and operational diagnostics.
-- **Technical CLI**: `python -m core.system` provides human and JSON output, explicit `--apply` repairs and dry-run launch behavior.
-- **Streamlit diagnostics**: The UI exposes safe health checks and previews without duplicating system logic.
-- **Web crawler hardening**: URL validation, redirect controls, bounded downloads and safer path handling.
-- **Version identity**: Runtime metadata uses `4.0`; user-facing product labels use `v4`.
+### v4.1 — Release candidate
+- **Incremental local indexing:** new and modified files are indexed individually; `!indexar sync` reconciles additions, updates, deletions, unchanged files, and failures through the SHA-256 manifest.
+- **Incremental web ingestion:** crawler artifacts are indexed per saved document, without rebuilding the full library.
+- **EPUB and HTML:** `core/universal_loader.py` supports both formats.
+- **Prompt Playground:** the Streamlit UI can compare one prompt across available local models.
+- **Basic dashboard:** the UI exposes current system and RAG metrics. Advanced observability remains partial.
+- **Runtime foundation:** `core/system` provides Doctor, Healer, Launcher, typed results, dry-run defaults, and a technical CLI.
+- **Version identity:** technical metadata uses `4.1.0`; visible product labels use `Atlas v4.1`.
+- **Pending:** Chat Session Exporter, advanced dashboard completion, and v4.1.x crawler follow-ups listed in the roadmap.
 
 ---
 
@@ -194,8 +189,8 @@ To ensure maximum package compatibility and avoid compilation issues, we recomme
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/CharlyFoxAlonso/Atlas-AI-assistant.git
-   cd Atlas-AI-assistant
+   git clone https://github.com/CharlyFoxAlonso/Atlas-IA-assistant.git
+   cd Atlas-IA-assistant
    ```
 
 2. **Create the environment and install dependencies:**
@@ -256,30 +251,10 @@ The web UI is divided into intuitive sections:
 
 ---
 
-### Screenshots
-
-**1. Main Chat Interface & Model Selection**
-![Main Chat UI](docs/01_chat_ui.png)
-*Interactive chat with real-time model switching between cloud and local models.*
-
-**2. Cloud Mode (Prometeo) & Advanced Models**
-![Prometeo Cloud UI](docs/02_chat_prometeo_ui.png)
-*Using high-tier cloud models like DeepSeek V4 Pro or Llama 3.1 for complex tasks.*
-
-**3. Commands Reference Panel**
-![Commands Panel](docs/03_help_command.png)
-*Comprehensive !help command reference with categorized commands for RAG, memory, agents, and system management.*
-
-**4. Document Processing & RAG Ingestion**
-![RAG Processing](docs/04_rag_processing.png)
-*Drag & drop interface for uploading PDFs, with destination folder selection and cloud processing via Prometheus.*
-
----
-
 ## 📁 Structure of the Project
 
 ```
-C:\Users\delfa\Documents\Atlas\
+<ruta-del-repo>\
 ├── run.py                 # Core wrapper for launching the CLI
 ├── run.bat                # CLI launcher batch (auto-activates venv)
 ├── run_ui.bat             # UI launcher batch (auto-activates venv)
@@ -313,11 +288,22 @@ C:\Users\delfa\Documents\Atlas\
 
 We prioritize maintaining a secure, lightweight, and robust assistant over "feature creep". Here is our realistic development timeline:
 
-### v4.1 (Next Minor Release)
-- [ ] **EPUB & HTML support** inside `core/universal_loader.py`.
-- [ ] **Chat Session Exporter:** Export the active chat to Markdown (`.md`) or structured PDF directly from the UI.
-- [ ] **Prompt Playground:** Sandbox in the UI to test a single prompt against all downloaded local models simultaneously to evaluate responses.
-- [ ] **Enhanced Dashboard:** Display real-time CPU, RAM, and GPU usage in the sidebar.
+### v4.1 (Release candidate)
+
+Completed:
+- [x] Incremental local indexing and synchronization.
+- [x] Incremental web/crawler ingestion.
+- [x] EPUB and HTML loading.
+- [x] Prompt Playground.
+- [x] Basic system and RAG dashboard.
+
+Partial:
+- [~] **Advanced dashboard:** basic metrics exist; expanded CPU, RAM, GPU, and operational views remain pending.
+
+### v4.1.x technical follow-ups
+- [ ] **L1 / ATLAS-TD-001:** make the ignored crawler `reindexer` compatibility parameter explicit.
+- [ ] **L2 / ATLAS-TD-002:** define or reset crawler state when an instance is reused.
+- [ ] **L3 / ATLAS-TD-003:** clarify the UI summary when saved artifacts remain pending indexing.
 
 ### v3.6 (Connectivity & Polish)
 - [x] **FastAPI Integration:** Lightweight local REST API to interact with Atlas from external platforms.
@@ -330,13 +316,19 @@ We prioritize maintaining a secure, lightweight, and robust assistant over "feat
 - [x] **System-wide Consistency:** Centralized model defaults and synchronized versioning.
 - [x] **RAG Stability:** Enhanced error handling and validation in the digestion worker.
 
-### v4.x (Long-Term Vision)
+### v4.2
+- [ ] **Chat Session Exporter:** export the active chat to Markdown or structured PDF.
+- [ ] Complete the advanced dashboard.
+- [ ] Design a compatible migration from internal personal profile identifiers.
+- [ ] Select and publish a project license.
+
+### Long-Term Vision
 - [ ] **Secure Tool-Calling (Function-Calling):** Safe local function-calling utilizing an explicit, user-confirmed whitelist of tasks (e.g. search specific local folders, run math calculations) with absolutely **no unsafe shell-execution allowed**.
 
 ---
 
-## 📄 Licence
+## 📄 Licencia
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for more details.
+La selección y publicación de una licencia continúan pendientes.
 
 *Designed by Charly in Tandil, Argentina*

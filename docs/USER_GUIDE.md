@@ -1,4 +1,4 @@
-# 📖 User Guide - Atlas v4
+# 📖 User Guide - Atlas v4.1
 
 Welcome to Atlas, your hybrid AI assistant. This guide will help you get started and master the system.
 

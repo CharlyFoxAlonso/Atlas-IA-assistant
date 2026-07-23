@@ -106,7 +106,7 @@ Los comandos se ejecutan desde la raíz del repositorio mientras Atlas no esté 
 CMD:
 
 ```bat
-cd /d C:\Users\delfa\Documents\Atlas
+cd /d <ruta-del-repo>
 .venv\Scripts\activate.bat
 python -m core.system help
 ```
@@ -114,7 +114,7 @@ python -m core.system help
 PowerShell:
 
 ```powershell
-Set-Location C:\Users\delfa\Documents\Atlas
+Set-Location <ruta-del-repo>
 .\.venv\Scripts\Activate.ps1
 python -m core.system help
 ```
