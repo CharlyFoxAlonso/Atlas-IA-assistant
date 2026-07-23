@@ -1,3 +1,6 @@
+> Documento histórico — Atlas v3.8.
+> No representa el estado vigente de Atlas v4.1.
+
 # 📓 Bitácora de Desarrollo Técnico: Atlas AI System
 **Estado Actual:** Versión 3.8  
 **Responsable:** Desarrollo Core / AI Engineering  

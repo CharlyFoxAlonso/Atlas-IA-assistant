@@ -88,6 +88,11 @@ python -m core.system launch --target cli
 python -m core.system launch --target ui --port 8401 --apply
 ```
 
+El contrato de puertos de `run_ui.bat` depende de la ruta de runtime: el
+intérprete local `.venv` inicia la UI en el puerto principal `8401`; si ese
+intérprete no existe, las rutas de respaldo con `py` o Streamlit global usan
+`8501`. El batch no selecciona el fallback comprobando si `8401` está ocupado.
+
 ## Códigos de salida
 
 | Código | Significado |
@@ -106,7 +111,7 @@ Los comandos se ejecutan desde la raíz del repositorio mientras Atlas no esté 
 CMD:
 
 ```bat
-cd /d C:\Users\delfa\Documents\Atlas
+cd /d <ruta-del-repo>
 .venv\Scripts\activate.bat
 python -m core.system help
 ```
@@ -114,7 +119,7 @@ python -m core.system help
 PowerShell:
 
 ```powershell
-Set-Location C:\Users\delfa\Documents\Atlas
+Set-Location <ruta-del-repo>
 .\.venv\Scripts\Activate.ps1
 python -m core.system help
 ```

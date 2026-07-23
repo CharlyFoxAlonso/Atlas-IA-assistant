@@ -1,8 +1,8 @@
 """
 core/diary_manager.py
-Gestiona el diario personal de Charly.
+Gestiona el diario personal del usuario.
 Agrega entradas con fecha, permite leer y buscar.
-Atlas v4
+Atlas v4.1
 """
 import os
 from datetime import datetime
@@ -46,7 +46,7 @@ def agregar_entrada(contenido: str, categoria: str = "general") -> dict:
         
         # Si el archivo no existe, agregar encabezado
         if not os.path.exists(archivo):
-            encabezado = f"# 📔 Diario de Charly - {fecha_legible}\n\n"
+            encabezado = f"# 📔 Diario del usuario - {fecha_legible}\n\n"
             with open(archivo, "w", encoding="utf-8") as f:
                 f.write(encabezado + entrada)
         else:

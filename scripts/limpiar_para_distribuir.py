@@ -216,7 +216,7 @@ def limpiar_atlas():
             "- Empatico y calido",
             "- Escucha activa",
             "- No juzgues",
-            "- Ayudas a Charly a reflexionar sobre emociones y logros",
+            "- Ayudas al usuario a reflexionar sobre emociones y logros",
         ]
     )
 
@@ -328,7 +328,7 @@ def limpiar_atlas():
     escribir_archivo(
         os.path.join(clean_dir, "requirements.txt"),
         [
-            "# Atlas v4 - Dependencias",
+            "# Atlas v4.1 - Dependencias",
             "# Instalacion: pip install -r requirements.txt",
             "",
             "# UI",
@@ -383,7 +383,7 @@ def limpiar_atlas():
     # 5. CREAR CONFIG
     # ========================================
     config = {
-        "version": "4.0",
+        "version": "4.1.0",
         "fecha_creacion": datetime.now().isoformat(),
         "modelo_defecto": "qwen3:8b",
         "idioma": "es",

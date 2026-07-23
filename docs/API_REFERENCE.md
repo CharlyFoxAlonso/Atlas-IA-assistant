@@ -1,4 +1,4 @@
-# 🔌 API Reference - Atlas v4
+# 🔌 API Reference - Atlas v4.1
 
 Atlas exposes a REST API via FastAPI, allowing external integration with the AI system.
 
@@ -12,7 +12,7 @@ Returns the system status and version.
 ```json
 {
   "status": "online",
-  "version": "v4",
+  "version": "4.1.0",
   "name": "Atlas API"
 }
 ```

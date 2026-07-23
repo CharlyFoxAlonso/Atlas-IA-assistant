@@ -1,7 +1,7 @@
 """
 core/pdf_scraper.py
 Descarga, valida y extrae texto de recursos web.
-Atlas v4
+Atlas v4.1
 """
 import os
 import requests
@@ -28,7 +28,7 @@ def validar_fuente(url: str) -> dict:
 
         # Validar con HEAD request
         headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; AtlasBot/4.0)",
+            "User-Agent": "Mozilla/5.0 (compatible; AtlasBot/4.1)",
             "Accept": "text/html,application/pdf,*/*"
         }
         response = requests.head(url, headers=headers, allow_redirects=True, timeout=15)
@@ -65,7 +65,7 @@ def descargar_y_extraer(url: str, carpeta_destino: str = "temp_ingestion") -> di
     ruta_local = os.path.join(carpeta_destino, nombre_archivo)
 
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; AtlasBot/4.0)"}
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; AtlasBot/4.1)"}
         response = requests.get(url, headers=headers, timeout=60, stream=True)
         response.raise_for_status()
 

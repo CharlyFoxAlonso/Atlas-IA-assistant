@@ -1,6 +1,6 @@
 """
 core/vector_store.py
-Motor de búsqueda semántica para Atlas v4.
+Motor de búsqueda semántica para Atlas v4.1.
 Usa ChromaDB y embeddings multilingües para entender el significado, no solo keywords.
 Inicialización perezosa: ChromaDB y el modelo de embeddings se cargan sólo cuando
 se necesita una búsqueda, no al importar este módulo.
@@ -175,13 +175,88 @@ def chunk_text(texto, chunk_size=500, overlap=100):
 
 
 # ============================================
-# AGREGAR DOCUMENTO
+# AGREGAR / ELIMINAR DOCUMENTO
 # ============================================
+
+def _variantes_ruta_legacy(relative_path):
+    """
+    Devuelve las variantes de separador que pudo haber usado el indexador
+    antiguo al guardar la metadata 'ruta' (os.path.relpath depende del OS).
+    Permite localizar chunks indexados antes de Atlas v4.1.
+    """
+    variantes = {relative_path, relative_path.replace("/", os.sep)}
+    return [v for v in variantes if v]
+
+
+def _ids_chunks_documento(col, doc_id, rutas_legacy=None):
+    """
+    Localiza los IDs de TODOS los chunks de un documento:
+    - Esquema nuevo (v4.1): metadata 'doc_id' = ruta relativa normalizada.
+    - Esquema antiguo: metadata 'ruta' con separador dependiente del OS.
+    """
+    ids = []
+    consultas = [{"doc_id": doc_id}]
+    for ruta in rutas_legacy or []:
+        consultas.append({"ruta": ruta})
+
+    for where in consultas:
+        try:
+            existing = col.get(where=where)
+            if existing and existing.get("ids"):
+                ids.extend(existing["ids"])
+        except Exception as e:
+            # No silenciar: se registra y se continúa con las demás variantes.
+            from core.security import log_seguridad
+            log_seguridad(
+                "VECTOR_STORE_LOOKUP_ERROR",
+                f"Error buscando chunks con {where}: {type(e).__name__}: {e}"
+            )
+    # Deduplicar preservando orden
+    return list(dict.fromkeys(ids))
+
+
+def eliminar_documento(doc_id, rutas_legacy=None):
+    """
+    Elimina de ChromaDB todos los chunks de un documento.
+
+    Args:
+        doc_id: Identidad estable del documento (ruta relativa normalizada).
+        rutas_legacy: Variantes de ruta usadas por el indexador antiguo.
+
+    Returns:
+        int: Cantidad de chunks eliminados (0 si no existía; idempotente).
+
+    Raises:
+        Exception: Propaga errores del backend tras registrarlos; nunca
+            falla silenciosamente.
+    """
+    col = _get_collection()
+    ids = _ids_chunks_documento(col, doc_id, rutas_legacy)
+    if not ids:
+        return 0
+    try:
+        col.delete(ids=ids)
+    except Exception as e:
+        from core.security import log_seguridad
+        log_seguridad(
+            "VECTOR_STORE_DELETE_ERROR",
+            f"Error eliminando {len(ids)} chunks de '{doc_id}': {type(e).__name__}: {e}"
+        )
+        raise
+    return len(ids)
+
 
 def agregar_documento(doc_id, texto, metadata=None):
     """
     Agrega un documento a la base de datos vectorial.
-    Usa SIEMPRE 'nombre' como clave de metadata (compatible con indexer.py).
+
+    Identidad:
+    - Si metadata incluye 'doc_id' (callers v4.1), la identidad es ese valor
+      (ruta relativa normalizada) y los chunks usan IDs '{doc_id}:chunk:{i}'.
+      Antes de insertar se eliminan las versiones previas, incluidas las
+      indexadas por el esquema antiguo (metadata 'ruta').
+    - Si metadata NO incluye 'doc_id' (callers antiguos), se conserva el
+      comportamiento histórico: borrado previo por where={"nombre": doc_id}.
     """
     if not texto or len(texto.strip()) < 50:
         return 0
@@ -193,7 +268,6 @@ def agregar_documento(doc_id, texto, metadata=None):
     col = _get_collection()
 
     chunks = [c["texto"] for c in chunks_data]
-    ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
 
     metadatas = []
     base_metadata = metadata or {"nombre": doc_id}
@@ -204,12 +278,24 @@ def agregar_documento(doc_id, texto, metadata=None):
             chunk_metadata["capitulo"] = chunk_data["capitulo"]
         metadatas.append(chunk_metadata)
 
-    try:
-        existing = col.get(where={"nombre": doc_id})
-        if existing and 'ids' in existing and existing['ids']:
-            col.delete(ids=existing['ids'])
-    except Exception:
-        pass
+    # Eliminar versión previa del mismo documento (si existe)
+    if "doc_id" in base_metadata:
+        ids = [f"{doc_id}:chunk:{i}" for i in range(len(chunks))]
+        rutas_legacy = _variantes_ruta_legacy(base_metadata["doc_id"])
+        eliminar_documento(doc_id, rutas_legacy=rutas_legacy)
+    else:
+        ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
+        try:
+            existing = col.get(where={"nombre": doc_id})
+            if existing and 'ids' in existing and existing['ids']:
+                col.delete(ids=existing['ids'])
+        except Exception as e:
+            from core.security import log_seguridad
+            log_seguridad(
+                "VECTOR_STORE_DEDUP_ERROR",
+                f"No se pudo eliminar versión previa de '{doc_id}': "
+                f"{type(e).__name__}: {e}"
+            )
 
     col.add(
         documents=chunks,

@@ -1,7 +1,7 @@
 """
 Módulo de reconocimiento de voz para Atlas.
 Usa Google Speech (online) o Vosk (offline).
-Atlas v4
+Atlas v4.1
 """
 import os
 import json

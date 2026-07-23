@@ -1,7 +1,7 @@
 """
 core/profile_manager.py
 Gestiona perfiles de usuario: exportar, importar, crear nuevos.
-Atlas v4
+Atlas v4.1
 """
 import os
 import json
@@ -38,7 +38,7 @@ def crear_estructura_memoria(ruta_base="memory/Atlas_Memory"):
         return False, f"Error creando estructura: {str(e)}"
 
 
-def exportar_perfil_actual(nombre_usuario="charly"):
+def exportar_perfil_actual(nombre_usuario="usuario"):
     """
     Exporta el perfil actual (memoria + prompts + config) a un archivo ZIP.
     """

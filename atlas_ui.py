@@ -1,6 +1,6 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v4 - Interfaz Gráfica Híbrida Completa         ║
+║  🧠 ATLAS UI v4.1 - Interfaz Gráfica Híbrida Completa       ║
 ║  13/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Chats Múltiples               ║
@@ -37,7 +37,8 @@ from core.config import (
     eliminar_modelo_local,
     set_modelo_local,
     detectar_hardware,
-    MODELO_LOCAL
+    MODELO_LOCAL,
+    VERSION,
 )
 from core.system import Healer, diagnosticar_sistema
 
@@ -50,7 +51,7 @@ SYSTEM_UI_REPAIRS = {
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="Atlas v4",
+    page_title="Atlas v4.1",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -291,7 +292,7 @@ h1, h2, h3 { color: #e94560; }
 with st.sidebar:
     _ensure_state()
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("Atlas v4")
+    st.title("Atlas v4.1")
     st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
 
     # ========================================
@@ -841,6 +842,12 @@ with st.sidebar:
                         
                         if paso["estado"] == "completado":
                             progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "indexando":
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "indexado":
+                            progreso_container.info(f"{timer_str} | {paso['mensaje']}")
+                        elif paso["estado"] == "advertencia":
+                            progreso_container.warning(f"{timer_str} | {paso['mensaje']}")
                         elif paso["estado"] == "info":
                             progreso_container.caption(f"{timer_str} | {paso['mensaje']}")
                         elif paso["estado"] == "error":
@@ -996,8 +1003,8 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v4
-Generado: {ahora_str} | Creador: Charly
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v4.1
+Generado: {ahora_str} | Creador: Atlas
 
 ## Sistema Híbrido
 - Atlas (local): {st.session_state.modelo_local} vía Ollama
@@ -1049,7 +1056,7 @@ Generado: {ahora_str} | Creador: Charly
     # SECCIÓN: Perfiles
     # ========================================
     st.subheader("👤 Perfiles")
-    nombre_export = st.text_input("Nombre:", value="charly", key="nombre_export")
+    nombre_export = st.text_input("Nombre:", value="usuario", key="nombre_export")
 
     if st.button("💾 Exportar Perfil", use_container_width=True):
         try:
@@ -1119,13 +1126,13 @@ Generado: {ahora_str} | Creador: Charly
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-        st.caption("📅 Versión: 4.0")
+        st.caption(f"📅 Versión: {VERSION}")
 
 # ============================================
 # HEADER PRINCIPAL
 # ============================================
-st.title("Atlas")
-st.caption(f"Asistente híbrido v4 | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.title("Atlas v4.1")
+st.caption(f"Asistente híbrido v{VERSION} | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -1139,7 +1146,7 @@ st.divider()
 def _render_ayuda_modal():
     """Muestra el panel de comandos en un modal centrado y prolijo."""
     _ensure_state()
-    @st.dialog("🧠 Atlas v4 — Comandos", width="large")
+    @st.dialog("🧠 Atlas v4.1 — Comandos", width="large")
     def modal():
         _ensure_state()
         st.markdown(
@@ -1159,7 +1166,8 @@ def _render_ayuda_modal():
         with tab_rag:
             st.markdown("#### 🔄 Sistema y RAG Semántico")
             cmd_list = [
-                ("`!indexar`", "Reconstruye el índice semántico desde `memory/Atlas_Memory/`."),
+                ("`!indexar`", "Reconstrucción completa del índice semántico desde `memory/Atlas_Memory/`."),
+                ("`!indexar sync`", "Sincronización incremental: procesa sólo archivos nuevos, modificados o eliminados."),
                 ("`!limpiar` o `!limpiar_historial`", "Borra el historial de la sesión actual."),
                 ("`!historial`", "Informa cantidad de mensajes acumulados."),
                 ("`!categorias`", "Lista las categorías de memoria persistente."),
@@ -1431,15 +1439,36 @@ Ruta de DB: {stats['ruta_db']}""")
                             else:
                                 st.info("No encontré nada.")
 
-            # !INDEXAR
+            # !INDEXAR [sync|rebuild]
             elif comando == "!indexar":
-                with st.spinner("🔄 Reconstruyendo índice semántico..."):
-                    try:
-                        from core.indexer import construir_indice
-                        indice = construir_indice()
-                        st.success(f"✅ {len(indice)} archivos indexados en ChromaDB")
-                    except Exception as e:
-                        st.error(f"❌ Error: {e}")
+                sub_idx = args[0].lower() if args else "rebuild"
+                if sub_idx == "sync":
+                    with st.spinner("🔄 Sincronización incremental (sólo cambios)..."):
+                        try:
+                            from core.indexer import sincronizar_indice
+                            sync = sincronizar_indice()
+                            st.success(
+                                f"✅ Escaneados: {sync.scanned} · "
+                                f"Nuevos: {sync.indexed_new} · "
+                                f"Modificados: {sync.reindexed_modified} · "
+                                f"Sin cambios: {sync.skipped_unchanged} · "
+                                f"Retirados: {sync.removed_deleted} · "
+                                f"Fallidos: {sync.failed} "
+                                f"({sync.duration_seconds:.1f}s)"
+                            )
+                            for item in sync.items:
+                                if item.status == "failed":
+                                    st.warning(f"⚠️ {item.path}: {item.error}")
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
+                else:
+                    with st.spinner("🔄 Reconstruyendo índice semántico completo (todos los documentos)..."):
+                        try:
+                            from core.indexer import construir_indice
+                            indice = construir_indice()
+                            st.success(f"✅ {len(indice)} archivos indexados en ChromaDB")
+                        except Exception as e:
+                            st.error(f"❌ Error: {e}")
 
             # !LIMPIAR
             elif comando in ["!limpiar", "!limpiar_historial"]:
@@ -1663,4 +1692,4 @@ if st.session_state.pop("_mostrar_ayuda", False):
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v4 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 13/07/2026")
+    st.caption("Atlas v4.1 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 13/07/2026")

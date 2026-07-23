@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 from core.web_crawler import CrawlerSecurityError, WebCrawler, validate_public_url
@@ -125,18 +126,28 @@ class WebCrawlerBehaviorTests(unittest.TestCase):
                 "https://example.com/article": FakeResponse(useful_html()),
             })
             reindexer = Mock()
+            file_indexer = Mock(return_value=SimpleNamespace(
+                status="indexed", chunk_count=3, error=None
+            ))
             digester = Mock(return_value="resumen")
             crawler = WebCrawler(
                 str(root / "dest"), "tema", max_pages=1, memory_root=str(root),
                 session=session, resolver=resolver, llm=llm, digester=digester,
-                reindexer=reindexer, respect_robots=False, request_delay=0,
+                reindexer=reindexer, file_indexer=file_indexer,
+                respect_robots=False, request_delay=0,
             )
             events = list(crawler.crawl("https://example.com/"))
             self.assertEqual(crawler.request_count, 2)
             self.assertEqual(crawler.processed_count, 1)
-            self.assertTrue(list((root / "dest" / "tema_seguro").glob("article_*.md")))
-            reindexer.assert_called_once_with()
+            saved = list((root / "dest" / "tema_seguro").glob("article_*.md"))
+            self.assertTrue(saved)
+            file_indexer.assert_called_once_with(str(saved[0]))
+            reindexer.assert_not_called()
+            self.assertTrue(any(event["estado"] == "indexado" for event in events))
+            self.assertEqual(events[-1]["guardadas"], 1)
+            self.assertEqual(events[-1]["indexadas"], 1)
             self.assertTrue(events[-1]["reindexado"])
+            self.assertEqual(events[-1]["estado_indice"], "actualizado")
 
     def test_selected_motor_and_model_are_forwarded(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -147,7 +158,9 @@ class WebCrawlerBehaviorTests(unittest.TestCase):
             crawler = WebCrawler(
                 str(root / "dest"), "tema", memory_root=str(root), session=session,
                 resolver=resolver, llm=llm_mock, digester=digester,
-                reindexer=lambda: None, motor="groq", modelo="modelo-prueba",
+                file_indexer=lambda _: SimpleNamespace(
+                    status="indexed", chunk_count=1, error=None
+                ), motor="groq", modelo="modelo-prueba",
                 respect_robots=False, request_delay=0,
             )
             list(crawler.crawl("https://example.com/"))
@@ -186,12 +199,124 @@ class WebCrawlerBehaviorTests(unittest.TestCase):
             crawler = WebCrawler(
                 str(root / "dest"), "tema", max_pages=2, memory_root=str(root),
                 session=session, resolver=resolver, llm=llm, digester=lambda **_: "ok",
-                reindexer=lambda: None, respect_robots=False, request_delay=0,
+                file_indexer=lambda _: SimpleNamespace(
+                    status="indexed", chunk_count=1, error=None
+                ), respect_robots=False, request_delay=0,
             )
             list(crawler.crawl("https://example.com/"))
             files = list((root / "dest" / "tema_seguro").glob("article_*.md"))
             self.assertEqual(len(files), 2)
             self.assertNotEqual(files[0].name, files[1].name)
+
+    def test_multiple_pages_are_indexed_individually_without_full_rebuild(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            session = FakeSession({
+                "https://example.com/": FakeResponse(useful_html("/article")),
+                "https://example.com/article": FakeResponse(useful_html()),
+            })
+            file_indexer = Mock(side_effect=[
+                SimpleNamespace(status="indexed", chunk_count=2, error=None),
+                SimpleNamespace(status="indexed", chunk_count=4, error=None),
+            ])
+            full_reindexer = Mock()
+            crawler = WebCrawler(
+                str(root / "dest"), "tema", max_pages=2, memory_root=str(root),
+                session=session, resolver=resolver, llm=llm, digester=lambda **_: "ok",
+                file_indexer=file_indexer, reindexer=full_reindexer,
+                respect_robots=False, request_delay=0,
+            )
+
+            events = list(crawler.crawl("https://example.com/"))
+
+            files = list((root / "dest" / "tema_seguro").glob("*.md"))
+            self.assertEqual(len(files), 2)
+            self.assertEqual(file_indexer.call_count, 2)
+            self.assertEqual(
+                {call.args[0] for call in file_indexer.call_args_list},
+                {str(path) for path in files},
+            )
+            full_reindexer.assert_not_called()
+            summary = events[-1]
+            self.assertEqual(summary["guardadas"], 2)
+            self.assertEqual(summary["indexadas"], 2)
+            self.assertEqual(summary["fallidas_indexacion"], 0)
+            self.assertEqual(summary["estado_indice"], "actualizado")
+            self.assertTrue(summary["reindexado"])
+
+    def test_skipped_page_is_not_saved_or_indexed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            file_indexer = Mock()
+            crawler = WebCrawler(
+                str(root / "dest"), "tema", memory_root=str(root),
+                session=FakeSession({"https://example.com/": FakeResponse(short_html())}),
+                resolver=resolver, llm=llm, digester=lambda **_: "ok",
+                file_indexer=file_indexer, respect_robots=False, request_delay=0,
+            )
+
+            events = list(crawler.crawl("https://example.com/"))
+
+            self.assertFalse(list((root / "dest").rglob("*.md")))
+            file_indexer.assert_not_called()
+            self.assertEqual(events[-1]["omitidas"], 1)
+            self.assertEqual(events[-1]["indexadas"], 0)
+            self.assertEqual(events[-1]["estado_indice"], "sin_cambios")
+            self.assertFalse(events[-1]["reindexado"])
+
+    def test_failed_index_result_keeps_markdown_and_reports_warning(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            crawler = WebCrawler(
+                str(root / "dest"), "tema", memory_root=str(root),
+                session=FakeSession({"https://example.com/": FakeResponse(useful_html())}),
+                resolver=resolver, llm=llm, digester=lambda **_: "ok",
+                file_indexer=Mock(return_value=SimpleNamespace(
+                    status="failed", chunk_count=0, error="Chroma caído"
+                )), respect_robots=False, request_delay=0,
+            )
+
+            events = list(crawler.crawl("https://example.com/"))
+
+            self.assertEqual(len(list((root / "dest").rglob("*.md"))), 1)
+            self.assertTrue(any(event["estado"] == "advertencia" for event in events))
+            summary = events[-1]
+            self.assertEqual(summary["guardadas"], 1)
+            self.assertEqual(summary["indexadas"], 0)
+            self.assertEqual(summary["fallidas_indexacion"], 1)
+            self.assertEqual(summary["estado_indice"], "sin_cambios")
+            self.assertFalse(summary["reindexado"])
+            self.assertIn("RAG sin cambios", summary["mensaje"])
+
+    def test_indexer_exception_does_not_stop_later_pages(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            session = FakeSession({
+                "https://example.com/": FakeResponse(useful_html("/article")),
+                "https://example.com/article": FakeResponse(useful_html()),
+            })
+            file_indexer = Mock(side_effect=[
+                RuntimeError("backend no disponible"),
+                SimpleNamespace(status="indexed", chunk_count=2, error=None),
+            ])
+            crawler = WebCrawler(
+                str(root / "dest"), "tema", max_pages=2, memory_root=str(root),
+                session=session, resolver=resolver, llm=llm, digester=lambda **_: "ok",
+                file_indexer=file_indexer, respect_robots=False, request_delay=0,
+            )
+
+            events = list(crawler.crawl("https://example.com/"))
+
+            self.assertEqual(len(list((root / "dest").rglob("*.md"))), 2)
+            self.assertEqual(file_indexer.call_count, 2)
+            self.assertTrue(any(event["estado"] == "advertencia" for event in events))
+            summary = events[-1]
+            self.assertEqual(summary["guardadas"], 2)
+            self.assertEqual(summary["indexadas"], 1)
+            self.assertEqual(summary["fallidas_indexacion"], 1)
+            self.assertEqual(summary["estado_indice"], "parcial")
+            self.assertTrue(summary["reindexado"])
+            self.assertIn("parcialmente", summary["mensaje"])
 
     def test_external_links_are_not_queued(self):
         with tempfile.TemporaryDirectory() as temp:

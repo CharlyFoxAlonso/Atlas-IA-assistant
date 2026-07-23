@@ -1,3 +1,8 @@
+Estado: Superseded
+
+Este RFC documenta la decisión histórica de Atlas v4.
+Atlas v4.1 adopta la versión técnica 4.1.0 y la identidad visible Atlas v4.1.
+
 # RFC-0011 — Identidad de versión Atlas v4
 
 - Estado: aceptado

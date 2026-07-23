@@ -1,5 +1,5 @@
 """
-Atlas Chat v4 - CLI Principal
+Atlas Chat v4.1 - CLI Principal
 Con soporte para modelos locales (Ollama) y nube (NVIDIA/Prometeo).
 Comandos para gestión de modelos locales.
 """
@@ -87,7 +87,7 @@ def mostrar_ayuda():
 ║     • !historial          → Estado del historial            ║
 ║     • !limpiar_historial  → Limpia historial                ║
 ║     • !analizar           → Fuerza análisis de memoria      ║
-║     • !indexar            → Reconstruye índice              ║
+║     • !indexar [sync]     → Reconstruye / sincroniza índice ║
 ║     • !seguridad          → Reporte de seguridad            ║
 ║                                                             ║
 ║  🚪 SALIR:  "salir", "exit", "quit"                          ║
@@ -480,15 +480,34 @@ def chat():
                 continue
 
             # ============================
-            # !indexar
+            # !indexar [sync|rebuild]
             # ============================
-            if pregunta_lower == "!indexar":
-                print("\n🔄 Reconstruyendo índice...")
-                try:
-                    indice = construir_indice()
-                    print(f"✅ {len(indice)} archivos indexados\n")
-                except Exception as e:
-                    print(f"❌ Error: {e}\n")
+            if pregunta_lower.startswith("!indexar"):
+                partes_idx = pregunta_lower.split(maxsplit=1)
+                sub_idx = partes_idx[1].strip() if len(partes_idx) > 1 else "rebuild"
+                if sub_idx == "sync":
+                    print("\n🔄 Sincronización incremental (sólo cambios)...")
+                    try:
+                        from core.indexer import sincronizar_indice
+                        sync = sincronizar_indice()
+                        print(
+                            f"✅ Escaneados: {sync.scanned} | "
+                            f"Nuevos: {sync.indexed_new} | "
+                            f"Modificados: {sync.reindexed_modified} | "
+                            f"Sin cambios: {sync.skipped_unchanged} | "
+                            f"Retirados: {sync.removed_deleted} | "
+                            f"Fallidos: {sync.failed} "
+                            f"({sync.duration_seconds:.1f}s)\n"
+                        )
+                    except Exception as e:
+                        print(f"❌ Error: {e}\n")
+                else:
+                    print("\n🔄 Reconstruyendo índice completo (todos los documentos)...")
+                    try:
+                        indice = construir_indice()
+                        print(f"✅ {len(indice)} archivos indexados\n")
+                    except Exception as e:
+                        print(f"❌ Error: {e}\n")
                 continue
 
             # ============================
@@ -597,7 +616,7 @@ def chat():
             # ============================
             if pregunta_lower.startswith("!exportar_perfil"):
                 partes = pregunta.split(maxsplit=1)
-                nombre = partes[1].strip() if len(partes) > 1 else "charly"
+                nombre = partes[1].strip() if len(partes) > 1 else "usuario"
                 print(f"\n💾 Exportando perfil '{nombre}'...\n")
                 try:
                     from core.profile_manager import exportar_perfil_actual
