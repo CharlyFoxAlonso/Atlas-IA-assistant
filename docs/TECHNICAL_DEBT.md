@@ -34,10 +34,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 | ATLAS-TD-006 | README y changelog desalineados con el estado real | MEDIUM | RESOLVED | README |
 | ATLAS-TD-007 | Roadmap mezcla funciones terminadas, parciales y pendientes | MEDIUM | RESOLVED | Roadmap |
 | ATLAS-TD-008 | Documentación pública todavía identifica la versión como v4 | MEDIUM | RESOLVED | Documentación |
-| ATLAS-TD-009 | Comandos y puertos documentados no siempre coinciden | MEDIUM | OPEN | Documentación / launchers |
+| ATLAS-TD-009 | Comandos y puertos documentados no siempre coinciden | MEDIUM | RESOLVED | Documentación / launchers |
 | ATLAS-TD-010 | Referencia documental a `prometeo_worker.py` inexistente | LOW | RESOLVED | Guía de desarrollo |
 | ATLAS-TD-011 | Uso incorrecto de “Prometheus” en lugar de “Prometeo” | LOW | RESOLVED | README |
-| ATLAS-TD-012 | Rutas locales personales en archivos rastreados | MEDIUM | OPEN | Docs / scripts |
+| ATLAS-TD-012 | Rutas locales personales en archivos rastreados | MEDIUM | RESOLVED | Docs / scripts |
 | ATLAS-TD-013 | Defaults y etiquetas públicas acoplados a “Charly” | MEDIUM | RESOLVED | UI / CLI / perfil |
 | ATLAS-TD-014 | Identidad interna del perfil acoplada a `Perfil_Charly.md` | LOW | OPEN | Memoria / perfil |
 | ATLAS-TD-015 | Manual HTML v2.0 obsoleto todavía rastreado | MEDIUM | RESOLVED | Documentación |
@@ -216,7 +216,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ## ATLAS-TD-009 — Comandos y puertos documentados no siempre coinciden
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Componentes:** README, manuales, launchers y guías.
@@ -225,8 +225,14 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Corrección propuesta:** Definir y documentar el puerto principal, aclarando cuándo puede personalizarse.
 - **Prueba de aceptación:** README, launcher y guía de desarrollo coinciden.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
-- **Progreso en Corte 3 (2026-07-22):** la documentación vigente identifica 8401 como puerto principal, pero los fallbacks sin `.venv` de `run_ui.bat` todavía usan 8501. Permanece abierta porque corregir ese comportamiento excede el alcance documental y de cadenas visibles de este corte.
+- **Antecedente del Corte 3 (2026-07-22):** la documentación vigente identificaba 8401 como puerto principal, pero no explicaba que los fallbacks sin `.venv` de `run_ui.bat` usan 8501.
+- **Fecha de resolución:** 2026-07-23.
+- **Corte de resolución:** Atlas v4.1 Corte 3 follow-up.
+- **Commit de resolución:** `2e636b8`.
+- **Evidencia:**
+  - La inspección de `run_ui.bat` confirma 8401 para la ruta con `.venv` local y 8501 para las rutas de respaldo con `py` o Streamlit global.
+  - README, SETUP, guía de usuario y guía de desarrollo documentan el mismo contrato sin atribuir el fallback a disponibilidad del puerto.
+  - Las búsquedas de validación muestran ambos puertos únicamente con su función real.
 
 ---
 
@@ -268,7 +274,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ## ATLAS-TD-012 — Rutas locales personales en archivos rastreados
 
-- **Estado:** `OPEN`
+- **Estado:** `RESOLVED`
 - **Severidad:** `MEDIUM`
 - **Origen:** Auditoría documental Atlas v4.1
 - **Componentes conocidos:**
@@ -277,13 +283,19 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
   - `docs/installation/development.md`
   - `scripts/crear_distribucion.py`
   - posibles scripts auxiliares.
-- **Descripción:** Existen ejemplos con rutas como `C:\Users\delfa\Documents\Atlas`.
+- **Evidencia histórica:** se detectó el ejemplo rastreado `C:\Users\delfa\Documents\Atlas` antes del Corte 3 y su follow-up.
 - **Impacto:** Documentación no portable y exposición accidental del nombre de usuario local.
 - **Corrección propuesta:** Reemplazar por `<ruta-del-repo>` o rutas sintéticas claramente genéricas.
 - **Prueba de aceptación:** `git grep -F "C:\Users\"` no devuelve coincidencias accidentales en archivos rastreados actuales.
 - **Versión objetivo:** Corte 3.
-- **Commit de resolución:** pendiente.
-- **Progreso en Corte 3 (2026-07-22):** `README.md`, `SETUP.md`, `docs/installation/development.md` y `scripts/crear_distribucion.py` usan `<ruta-del-repo>` desde `215f7ba`. Permanece abierta: `probar_researcher.py` conserva una ruta personal y el corte prohíbe ampliar el cambio a scripts personales adicionales.
+- **Antecedente del Corte 3 (2026-07-22):** `README.md`, `SETUP.md`, `docs/installation/development.md` y `scripts/crear_distribucion.py` usan `<ruta-del-repo>` desde `215f7ba`; quedaba pendiente `probar_researcher.py`.
+- **Fecha de resolución:** 2026-07-23.
+- **Corte de resolución:** Atlas v4.1 Corte 3 follow-up.
+- **Commit de resolución:** `2e636b8`.
+- **Evidencia:**
+  - `probar_researcher.py` deriva la raíz portable con `Path(__file__).resolve().parent` y conserva la ruta relativa esperada del PDF.
+  - `py_compile` pasa sin ejecutar el researcher real.
+  - Las búsquedas de `C:\Users\` y `C:/Users/` no muestran rutas personales accidentales; solo evidencia histórica explícita y datos sintéticos de tests.
 
 ---
 
@@ -446,7 +458,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 # Historial de deudas resueltas
 
-Atlas v4.1 Corte 3 resolvió, con evidencia en sus entradas originales: ATLAS-TD-004, 005, 006, 007, 008, 010, 011, 013, 015, 016, 017, 019 y 020.
+Atlas v4.1 Corte 3 y su follow-up resolvieron, con evidencia en sus entradas originales: ATLAS-TD-004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 015, 016, 017, 019 y 020.
 
 ---
 
