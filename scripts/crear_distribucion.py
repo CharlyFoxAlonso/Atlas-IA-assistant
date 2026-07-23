@@ -1,6 +1,6 @@
 """
 Atlas - Generador de Distribucion.
-Genera un ZIP con Atlas limpio (sin datos personales de Charly)
+Genera un ZIP con Atlas limpio (sin datos personales del usuario)
 listo para instalar en otra PC.
 
 USO:

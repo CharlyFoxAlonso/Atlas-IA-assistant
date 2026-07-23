@@ -616,7 +616,7 @@ def chat():
             # ============================
             if pregunta_lower.startswith("!exportar_perfil"):
                 partes = pregunta.split(maxsplit=1)
-                nombre = partes[1].strip() if len(partes) > 1 else "charly"
+                nombre = partes[1].strip() if len(partes) > 1 else "usuario"
                 print(f"\n💾 Exportando perfil '{nombre}'...\n")
                 try:
                     from core.profile_manager import exportar_perfil_actual

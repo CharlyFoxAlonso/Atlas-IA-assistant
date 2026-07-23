@@ -24,9 +24,9 @@ CATEGORIAS = {
 def analizar_conversacion(pregunta, respuesta):
     """Analiza una conversación para detectar información importante sobre el USUARIO."""
     prompt_analisis = f"""
-Sos un analista de conversaciones. Tu tarea es detectar información sobre CHARLY (el usuario), NO sobre el tema de la conversación.
+Sos un analista de conversaciones. Tu tarea es detectar información sobre el usuario, NO sobre el tema de la conversación.
 
-PREGUNTA DE CHARLY:
+PREGUNTA DEL USUARIO:
 {pregunta}
 
 RESPUESTA DE ATLAS:
@@ -35,17 +35,17 @@ RESPUESTA DE ATLAS:
 ═══════════════════════════════════════════════════════════
 REGLA CRÍTICA:
 ═══════════════════════════════════════════════════════════
-SOLO debés guardar información si Charly dice algo sobre SÍ MISMO.
+SOLO debés guardar información si el usuario dice algo sobre SÍ MISMO.
 
 ❌ NO GUARDES: Explicaciones de conceptos, fórmulas, ejemplos educativos.
 ✅ SÍ GUARDA: "Me cuesta...", "No entiendo...", "Prefiero...", "Aprobé...", "Tengo examen...", "Estoy estresado...", "Trabajo en..."
 
-Si NO hay info sobre Charly → respondé SOLO: "NADA"
+Si NO hay info sobre el usuario → respondé SOLO: "NADA"
 Si SÍ hay info → respondé en este formato:
 
 CATEGORIA: [Perfil/Aprendizajes/Decisiones/Universidad/Proyectos/Diario/Salud/Finanzas]
-RESUMEN: [máximo 50 palabras sobre Charly]
-RAZON: [por qué es importante recordar esto sobre Charly]
+RESUMEN: [máximo 50 palabras sobre el usuario]
+RAZON: [por qué es importante recordar esto sobre el usuario]
 
 Tu análisis:
 """
@@ -65,7 +65,7 @@ Tu análisis:
                 propuestas.append({
                     "categoria": categoria.strip(),
                     "resumen": resumen.strip(),
-                    "razon": razon.strip() if razon else "Información relevante sobre Charly"
+                    "razon": razon.strip() if razon else "Información relevante sobre el usuario"
                 })
         
         return propuestas
@@ -141,7 +141,7 @@ def listar_categorias():
 def procesar_historial_para_memoria(historial):
     """
     Recorre el historial de conversaciones, analiza cada interacción
-    y guarda la información relevante sobre Charly en la memoria persistente.
+    y guarda la información relevante sobre el usuario en la memoria persistente.
     (Equivalente al comando 'salir' de la versión CMD).
     """
     guardados = 0
@@ -154,7 +154,7 @@ def procesar_historial_para_memoria(historial):
         if not pregunta or not respuesta:
             continue
         
-        # Usar el LLM para analizar si hay info sobre Charly
+        # Usar el LLM para analizar si hay info sobre el usuario
         propuestas = analizar_conversacion(pregunta, respuesta)
         
         for p in propuestas:

@@ -31,7 +31,7 @@ HISTORIAL DE CONVERSACIONES:
 REFLEXIONÁ SOBRE:
 1. ¿Dónde fui más útil? (qué tipo de preguntas respondí mejor)
 2. ¿Dónde fallé o fui menos útil? (qué no pude responder bien)
-3. ¿Qué patrones detecto en las preguntas de Charly?
+3. ¿Qué patrones detecto en las preguntas del usuario?
 4. ¿Qué debería mejorar o aprender?
 5. ¿Qué fortalezas tengo que debería aprovechar más?
 
@@ -91,7 +91,7 @@ def generar_sugerencias_mejora(historial):
     sugerencias = []
     
     if patrones.get("estadística", 0) > 3:
-        sugerencias.append("📊 Charly pregunta mucho sobre estadística. Considerá indexar más material de esa área.")
+        sugerencias.append("📊 El usuario pregunta mucho sobre estadística. Considerá indexar más material de esa área.")
     
     if patrones.get("derecho", 0) > 3:
         sugerencias.append("⚖️ Hay muchas consultas sobre derecho. Verificá que el RAG tenga los capítulos clave de Bidart y Sagues.")
@@ -100,7 +100,7 @@ def generar_sugerencias_mejora(historial):
         sugerencias.append("📈 Optimizar el sistema de búsqueda semántica para mejorar la precisión en documentos largos.")
     
     if patrones.get("emociones", 0) > 2:
-        sugerencias.append("💭 Charly comparte emociones regularmente. El agente psicólogo es importante para él.")
+        sugerencias.append("💭 El usuario comparte emociones regularmente. El agente psicólogo es importante para él.")
     
     if not sugerencias:
         sugerencias.append("✅ No se detectaron patrones críticos. El sistema está funcionando bien.")

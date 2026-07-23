@@ -46,7 +46,7 @@ HISTORIAL = []
 # ============================================
 
 def cargar_perfil_charly():
-    """Carga el perfil de Charly."""
+    """Carga el perfil persistente del usuario."""
     ruta = os.path.join(BASE_PROMPTS, "Perfil_Charly.md")
     if os.path.exists(ruta):
         f = io.StringIO()
@@ -140,7 +140,7 @@ def formatear_historial():
         return ""
     texto = "\n========================\nHISTORIAL DE CONVERSACIÓN:\n"
     for i, item in enumerate(HISTORIAL, 1):
-        texto += f"\n{i}. Charly: {item['pregunta']}\n"
+        texto += f"\n{i}. Usuario: {item['pregunta']}\n"
         texto += f"   Atlas: {item['respuesta'][:300]}...\n"
     return texto
 
@@ -420,7 +420,7 @@ Usá SIEMPRE ejemplos concretos de la vida real.
 {historial_contexto}
 {reglas_contexto}
 
-PREGUNTA DE CHARLY:
+PREGUNTA DEL USUARIO:
 {pregunta}
 """
 

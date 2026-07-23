@@ -1004,7 +1004,7 @@ with st.sidebar:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
             ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v4.1
-Generado: {ahora_str} | Creador: Charly
+Generado: {ahora_str} | Creador: Atlas
 
 ## Sistema Híbrido
 - Atlas (local): {st.session_state.modelo_local} vía Ollama
@@ -1056,7 +1056,7 @@ Generado: {ahora_str} | Creador: Charly
     # SECCIÓN: Perfiles
     # ========================================
     st.subheader("👤 Perfiles")
-    nombre_export = st.text_input("Nombre:", value="charly", key="nombre_export")
+    nombre_export = st.text_input("Nombre:", value="usuario", key="nombre_export")
 
     if st.button("💾 Exportar Perfil", use_container_width=True):
         try:

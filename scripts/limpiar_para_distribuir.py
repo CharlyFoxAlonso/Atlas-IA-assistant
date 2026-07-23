@@ -216,7 +216,7 @@ def limpiar_atlas():
             "- Empatico y calido",
             "- Escucha activa",
             "- No juzgues",
-            "- Ayudas a Charly a reflexionar sobre emociones y logros",
+            "- Ayudas al usuario a reflexionar sobre emociones y logros",
         ]
     )
 
