@@ -456,6 +456,24 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ---
 
+## ATLAS-TD-021 — Rutas personales en fallbacks de OCR y PDF
+
+- **Estado:** `OPEN`
+- **Severidad:** `LOW`
+- **Origen:** Auditoría Atlas v4.1 Corte 3
+- **Componentes:**
+  - `core/pdf_reader.py`
+  - `diagnostico_ocr.py`
+- **Descripción:** Existen rutas de fallback con `C:\Users\delfa` para localizar herramientas externas como Poppler o Tesseract.
+- **Impacto:** Reduce portabilidad y conserva una ruta personal en archivos rastreados. No bloquea la ejecución normal cuando las herramientas están disponibles en `PATH`.
+- **Corrección propuesta:** Usar variables de entorno, configuración explícita o detección portable.
+- **Prueba de aceptación:** `git grep -F "C:\Users\delfa" -- "*.py"` no devuelve rutas ejecutables.
+- **Versión objetivo sugerida:** `v4.1.x`.
+- **Commit de resolución:** pendiente.
+  
+  
+---
+
 # Historial de deudas resueltas
 
 Atlas v4.1 Corte 3 y su follow-up resolvieron, con evidencia en sus entradas originales: ATLAS-TD-004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 015, 016, 017, 019 y 020.
