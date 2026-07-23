@@ -1,5 +1,5 @@
 """
-Atlas Chat v4 - CLI Principal
+Atlas Chat v4.1 - CLI Principal
 Con soporte para modelos locales (Ollama) y nube (NVIDIA/Prometeo).
 Comandos para gestión de modelos locales.
 """

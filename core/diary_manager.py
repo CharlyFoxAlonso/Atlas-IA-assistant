@@ -2,7 +2,7 @@
 core/diary_manager.py
 Gestiona el diario personal de Charly.
 Agrega entradas con fecha, permite leer y buscar.
-Atlas v4
+Atlas v4.1
 """
 import os
 from datetime import datetime

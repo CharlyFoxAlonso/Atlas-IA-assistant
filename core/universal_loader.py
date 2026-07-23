@@ -2,7 +2,7 @@
 core/universal_loader.py
 Cargador universal de archivos: PDF, DOCX, PPTX, TXT, MD, Imágenes
 Optimizado para manejar archivos grandes sin saturar RAM.
-Atlas v4
+Atlas v4.1
 """
 import os
 import logging

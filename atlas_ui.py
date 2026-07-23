@@ -1,6 +1,6 @@
 """
 ╔════════════════════════════════════════════════════════════╗
-║  🧠 ATLAS UI v4 - Interfaz Gráfica Híbrida Completa         ║
+║  🧠 ATLAS UI v4.1 - Interfaz Gráfica Híbrida Completa       ║
 ║  13/07/2026 - Atlas + Prometeo + RAG Semántico             ║
 ║  + Reglas Temporales + Diario + Memoria Persistente        ║
 ║  + Modo Examen Interactivo + Chats Múltiples               ║
@@ -37,7 +37,8 @@ from core.config import (
     eliminar_modelo_local,
     set_modelo_local,
     detectar_hardware,
-    MODELO_LOCAL
+    MODELO_LOCAL,
+    VERSION,
 )
 from core.system import Healer, diagnosticar_sistema
 
@@ -50,7 +51,7 @@ SYSTEM_UI_REPAIRS = {
 # CONFIGURACIÓN DE PÁGINA
 # ============================================
 st.set_page_config(
-    page_title="Atlas v4",
+    page_title="Atlas v4.1",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -291,7 +292,7 @@ h1, h2, h3 { color: #e94560; }
 with st.sidebar:
     _ensure_state()
     st.image("https://img.icons8.com/fluency/96/brain.png", width=100)
-    st.title("Atlas v4")
+    st.title("Atlas v4.1")
     st.caption("Sistema Híbrido + RAG Semántico + Chats Múltiples")
 
     # ========================================
@@ -1002,7 +1003,7 @@ with st.sidebar:
             except:
                 agentes_disponibles = ["general", "estadistica", "researcher", "mentor", "arquitecto"]
 
-            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v4
+            ficha_tecnica = f"""# 🧠 FICHA DE ARQUITECTURA - ATLAS v4.1
 Generado: {ahora_str} | Creador: Charly
 
 ## Sistema Híbrido
@@ -1125,13 +1126,13 @@ Generado: {ahora_str} | Creador: Charly
         st.caption(f"🏠 Modelo: {st.session_state.modelo_local}")
     else:
         st.caption(f"☁️ Modelo: {st.session_state.modelo_nube}")
-        st.caption("📅 Versión: 4.0")
+        st.caption(f"📅 Versión: {VERSION}")
 
 # ============================================
 # HEADER PRINCIPAL
 # ============================================
-st.title("Atlas")
-st.caption(f"Asistente híbrido v4 | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
+st.title("Atlas v4.1")
+st.caption(f"Asistente híbrido v{VERSION} | Motor: {st.session_state.get('motor_activo', 'atlas').upper()} | Escribí, hablá o usá comandos (!ayuda)")
 
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -1145,7 +1146,7 @@ st.divider()
 def _render_ayuda_modal():
     """Muestra el panel de comandos en un modal centrado y prolijo."""
     _ensure_state()
-    @st.dialog("🧠 Atlas v4 — Comandos", width="large")
+    @st.dialog("🧠 Atlas v4.1 — Comandos", width="large")
     def modal():
         _ensure_state()
         st.markdown(
@@ -1691,4 +1692,4 @@ if st.session_state.pop("_mostrar_ayuda", False):
 st.divider()
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.caption("Atlas v4 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 13/07/2026")
+    st.caption("Atlas v4.1 | RAG Semántico + Multi-Nube (NVIDIA/Groq) + Chats Múltiples | 13/07/2026")

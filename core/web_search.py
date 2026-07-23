@@ -1,7 +1,7 @@
 """
 core/web_search.py
 Búsqueda web en cadena con fallback.
-Atlas v4 — intento automático entre varios backends.
+Atlas v4.1 — intento automático entre varios backends.
 
 Jerarquía (intentamos en orden):
   1. Tavily (gratis con TAVILY_API_KEY)      — primera opción, optimizado para IA
@@ -126,7 +126,7 @@ def _searxng_buscar(query: str, max_resultados: int = 5) -> List[Dict[str, str]]
                 "language": "auto",
                 "safesearch": 0,
             },
-            headers={"User-Agent": "Atlas/4.0 (compatible)"},
+            headers={"User-Agent": "Atlas/4.1 (compatible)"},
             timeout=20,
         )
         if resp.status_code != 200:

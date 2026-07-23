@@ -2,7 +2,7 @@
 core/local_ingestion_manager.py
 Orquesta la ingestión de archivos LOCALES (Drag & Drop) hacia el RAG.
 Con PARALELISMO (4 workers) para máxima velocidad en la digestión.
-Atlas v4
+Atlas v4.1
 """
 import os
 import hashlib

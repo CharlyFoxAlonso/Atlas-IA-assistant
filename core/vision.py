@@ -1,7 +1,7 @@
 """
 Módulo de visión de Atlas.
 Captura pantalla y extrae texto con OCR.
-Atlas v4
+Atlas v4.1
 """
 import os
 from datetime import datetime

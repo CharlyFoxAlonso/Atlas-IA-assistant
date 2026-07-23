@@ -1,6 +1,6 @@
 """
 core/vector_store.py
-Motor de búsqueda semántica para Atlas v4.
+Motor de búsqueda semántica para Atlas v4.1.
 Usa ChromaDB y embeddings multilingües para entender el significado, no solo keywords.
 Inicialización perezosa: ChromaDB y el modelo de embeddings se cargan sólo cuando
 se necesita una búsqueda, no al importar este módulo.

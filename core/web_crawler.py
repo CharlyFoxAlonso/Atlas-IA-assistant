@@ -21,7 +21,7 @@ from core.security import BASE_MEMORIA, log_seguridad, validar_ruta
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = "AtlasBot/4.0 (personal knowledge crawler)"
+USER_AGENT = "AtlasBot/4.1 (personal knowledge crawler)"
 HTML_CONTENT_TYPES = ("text/html", "application/xhtml+xml", "text/plain")
 REDIRECT_CODES = {301, 302, 303, 307, 308}
 WINDOWS_RESERVED_NAMES = {

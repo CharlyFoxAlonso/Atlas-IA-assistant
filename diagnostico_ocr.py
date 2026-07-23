@@ -1,7 +1,7 @@
 """
 diagnostico_ocr.py
 Script de diagnóstico para verificar que Tesseract OCR funciona correctamente.
-Atlas v4
+Atlas v4.1
 """
 import os
 import subprocess
