@@ -223,6 +223,9 @@ No need to remember long terminal commands. Use the pre-configured launchers:
   ```cmd
   .\run_ui.bat
   ```
+  The normal launcher route through the local `.venv` uses `http://localhost:8401`.
+  If that local interpreter is absent and the launcher follows its `py` or global
+  Streamlit fallback route, it uses `http://localhost:8501`.
 - **CLI Chat (Terminal):**
   Simply double-click `run.bat` or run:
   ```cmd

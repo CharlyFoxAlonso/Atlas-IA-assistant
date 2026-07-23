@@ -6,7 +6,7 @@ Welcome to Atlas, your hybrid AI assistant. This guide will help you get started
 
 ### 1. Launching the System
 You have two ways to interact with Atlas:
-- **Web UI (Recommended):** Double-click `run_ui.bat`. Open your browser at `http://localhost:8401`.
+- **Web UI (Recommended):** Double-click `run_ui.bat`. Its normal local `.venv` route uses `http://localhost:8401`; if that interpreter is absent and the launcher follows its `py` or global Streamlit fallback route, use `http://localhost:8501`.
 - **Terminal (CLI):** Double-click `run.bat` for a lightweight interactive experience.
 
 ### 2. Using the Interface

@@ -80,6 +80,10 @@ Ya con todo instalado:
 .\run.bat
 ```
 
+`run_ui.bat` usa `http://localhost:8401` en su ruta principal con el `.venv`
+local. Si ese intérprete no existe y el launcher continúa por su ruta de
+respaldo con `py` o Streamlit global, usa `http://localhost:8501`.
+
 ### Opción B — Manual con CMD
 
 ```cmd
@@ -87,7 +91,7 @@ cd <ruta-del-repo>
 .venv\Scripts\activate
 
 :: UI web
-streamlit run atlas_ui.py
+streamlit run atlas_ui.py --server.port 8401
 
 :: o CLI
 python run.py

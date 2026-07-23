@@ -88,6 +88,11 @@ python -m core.system launch --target cli
 python -m core.system launch --target ui --port 8401 --apply
 ```
 
+El contrato de puertos de `run_ui.bat` depende de la ruta de runtime: el
+intérprete local `.venv` inicia la UI en el puerto principal `8401`; si ese
+intérprete no existe, las rutas de respaldo con `py` o Streamlit global usan
+`8501`. El batch no selecciona el fallback comprobando si `8401` está ocupado.
+
 ## Códigos de salida
 
 | Código | Significado |
