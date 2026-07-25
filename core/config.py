@@ -20,6 +20,8 @@ import os
 import subprocess
 from dotenv import load_dotenv
 
+from core.system.paths import get_paths
+
 load_dotenv()
 
 # ============================================
@@ -181,9 +183,10 @@ MODELOS_LOCALES_DISPONIBLES = {
 # ============================================
 # 📂 RUTAS BASE
 # ============================================
-BASE_MEMORIA = "memory/Atlas_Memory"
-BASE_ESTUDIO = "memory/Atlas_Memory/03_Conocimiento"
-BASE_PROMPTS = "memory/Atlas_Memory/00_Sistema/Prompts"
+_ATLAS_PATHS = get_paths()
+BASE_MEMORIA = str(_ATLAS_PATHS.private_memory_dir)
+BASE_ESTUDIO = str(_ATLAS_PATHS.private_memory_dir / "03_Conocimiento")
+BASE_PROMPTS = str(_ATLAS_PATHS.private_memory_dir / "00_Sistema" / "Prompts")
 CHROMA_PATH = "./vector_db"
 COLLECTION_NAME = "atlas_rag"
 
