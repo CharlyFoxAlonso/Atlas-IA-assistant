@@ -7,6 +7,8 @@ import sys
 import logging
 from datetime import datetime
 
+from core.config import BASE_MEMORIA
+
 # Forzar UTF-8 en stdout/stderr para que los mensajes de logging estén
 # en el mismo encoding que luego se lee del archivo (Windows por defecto
 # usa cp1252 y rompe la lectura UTF-8 desde el archivo).
@@ -36,8 +38,8 @@ except Exception:
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
 
-# Base de memoria (debe coincidir con la usada en otros módulos)
-BASE_MEMORIA = "memory/Atlas_Memory"
+# core.config es la fuente de verdad; este módulo reexporta el símbolo
+# por compatibilidad.
 
 # Patrones sospechosos de inyección de prompts (SIN espacios al final)
 PATRONES_PELIGROSOS = [
