@@ -482,6 +482,236 @@ Una versión instalada globalmente no demuestra que sea la usada por Atlas.
 
 Una documentación correcta no demuestra que el código la cumpla.
 
+### 11.1 Protocolo de consulta al grafo de código
+
+El grafo de Codebase Memory MCP es una fuente complementaria de evidencia. No es una fuente de verdad. Toda relación relevante obtenida mediante el grafo debe confirmarse mediante lectura directa, diff, tests o búsqueda textual.
+
+#### 11.1.1 Warm-up obligatorio
+
+Antes de realizar consultas de arquitectura, símbolos o relaciones, ejecutá como primera operación:
+
+```text
+codebase-memory_list_projects
+```
+
+Esta operación se utiliza como warm-up y para obtener los identificadores reales de los proyectos disponibles.
+
+No asumas que el servidor está listo únicamente porque las herramientas MCP aparecen registradas en la sesión.
+
+#### 11.1.2 Detección de cold start y reintentos
+
+Si `codebase-memory_list_projects` devuelve:
+
+```text
+MCP error -32001: Request timed out
+```
+
+aplicá este protocolo:
+
+1. Clasificá provisionalmente el evento como posible `COLD START`.
+2. Intentá esperar aproximadamente 3 segundos si las herramientas disponibles permiten una espera segura.
+3. Si no existe una herramienta de espera, registrá que no se aplicó una espera explícita y realizá el siguiente intento de forma secuencial.
+4. Reintentá `codebase-memory_list_projects`.
+5. Realizá como máximo 3 intentos totales.
+6. No ejecutes otras consultas MCP en paralelo mientras se completa el warm-up.
+
+Si un intento posterior responde correctamente:
+
+```text
+GRAPH COLD START RECOVERED
+```
+
+y continuá con el protocolo normal.
+
+Si los 3 intentos fallan:
+
+```text
+GRAPH NOT AVAILABLE
+```
+
+y continuá la auditoría mediante lectura directa, diff, tests y búsqueda textual.
+
+No atribuyas automáticamente el timeout a:
+
+- ejecutable inexistente;
+- configuración incorrecta;
+- índice corrupto;
+- proyecto inexistente;
+- incompatibilidad del cliente.
+
+Esas causas requieren evidencia independiente.
+
+#### 11.1.3 Identificador real del proyecto
+
+Cuando `list_projects` responda, seleccioná el proyecto cuyo `root_path`, ruta equivalente o metadata corresponda al repositorio actualmente auditado.
+
+Extraé el identificador real devuelto por el servidor.
+
+No asumas que el identificador es:
+
+```text
+Atlas
+```
+
+ni hardcodees un valor observado en una ejecución anterior, como:
+
+```text
+C-Users-delfa-Documents-Atlas
+```
+
+Usá siempre el identificador devuelto en la sesión actual.
+
+Si aparecen varios proyectos compatibles o la correspondencia es ambigua, registrá la ambigüedad y no elijas uno sin evidencia.
+
+#### 11.1.4 Estado del índice
+
+Después de obtener el identificador real, consultá secuencialmente el estado del índice.
+
+Registrá, cuando la herramienta lo exponga:
+
+- identificador del proyecto;
+- ruta del repositorio;
+- estado del índice;
+- cantidad de nodos;
+- cantidad de relaciones;
+- fecha de actualización;
+- versión, commit o metadata de indexación.
+
+No inventes metadata que la herramienta no proporcione.
+
+#### 11.1.5 Consultas posteriores
+
+Solo después de completar el warm-up y confirmar el proyecto, realizá consultas como:
+
+```text
+codebase-memory_index_status
+codebase-memory_search_graph
+codebase-memory_search_code
+codebase-memory_trace_path
+codebase-memory_query_graph
+```
+
+Usá los nombres y parámetros que realmente expongan las herramientas disponibles.
+
+No inventes funciones MCP.
+
+Durante las primeras consultas posteriores al warm-up:
+
+- ejecutá una operación por vez;
+- evitá solicitudes globales innecesariamente costosas;
+- preferí búsquedas acotadas por símbolo, archivo o profundidad;
+- registrá errores y timeouts por operación.
+
+#### 11.1.6 Estados del grafo
+
+Al finalizar el uso del grafo, registrá exactamente uno de estos estados:
+
+```text
+GRAPH AVAILABLE
+```
+
+El servidor respondió en el primer intento, el proyecto fue identificado y las consultas necesarias funcionaron.
+
+```text
+GRAPH COLD START RECOVERED
+```
+
+La primera operación sufrió un timeout compatible con cold start, pero el servidor respondió dentro de los reintentos permitidos y las consultas pudieron continuar.
+
+```text
+GRAPH PARTIAL
+```
+
+El servidor responde, pero una parte de las consultas necesarias falla, devuelve resultados incompletos o no permite verificar todas las relaciones requeridas. Documentá exactamente qué operaciones funcionaron y cuáles no.
+
+```text
+GRAPH STALE
+```
+
+Existe evidencia concreta de que el índice no representa el código actualmente auditado. Esta clasificación requiere una discrepancia verificable, por ejemplo:
+
+- archivos o símbolos presentes en el HEAD actual que no aparecen en el índice;
+- relaciones del índice correspondientes a código eliminado;
+- metadata de indexación asociada a una revisión anterior;
+- resultados incompatibles con el diff o la lectura directa.
+
+No declares `GRAPH STALE` únicamente porque existe un working tree con cambios o porque no se expone el SHA de indexación.
+
+```text
+GRAPH NOT AVAILABLE
+```
+
+El servidor no respondió después de los 3 intentos permitidos o devolvió errores consistentes que impidieron usar el grafo.
+
+#### 11.1.7 Verificación cruzada
+
+El grafo no reemplaza la inspección directa.
+
+Toda relación relevante obtenida mediante el grafo debe confirmarse mediante al menos uno de estos métodos:
+
+- lectura directa del código;
+- búsqueda textual;
+- diff entre commits;
+- inspección de imports;
+- ejecución de tests;
+- reproducción del comportamiento.
+
+Una coincidencia textual confirma la presencia de texto, no una relación semántica.
+
+Si una relación del grafo no puede verificarse por otro medio, clasificá el resultado como:
+
+```text
+INFERRED
+```
+
+No lo clasifiques como:
+
+```text
+CONFIRMED BY CODE INSPECTION
+```
+
+#### 11.1.8 Discrepancias
+
+Si el grafo y el código actual difieren:
+
+1. documentá la relación informada por el grafo;
+2. documentá la evidencia obtenida del código;
+3. determiná si el índice está incompleto, desactualizado o si la consulta fue ambigua;
+4. usá el código y el diff como fuente principal para el gate;
+5. no ocultes la discrepancia.
+
+#### 11.1.9 Registro en el reporte
+
+Cuando el grafo sea relevante para la auditoría, incluí en el reporte:
+
+- estado final del grafo;
+- cantidad de intentos de warm-up;
+- recuperación o no del cold start;
+- identificador real del proyecto;
+- estado del índice;
+- nodos y relaciones, si se exponen;
+- operaciones realizadas;
+- resultados relevantes;
+- errores o timeouts;
+- relaciones confirmadas mediante código;
+- discrepancias;
+- límite de la evidencia.
+
+Si el grafo queda `GRAPH NOT AVAILABLE`, indicá que la auditoría continuó mediante evidencia sustitutiva.
+
+No afirmes que el servidor, el ejecutable, la configuración o el índice están rotos salvo que exista evidencia específica para esa conclusión.
+
+#### 11.1.10 Límites
+
+- No uses el grafo como fuente de verdad.
+- No hardcodees el identificador del proyecto.
+- No inventes nombres de herramientas ni parámetros MCP.
+- No ejecutes consultas paralelas durante el warm-up.
+- No declares indisponibilidad después de un único timeout.
+- No reinstales ni reindexes durante una auditoría de código.
+- No modifiques configuración MCP como parte de una auditoría.
+- No agregues scripts, dependencias ni código Python para implementar este protocolo.
+
 ## 12. Estados que nunca deben confundirse
 
 Usá estas categorías:
