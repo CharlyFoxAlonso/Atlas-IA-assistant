@@ -1,211 +1,558 @@
-# AGENTS.md — Atlas Repository Governance
+# AGENTS.md
 
-**Proyecto:** Atlas — Asistente AI híbrido (local/nube) con RAG semántico, búsqueda web, voz, visión y memoria persistente.
+## Purpose
 
-**Propósito:** Este archivo define la gobernanza del repositorio, políticas de seguridad, playbooks operativos e integraciones disponibles para agentes que operan en este repositorio.
+This file is the permanent repository-level instruction and routing entry point for Atlas.
 
----
+Keep task prompts short. Do not repeat the policies and workflows referenced below unless a task introduces an explicit exception.
 
-## 1. Jerarquía de Instrucciones
-
-Cuando operes en este repositorio, aplicá las instrucciones en este orden:
-
-1. **Políticas transversales** (`.agents/policies/*.md`)
-2. **Playbook correspondiente a tu rol** (`.agents/playbooks/*.md`)
-3. **Integraciones opcionales** (`.agents/integrations/*.md`)
-4. **Instrucciones específicas del task** (proporcionadas en la conversación)
-
-Las políticas y playbooks son de cumplimiento obligatorio. Las integraciones son opcionales y se aplican cuando agregan valor al task.
+Before acting, inspect the current repository state and read the files relevant to the requested scope. Repository evidence takes priority over summaries, historical reports, agent output, and assumptions.
 
 ---
 
-## 2. Políticas Transversales
+## 1. Required instruction routing
 
-| Archivo | Descripción |
-|---|---|
-| `.agents/policies/git-safety.md` | Reglas de seguridad Git: inspección previa, operaciones prohibidas, control de alcance, commits, reporte final. |
-| `.agents/policies/testing.md` | Política de evidencia: categorías de evidencia, baseline, orden de tests, coverage, fallos, reporte final. |
+Apply the policy files relevant to every repository task:
 
-**Obligatorio:** Antes de cualquier task que inspeccione o modifique el repositorio, leé y aplicá `git-safety.md`. Antes de cualquier task que cambie o verifique comportamiento, leé y aplicá `testing.md`.
+- Git and working-tree safety:
+  - `.agents/policies/git-safety.md`
+- Testing, validation, and evidence:
+  - `.agents/policies/testing.md`
 
----
+Select exactly one primary playbook according to the requested mode:
 
-## 3. Playbooks por Rol
+- Investigation and planning without implementation:
+  - `.agents/playbooks/plan.md`
+- Code, test, configuration, or documentation changes:
+  - `.agents/playbooks/implement.md`
+- Read-only validation of an existing implementation:
+  - `.agents/playbooks/verify.md`
+- Independent evidence-based audit:
+  - `.agents/playbooks/audit.md`
 
-| Playbook | Uso |
-|---|---|
-| `.agents/playbooks/implement.md` | Tasks que modifican código, crean archivos, corrigen defectos, refactorizan o implementan un plan aprobado. |
-| `.agents/playbooks/verify.md` | Tasks que revisan, testean o validan una implementación existente sin modificarla. |
-| `.agents/playbooks/audit.md` | Tasks de auditoría evidence-based de código, arquitectura, documentación, seguridad o calidad. |
-| `.agents/playbooks/plan.md` | Tasks de investigación, análisis, diseño o planificación sin modificar código productivo. |
+Optional integration:
 
-**Regla:** Usá exactamente el playbook que corresponde al task solicitado. No combinés playbooks ni cambies de rol durante un task sin autorización explícita.
+- Repository navigation and structural impact analysis:
+  - `.agents/integrations/codebase-memory-mcp.md`
 
----
+Final response format:
 
-## 4. Integraciones Opcionales
+- `.agents/templates/final-report.md`
 
-| Integración | Descripción | Cuándo usar |
-|---|---|---|
-| `.agents/integrations/codebase-memory-mcp.md` | Uso de Codebase Memory MCP para localizar símbolos, dependencias, tests, relaciones arquitectónicas e impacto de cambios. | Cuando agrega valor: localizar símbolos, explorar arquitectura, estimar impacto, encontrar tests relacionados. No usar ceremonialmente para cambios triviales. |
-
-**Regla:** La integración es opcional. Su salida no reemplaza lectura de código fuente, búsqueda directa, revisión de diff o ejecución de tests. Si no está disponible, continuá con herramientas normales del repositorio.
-
----
-
-## 5. Templates
-
-| Template | Uso |
-|---|---|
-| `.agents/templates/final-report.md` | Estructura obligatoria para reportes finales de tasks de implementación, verificación, auditoría o planificación. |
+More specific `AGENTS.md` files, when present in subdirectories, extend or override this file only within their directory scope.
 
 ---
 
-## 6. Identidad y Alcance del Proyecto
+## 2. Atlas product identity
 
-**Atlas** es un asistente personal de IA local-first e híbrido construido en Python.
+Atlas is a personal, single-user, local-first and hybrid Python application.
 
-**Objetivos:**
-- Utilizar modelos locales mediante Ollama
-- Reducir dependencia de suscripciones de IA
-- Ingerir documentos y material académico
-- Construir RAG local con ChromaDB
-- Responder desde material almacenado por el usuario
-- Generar y corregir exámenes
-- Utilizar proveedores externos opcionales (NVIDIA, Groq) cuando el usuario lo decide
-- Ser portable e instalable en otras computadoras Windows
+Its current purpose is to:
 
-**No es:**
-- Un SaaS multi-tenant
-- Una arquitectura de microservicios
-- Un sistema empresarial distribuido
-- Un producto diferente (no Xilas, no Frontier)
+- ingest user-selected documents and study material;
+- maintain a local knowledge base and retrieval workflow;
+- use local models through Ollama when available;
+- support optional external model providers when explicitly selected;
+- answer from stored user material;
+- support study and examination workflows;
+- preserve user data locally;
+- remain portable and reproducible on Windows systems.
 
-**Stack tecnológico:** Python 3.11–3.13 · Ollama / NVIDIA NIM / Groq · Streamlit · FastAPI · ChromaDB + sentence-transformers · pypdf / docx / pptx / Tesseract / Pillow · Groq Whisper / Vosk / Edge TTS / pyttsx3 · DuckDuckGo / Tavily / SearXNG
+Atlas is not a multi-tenant SaaS, distributed platform, enterprise service mesh, or microservice product.
 
----
+Do not introduce enterprise-scale architecture merely because it would be conventional in a larger product. Proposals must be proportionate to a personal, single-user application and supported by a demonstrated requirement.
 
-## 6.1 Distinción de Identidades Documentadas
-
-Este repositorio contiene referencias a varios "personajes" o identidades en su documentación histórica. Distinguí claramente:
-
-| Identidad | Contexto | Tratamiento actual |
-|---|---|---|
-| **Atlas** | Producto actual | Referencia principal del producto |
-| **Atlas Auditor** | Agente de auditoría (`.opencode/agents/atlas-auditor.md`) | Rol específico de auditoría |
-| **Frontier** | Proyecto anterior/histórico | Referencia histórica, no producto actual |
-| **Xilas** | Proyecto anterior/histórico | Referencia histórica, no producto actual |
-| **Charly / Usuario** | Usuario humano original | Datos personales — **no incluir en docs públicas, ni logs, ni commits** |
-
-**Regla:** En documentación pública, reportes, commits y comunicación externa, usá solo "Atlas" como nombre del producto. No expongas datos personales, rutas privadas ni referencias al usuario original.
+Do not transform Atlas into another project.
 
 ---
 
-## 7. Entrypoints del Proyecto
+## 3. Product and repository names
 
-| Comando | Descripción |
-|---|---|
-| `python run.py` | CLI interactivo |
-| `streamlit run atlas_ui.py` | UI web |
-| `uvicorn main_api:app --reload` | API REST |
-| `python -m core.system` | CLI técnico (doctor/heal/launch) |
+Keep these identities separate.
 
----
+### Atlas
 
-## 8. Directorios Clave
+The application governed by this repository.
 
-| Directorio | Contenido |
-|---|---|
-| `core/` | Cerebro, router, modelos, config, RAG, memoria, seguridad, multimodal |
-| `core/system/` | Doctor, healer, launcher, paths, logs, command runner |
-| `agents/` | Stats researcher, export study |
-| `tests/` | Tests unitarios (unittest) |
-| `scripts/` | Backup, restore, distribución |
-| `docs/` | Arquitectura, RFCs, guías de instalación |
-| `memory/` | Datos de usuario, perfiles, diario (gitignored) |
-| `vector_db/` | ChromaDB persistente (gitignored) |
-| `.opencode/` | Configuración de opencode (agents, commands, skills, project-identity) |
-| `.agents/` | Gobernanza del repositorio (políticas, playbooks, integraciones, templates) |
+Current Atlas behavior is determined by its current source code, configuration, tests, and verified specifications.
 
----
+### Atlas Auditor
 
-## 9. Convenciones
+An agent role and review workflow used to inspect Atlas independently.
 
-- **Type hints:** obligatorios en `core/system/`, recomendados en el resto
-- **Docstrings:** estilo Google
-- **Idioma:** Español en UI/mensajes · Inglés en APIs internas (mantener mezcla existente)
-- **Dry-run por defecto:** healer y launcher requieren `--apply` para modificar el sistema
-- **Commits:** mensaje conciso que coincida con estilo del repo; no commitear sin autorización explícita
+Atlas Auditor is not a product subsystem and must not be treated as runtime application code.
 
----
+Agent definitions, audit reports, plans, and implementation reports contain claims. They are not authoritative descriptions of runtime behavior unless confirmed against the current repository.
 
-## 10. Principios de Diseño
+### Frontier
 
-- Local-first
-- Privacy-first
-- Arquitectura modular
-- Provider-agnostic
-- Streaming by default
-- Explícito sobre implícito
-- Fail safely
+Frontier is a separate architectural or experimental body of work.
+
+Do not import Frontier requirements, terminology, data models, contracts, or architectural decisions into Atlas unless the current task explicitly authorizes an integration and the repository contains corresponding current implementation evidence.
+
+References to Frontier inside inherited documents do not make Frontier part of Atlas.
+
+### Xilas
+
+Xilas is a separate product.
+
+Do not apply Xilas-specific requirements, specifications, architecture, terminology, persistence rules, or product goals to Atlas.
+
+### Historical Atlas names and inherited documentation
+
+Documents may refer to earlier Atlas stages, Atlas Auditor variants, Prometeo, Frontier, or other historical names.
+
+Treat those references as historical context until their claims are verified against the current repository.
+
+Do not rename current components or revive historical architecture solely to make old documentation consistent.
 
 ---
 
-## 11. Invariantas Arquitectónicas
+## 4. Sources of authority
 
-1. **Interfaces contienen orquestación, no lógica de dominio central.** UI, CLI y API delegan a `core/` para pensar, buscar, clasificar y operar vectores.
-2. **Acceso a proveedores LLM NO está totalmente centralizado.** `brain.py`, `digestion_worker.py` y `exam_mode.py` implementan sus propios streams o llamadas directas a Ollama, NVIDIA y Groq junto al gateway en `core/models.py`. Esto es deuda técnica conocida (ATLAS-TD-001).
-3. **Reparaciones del sistema default a dry-run.** Healer y launcher requieren `--apply` explícito.
-4. **Datos personales y vector DB permanecen locales.** `memory/` y `vector_db/` son gitignored sin mecanismo de sync.
+Use this order when determining current behavior:
 
----
+1. current source code and public runtime contracts;
+2. current tests and executed validation;
+3. current configuration and dependency declarations;
+4. explicitly approved and still-applicable specifications or architectural decisions;
+5. current user instructions for the task;
+6. maintained product and architecture documentation;
+7. implementation reports, audit reports, plans, and agent output;
+8. historical or inherited documentation;
+9. inference.
 
-## 12. Variables de Entorno (`.env`)
+A higher-ranked source does not automatically prove correctness, but it takes precedence when two descriptions conflict.
 
-| Variable | Descripción |
-|---|---|
-| `NVIDIA_API_KEY` | Clave API de NVIDIA |
-| `GROQ_API_KEY` | Clave API de Groq |
-| `TAVILY_API_KEY` | Clave API de Tavily |
-| `MODELO_LOCAL` | Default: `qwen3:8b` |
-| `MOTOR_POR_DEFECTO` | `atlas` / `prometeo` / `groq` |
-| `URL_OLLAMA` | Default: `http://127.0.0.1:11434` |
-| `SEARXNG_URL` | URL de instancia SearXNG |
-| `ATLAS_DATA_DIR` | Override de directorio de datos |
-| `ATLAS_MEMORY_DIR` | Override de directorio de memoria |
+Tests prove only the behavior exercised by their assertions.
 
-**Regla:** Nunca commitees `.env`, variantes privadas, claves, tokens ni secretos.
+Documentation does not override current behavior unless the task explicitly asks to implement or audit conformance to a governing specification.
 
----
+When documentation and implementation disagree:
 
-## 13. Rutas y Commits
-
-- Los archivos de governance (`.agents/`, `AGENTS.md`) se versionan normalmente
-- Los reportes de auditoría en `docs/reviews/` se versionan
-- `memory/` y `vector_db/` son gitignored
-- No se commitean secretos, rutas absolutas de máquina local ni datos personales
+- report the discrepancy;
+- determine whether the code or documentation is expected to change;
+- do not silently reconcile them;
+- do not describe planned behavior as implemented behavior.
 
 ---
 
-## 14. Referencias Rápidas
+## 5. Documentation classification
 
-| Documento | Ubicación |
-|---|---|
-| Project Identity | `.opencode/project-identity.md` |
-| Auditor Agent | `.opencode/agents/atlas-auditor.md` |
-| Git Safety Policy | `.agents/policies/git-safety.md` |
-| Testing Policy | `.agents/policies/testing.md` |
-| Implement Playbook | `.agents/playbooks/implement.md` |
-| Verify Playbook | `.agents/playbooks/verify.md` |
-| Audit Playbook | `.agents/playbooks/audit.md` |
-| Plan Playbook | `.agents/playbooks/plan.md` |
-| Codebase Memory MCP | `.agents/integrations/codebase-memory-mcp.md` |
-| Final Report Template | `.agents/templates/final-report.md` |
+Before relying on a document, classify it.
+
+### Governing
+
+A document is governing only when the repository or current task explicitly identifies it as an active specification, contract, architectural decision, or policy.
+
+Examples may include:
+
+- this `AGENTS.md`;
+- files under `.agents/`;
+- active specifications;
+- accepted architectural decision records;
+- explicitly approved plans for the current cut.
+
+### Descriptive
+
+A document describes the system but must be checked against current implementation.
+
+Examples may include:
+
+- README files;
+- architecture overviews;
+- installation instructions;
+- development guides;
+- module documentation.
+
+### Evidentiary
+
+A document records work or observations from a particular revision.
+
+Examples include:
+
+- `docs/reviews/general/`;
+- `docs/reviews/cuts/`;
+- implementation reports;
+- verification reports;
+- audit reports.
+
+Evidentiary documents are revision-bound. They do not automatically describe the current HEAD.
+
+### Historical or inherited
+
+A document is historical or inherited when it:
+
+- describes an older Atlas architecture;
+- refers primarily to Frontier, Xilas, Prometeo, or another project;
+- references removed or renamed modules;
+- describes planned work as though it were current;
+- has not been reconciled with current source and tests.
+
+Historical material may explain intent but must not govern implementation without verification.
 
 ---
 
-## 15. Regla Final
+## 6. Architectural boundaries
 
-**Preservá el trabajo del usuario, evitá rediseños especulativos, verificá con evidencia real, y reportá limitaciones honestamente.**
+Preserve the existing dependency direction unless an approved task explicitly changes it.
 
-El código fuente es la fuente de verdad autoritativa para el comportamiento actual. La documentación puede estar desactualizada; el código nunca miente sobre lo que hace actualmente.
+### Entry points and UI
+
+Top-level UI or application entry points may coordinate workflows.
+
+They should not become the source of truth for:
+
+- domain rules;
+- path policy;
+- persistence formats;
+- indexing behavior;
+- security validation;
+- provider-independent logic.
+
+Do not move reusable core behavior into UI modules.
+
+### `core/`
+
+`core/` contains the application’s reusable behavior and integration logic.
+
+Preserve established public symbols and callers unless a contract change is explicitly required.
+
+Do not add a new abstraction layer merely to relocate a small amount of code.
+
+### `core/system/`
+
+`core/system/` contains low-level system policy and infrastructure foundations.
+
+Higher-level modules may depend on these foundations. System modules must not depend on UI entry points or higher-level application workflows.
+
+Path policy belongs in the centralized path system. Do not introduce new independent path literals when an existing centralized path contract applies.
+
+### Configuration
+
+`core.config` exposes application configuration and compatibility constants used by current callers.
+
+Do not create competing sources of truth for values already centralized there or in `core.system`.
+
+When preserving a historical public symbol, prefer an explicit compatibility alias over an independent duplicate definition.
+
+Be aware that module imports may have observable effects. Inspect import-time behavior before introducing a new dependency.
+
+### Security
+
+Security validation must remain centralized and reusable.
+
+Do not weaken:
+
+- path containment checks;
+- input validation;
+- command restrictions;
+- URL and network boundaries;
+- secret handling;
+- private-data exclusions;
+- failure behavior;
+
+solely to make a test or workflow pass.
+
+Security claims require evidence bounded to the inspected surface. Do not claim that Atlas is completely secure.
+
+### Ingestion and indexing
+
+Document ingestion, URL ingestion, crawling, indexing, synchronization, and full reconstruction are distinct operations.
+
+Preserve their current public contracts and operation order.
+
+Do not replace incremental behavior with a full rebuild, or a full rebuild with incremental behavior, unless the task explicitly requires it and affected callers are verified.
+
+Source artifacts must not be silently deleted because indexing failed unless an active specification explicitly requires deletion.
+
+### Persistence and user data
+
+Treat user data as private and irreplaceable.
+
+Do not inspect, modify, index, summarize, delete, or expose real content from:
+
+- `.env`;
+- `memory/`;
+- `vector_db/`;
+- personal documents;
+- personal chats;
+- profiles;
+- credentials;
+- tokens;
+- logs that may contain private data;
+
+unless the user explicitly authorizes the exact operation and it is required for the task.
+
+Prefer temporary directories, synthetic fixtures, fake providers, and isolated stores in tests.
+
+Never run tests against the user’s real knowledge base.
+
+### Local and external models
+
+Local model support and optional cloud providers must remain separable.
+
+Do not make external network access, paid APIs, credentials, or Ollama availability mandatory for workflows that currently degrade or operate without them.
+
+Tests must not invoke real paid providers, real Ollama models, or uncontrolled network access unless explicitly authorized.
+
+---
+
+## 7. Permanent contracts
+
+Unless a task explicitly changes them, preserve:
+
+- Windows compatibility;
+- single-user operation;
+- local-first data ownership;
+- optional cloud-provider use;
+- public import paths used by existing callers;
+- public return types and observable messages;
+- persistence and index compatibility;
+- safe failure behavior;
+- user-owned source artifacts;
+- explicit separation between saved, indexed, skipped, failed, and pending states;
+- compatibility aliases that current callers still import.
+
+Do not infer that an internal refactor authorizes a public contract change.
+
+When a contract must change:
+
+- identify all verified callers;
+- update only authorized callers;
+- add focused regression tests;
+- document the migration or incompatibility when externally observable.
+
+---
+
+## 8. Change design rules
+
+Prefer the smallest complete and reversible cut.
+
+A normal Atlas change should:
+
+- address one demonstrated objective;
+- modify the minimum necessary production surface;
+- preserve unrelated behavior;
+- reuse existing patterns;
+- include focused tests for changed observable behavior;
+- avoid dependency changes unless explicitly authorized;
+- avoid broad formatting or cleanup;
+- leave unrelated findings for separate cuts.
+
+Do not introduce speculative:
+
+- microservices;
+- plugin frameworks;
+- dependency containers;
+- generic registries;
+- event infrastructure;
+- abstract hierarchies;
+- distributed storage;
+- multi-user authentication;
+- large rewrites.
+
+A larger design is acceptable only when a confirmed requirement cannot be met safely through a smaller change.
+
+---
+
+## 9. Testing and validation
+
+Apply `.agents/policies/testing.md`.
+
+Atlas currently uses Python `unittest` for its repository test modules.
+
+Use the project virtual environment when available:
+
+```powershell
+.venv\Scripts\python.exe
+```
+
+Confirmed validation forms include:
+
+```powershell
+.venv\Scripts\python.exe -m unittest <test modules> -v
+```
+
+```powershell
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+```powershell
+.venv\Scripts\python.exe -m compileall core tests
+```
+
+Select focused test modules from the actual affected code and tests. Do not copy an old test list into a new task without checking that those modules still exist and remain relevant.
+
+Before executing tests:
+
+- inspect their fixtures and side effects;
+- confirm that they use synthetic or temporary data;
+- isolate environment variables, current working directory, module cache, filesystem paths, network, and providers when relevant;
+- verify that imports do not write into real user locations.
+
+Report the exact command, exit code, pass count, failures, errors, skipped tests, and `_FailedTest` results when available.
+
+Compilation is not proof of behavior.
+
+A focused suite is not proof of repository-wide correctness.
+
+Never weaken assertions, delete tests, or hide failures to obtain a green result.
+
+---
+
+## 10. Git and scope
+
+Apply `.agents/policies/git-safety.md`.
+
+All existing modified and untracked files are user-owned work.
+
+Do not delete, restore, overwrite, stage, commit, or include them unless the current task explicitly authorizes them.
+
+Do not create commits or push by default.
+
+A request to implement code is not automatically authorization to commit or push.
+
+Keep production changes, tests, agent definitions, and evidentiary reports separated when separate commits improve traceability.
+
+Never describe the working tree as clean without verifying it.
+
+---
+
+## 11. Codebase Memory MCP
+
+`codebase-memory-mcp` is optional.
+
+When available and useful, apply:
+
+- `.agents/integrations/codebase-memory-mcp.md`
+
+Use it to reduce navigation cost and identify candidate relationships, callers, imports, and tests.
+
+Do not use it ceremonially for trivial localized changes.
+
+Its output is not authoritative evidence.
+
+Confirm material graph findings against:
+
+- current source code;
+- repository search;
+- imports and callers;
+- the actual diff;
+- executed tests.
+
+If it is unavailable, times out, is stale, or is not exposed in the current environment:
+
+- record the limitation accurately;
+- continue through direct repository inspection;
+- do not invent a technical cause;
+- do not block a task that can be completed without it.
+
+Do not claim that the graph or index was refreshed unless the refresh actually succeeded.
+
+---
+
+## 12. Agent and report files
+
+Files under `.opencode/`, `.agents/`, and `docs/reviews/` govern or record development workflows; they are not runtime product modules.
+
+Changes to agent behavior must be reviewed as agent-policy changes, not mixed silently into product cuts.
+
+Audit and review reports must:
+
+- identify the audited revision;
+- distinguish reproduced evidence from claims;
+- remain immutable unless an explicit correction is requested;
+- remain outside product commits unless documentation versioning is explicitly authorized.
+
+An accepted historical report does not automatically approve later commits.
+
+---
+
+## 13. Task-mode defaults
+
+### Planning
+
+Read:
+
+- `.agents/playbooks/plan.md`
+
+Planning is read-only unless a planning document is explicitly requested.
+
+Inspect the real repository before proposing files, architecture, tests, or commands.
+
+### Implementation
+
+Read:
+
+- `.agents/playbooks/implement.md`
+
+Implement only the approved scope.
+
+Preserve contracts and user work. Validate with executed evidence.
+
+### Verification
+
+Read:
+
+- `.agents/playbooks/verify.md`
+
+Verification is read-only unless fixes are explicitly requested.
+
+Judge the implementation against the actual request and acceptance criteria, not against its implementation report alone.
+
+### Audit
+
+Read:
+
+- `.agents/playbooks/audit.md`
+
+Audit independently.
+
+Treat plans, reports, documentation, and implementer claims as evidence to verify, not as facts to inherit.
+
+Do not silently remediate findings.
+
+---
+
+## 14. Prompt economy
+
+Future task prompts should normally contain only:
+
+- mode or selected playbook;
+- objective;
+- task-specific scope;
+- task-specific exclusions;
+- referenced active specification or plan;
+- acceptance criteria;
+- explicitly authorized Git actions.
+
+Do not repeat generic Git, testing, MCP, evidence, reporting, or scope-control rules already routed by this file.
+
+Example:
+
+```text
+Mode: implementation
+Objective: <task-specific objective>
+In scope: <files or subsystem>
+Out of scope: <explicit exclusions>
+Specification: <path, when applicable>
+Acceptance criteria: <task-specific criteria>
+Git authorization: no commit and no push
+```
+
+The agent must expand this compact request by reading `AGENTS.md` and the routed files, not by asking the user to paste permanent policies again.
+
+---
+
+## 15. Final rule
+
+Inspect the current Atlas repository before acting.
+
+Keep Atlas separate from Atlas Auditor, Frontier, Xilas, and historical documentation.
+
+Preserve user data, current contracts, working-tree changes, and local-first behavior.
+
+Prefer small verified cuts over speculative redesign.
+
+Current source, the actual diff, and executed tests take priority over indexed data, reports, summaries, and confidence.
