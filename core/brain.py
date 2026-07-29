@@ -28,15 +28,7 @@ from core.temp_rules import (
 # ============================================
 # CONFIGURACIÓN
 # ============================================
-try:
-    from core.config import BASE_ESTUDIO as _CFG_BASE_ESTUDIO, BASE_PROMPTS as _CFG_BASE_PROMPTS, MAX_HISTORIAL as _CFG_MAX_HISTORIAL
-    BASE_ESTUDIO = _CFG_BASE_ESTUDIO
-    BASE_PROMPTS = _CFG_BASE_PROMPTS
-    MAX_HISTORIAL = _CFG_MAX_HISTORIAL
-except Exception:
-    BASE_ESTUDIO = "memory/Atlas_Memory/03_Conocimiento"
-    BASE_PROMPTS = "memory/Atlas_Memory/00_Sistema/Prompts"
-    MAX_HISTORIAL = 5
+from core.config import BASE_ESTUDIO, BASE_PROMPTS, MAX_HISTORIAL
 
 HISTORIAL = []
 
