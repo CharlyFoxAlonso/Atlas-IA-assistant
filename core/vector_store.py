@@ -9,12 +9,12 @@ import os
 import re
 from datetime import datetime
 
+from core.config import CHROMA_PATH, COLLECTION_NAME
+from core.system.paths import validate_vector_store_path
+
 # ============================================
 # CONFIGURACIÓN
 # ============================================
-CHROMA_PATH = "./vector_db"
-COLLECTION_NAME = "atlas_rag"
-
 _cliente = None
 _coleccion = None
 _embedding_fn = None
@@ -33,6 +33,8 @@ def _get_collection():
     if _coleccion is not None:
         return _coleccion
 
+    resolved_chroma_path = str(validate_vector_store_path(CHROMA_PATH))
+
     import chromadb
     import os as _os
     _os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -42,7 +44,7 @@ def _get_collection():
         _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="paraphrase-multilingual-MiniLM-L12-v2"
         )
-        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _cliente = chromadb.PersistentClient(path=resolved_chroma_path)
         _coleccion = _cliente.get_or_create_collection(
             name=COLLECTION_NAME,
             embedding_function=_embedding_fn,
@@ -52,16 +54,16 @@ def _get_collection():
     except (KeyError, RuntimeError, ValueError) as e:
         # DB incompat (formato viejo). Respaldo y reintento limpio.
         from core.security import log_seguridad
-        log_seguridad("VECTOR_DB_INCOMPAT", f"Reformateando {CHROMA_PATH}: {type(e).__name__}: {e}")
+        log_seguridad("VECTOR_DB_INCOMPAT", f"Reformateando {resolved_chroma_path}: {type(e).__name__}: {e}")
         import shutil
-        if os.path.exists(CHROMA_PATH):
-            backup = CHROMA_PATH + ".incompat." + datetime.now().strftime("%Y%m%d_%H%M%S")
+        if os.path.exists(resolved_chroma_path):
+            backup = resolved_chroma_path + ".incompat." + datetime.now().strftime("%Y%m%d_%H%M%S")
             try:
-                shutil.move(CHROMA_PATH, backup)
+                shutil.move(resolved_chroma_path, backup)
             except Exception:
                 # Si no se puede mover (archivo bloqueado), abortar
                 raise RuntimeError(
-                    f"No se pudo migrar {CHROMA_PATH}. Cerrá Atlas (y Ollama si lo usás) "
+                    f"No se pudo migrar {resolved_chroma_path}. Cerrá Atlas (y Ollama si lo usás) "
                     f"y borrá manualmente la carpeta vector_db."
                 ) from e
         _coleccion = None
@@ -70,7 +72,7 @@ def _get_collection():
         _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="paraphrase-multilingual-MiniLM-L12-v2"
         )
-        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _cliente = chromadb.PersistentClient(path=resolved_chroma_path)
         _coleccion = _cliente.get_or_create_collection(
             name=COLLECTION_NAME,
             embedding_function=_embedding_fn,

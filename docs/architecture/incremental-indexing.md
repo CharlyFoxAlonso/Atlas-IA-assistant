@@ -75,8 +75,19 @@ flowchart TD
 
 ## 5. Manifiesto de indexación
 
-Archivo local `vector_db/index_manifest.json` (gitignored, junto a la base
-que describe; no contiene contenido de documentos).
+`core.system.paths` define el directorio vectorial autoritativo.
+`core.config.CHROMA_PATH` lo expone como `str` y
+`core.config.INDEX_MANIFEST_PATH` apunta a `index_manifest.json` dentro
+del mismo directorio. En desarrollo sin overrides conserva la ubicación
+histórica `<project_root>/vector_db`; `ATLAS_DATA_DIR` y el modo empaquetado
+reubican ChromaDB y manifiesto juntos.
+
+Si la ruta configurada no existe pero aparece un `cwd/vector_db` distinto,
+Atlas detiene la inicialización antes de crear ChromaDB. El error exige
+migración manual o restaurar la configuración previa: no hay fallback,
+movimiento ni combinación automática. Si ambas rutas existen, prevalece
+la configurada. El backup aplica la misma validación y conserva los
+miembros ZIP bajo `vector_db/` sin exponer la ruta absoluta de origen.
 
 ```json
 {

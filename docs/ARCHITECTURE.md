@@ -44,4 +44,11 @@ Atlas supports three distinct backends for flexibility:
 ## 4. Data Persistence
 - **Chats:** Saved as isolated JSON files per session.
 - **Long-term Memory:** Markdown files organized by category (Profile, University, Projects, etc.).
-- **Vector DB:** Persistent ChromaDB storage in `/vector_db`.
+- **Vector DB:** Persistent ChromaDB storage at
+  `core.system.paths.get_paths().chroma_dir`. `core.config` exposes the
+  absolute path and keeps `index_manifest.json` in that same directory.
+  Development defaults to `<project_root>/vector_db`; `ATLAS_DATA_DIR`
+  and packaged mode relocate both together. A distinct legacy
+  `cwd/vector_db` never becomes a silent fallback: when the configured
+  path is absent, Atlas stops for explicit manual migration. Backups read
+  the configured source but keep the stable ZIP layout `vector_db/...`.

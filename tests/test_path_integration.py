@@ -148,6 +148,8 @@ class PathIntegrationTests(unittest.TestCase):
             data_dir = root / "controlled-data"
             environment = {"ATLAS_DATA_DIR": str(data_dir)}
             expected = get_paths(packaged=False, environment=environment)
+            expected_chroma = data_dir.resolve() / "vector_db"
+            expected_manifest = expected_chroma / "index_manifest.json"
 
             with isolated_config_import(environment, root) as config:
                 self.assertEqual(config.BASE_MEMORIA, str(expected.private_memory_dir))
@@ -158,6 +160,15 @@ class PathIntegrationTests(unittest.TestCase):
                 self.assertEqual(
                     config.BASE_PROMPTS,
                     str(expected.private_memory_dir / "00_Sistema" / "Prompts"),
+                )
+                self.assertEqual(config.CHROMA_PATH, str(expected_chroma))
+                self.assertEqual(config.INDEX_MANIFEST_PATH, str(expected_manifest))
+                self.assertIsInstance(config.CHROMA_PATH, str)
+                self.assertTrue(Path(config.CHROMA_PATH).is_absolute())
+                self.assertTrue(Path(config.INDEX_MANIFEST_PATH).is_absolute())
+                self.assertEqual(
+                    Path(config.INDEX_MANIFEST_PATH).parent,
+                    Path(config.CHROMA_PATH),
                 )
 
 

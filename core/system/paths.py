@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Mapping, Optional
 
 
+class LegacyVectorStoreError(RuntimeError):
+    """Raised when an unmigrated cwd-relative vector store may be orphaned."""
+
+
 @dataclass(frozen=True)
 class AtlasPaths:
     mode: str
@@ -39,6 +43,34 @@ def is_packaged() -> bool:
 def _env_path(env: Mapping[str, str], name: str, fallback: Path) -> Path:
     value = env.get(name)
     return Path(value).expanduser().resolve() if value else fallback.resolve()
+
+
+def validate_vector_store_path(
+    configured_path: Path | str,
+    *,
+    legacy_path: Optional[Path | str] = None,
+) -> Path:
+    """Return the configured vector path without modifying either location.
+
+    A legacy ``cwd/vector_db`` is ambiguous only when it differs from the
+    configured path and the configured path does not exist. Atlas stops in
+    that case so Chroma and its manifest cannot silently split across roots.
+    """
+    configured = Path(configured_path).expanduser().resolve()
+    legacy = Path(
+        legacy_path if legacy_path is not None else Path.cwd() / "vector_db"
+    ).expanduser().resolve()
+
+    if configured == legacy or configured.exists() or not legacy.exists():
+        return configured
+
+    raise LegacyVectorStoreError(
+        "Possible legacy vector store detected at "
+        f"'{legacy}', but the configured vector store '{configured}' does "
+        "not exist. Automatic migration was intentionally not performed. "
+        "Move the legacy vector store to the configured location manually "
+        "or restore the previous ATLAS_DATA_DIR setting before retrying."
+    )
 
 
 def get_paths(
