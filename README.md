@@ -303,6 +303,8 @@ Completed:
 Partial:
 - [~] **Advanced dashboard:** basic metrics exist; expanded CPU, RAM, GPU, and operational views remain pending.
 
+Governing specification: the incremental-indexing behavioral and consistency contracts are frozen in [docs/spec/atlas-v4.1-incremental-indexing-sdd.md](docs/spec/atlas-v4.1-incremental-indexing-sdd.md).
+
 ### v4.1.x technical follow-ups
 - [ ] **L1 / ATLAS-TD-001:** make the ignored crawler `reindexer` compatibility parameter explicit.
 - [ ] **L2 / ATLAS-TD-002:** define or reset crawler state when an instance is reused.

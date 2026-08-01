@@ -1,6 +1,7 @@
 # Indexación incremental de Atlas
 
 **Estado:** Implementado (primer corte de Atlas v4.1)
+**Autoridad:** este documento es **descriptivo**; no define contratos. Los contratos de comportamiento y consistencia de la indexación incremental los congela la especificación gobernante [`docs/spec/atlas-v4.1-incremental-indexing-sdd.md`](../spec/atlas-v4.1-incremental-indexing-sdd.md) (cortes IDX-C1 a INT-C7).
 **Módulos:** `core/indexer.py`, `core/index_manifest.py`, `core/vector_store.py`, `core/local_ingestion_manager.py`
 **Interfaces:** comando `!indexar` / `!indexar sync` (CLI y Streamlit), ingestión local de archivos
 
