@@ -26,7 +26,7 @@ Todo comportamiento material de esta SDD lleva exactamente una marca:
 
 | Marca | Significado |
 |---|---|
-| `CURRENT` | Comportamiento verificado en el código y los tests actuales de la rama. |
+| `CURRENT` | Comportamiento implementado en el código actual y respaldado por tests existentes o evidencia previa; la ejecución fresca se registra en cada auditoría y gate. |
 | `TARGET_REQUIRED_FOR_V4.1` | Comportamiento contractual obligatorio para declarar Atlas 4.1 completo. **No está implementado todavía**; no debe describirse como implementado. |
 | `DEFERRED` | Decidido pero fuera del alcance de v4.1; requiere corte propio. |
 | `OUT_OF_SCOPE` | Explícitamente fuera de esta rama y de esta especificación. |
@@ -49,9 +49,9 @@ lista para integrarse en `origin/main` con los siguientes atributos:
    esta SDD (identidad estable, manifiesto atómico, sincronización por diferencias,
    reconstrucción explícita sin vaciado).
 2. La consistencia entre fuentes, manifiesto y ChromaDB es **verificable en modo
-   solo lectura** (IDX-C1) y **reparable de forma conservadora** (IDX-C2).
+   solo lectura** (IDX-C1) y **reparable de forma conservadora** (IDX-C3).
 3. Las operaciones de escritura están protegidas contra escritores concurrentes
-   (IDX-C3).
+   (IDX-C2).
 4. El estado del índice es observable desde superficies de solo lectura (IDX-C4) y la
    reparación conservadora tiene una superficie explícita con confirmación (IDX-C5).
 5. La documentación identifica esta SDD como gobernante (DOC-C6).
@@ -97,10 +97,10 @@ lista para integrarse en `origin/main` con los siguientes atributos:
 | **Divergence** | Diferencia observable entre las capas fuente / manifiesto / Chroma que el modelo de estados clasifica (sección 6). `CURRENT` (concepto) / verificación `TARGET_REQUIRED_FOR_V4.1`. |
 | **Orphan vector** | Chunk(s) en Chroma sin entrada de manifiesto y sin source document en disco. Se detecta y reporta; nunca se purga automáticamente (sección 9). `TARGET_REQUIRED_FOR_V4.1` (detección). |
 | **Unindexed source** | Source document presente en disco sin estado de indexación vigente (sin entrada de manifiesto y/o sin chunks). `CURRENT` (estado real alcanzable) / tratamiento `TARGET_REQUIRED_FOR_V4.1`. |
-| **Configured storage** | Ubicación del almacenamiento vectorial derivada de la política central de rutas (`get_paths()`, `ATLAS_DATA_DIR`/`ATLAS_MEMORY_DIR`), validada por `validate_vector_store_path`. `CURRENT`. |
-| **Legacy storage** | Ubicación `cwd/vector_db` distinta de la configurada. Su coexistencia ambigua produce error duro, nunca fusión ni fallback silencioso. `CURRENT`. |
+| **Configured storage** | Ubicación del almacenamiento vectorial derivada de la raíz de datos configurada. `ATLAS_DATA_DIR` controla esa raíz y, por lo tanto, `CHROMA_PATH` e `INDEX_MANIFEST_PATH`. `ATLAS_MEMORY_DIR` controla exclusivamente la raíz de los source documents (`BASE_MEMORIA`) y no modifica la ubicación vectorial. La ruta configurada se valida mediante `validate_vector_store_path`. `CURRENT`. |
+| **Legacy storage** | Ubicación `cwd/vector_db` distinta de la configurada. Política (`CURRENT`): si configured y legacy resuelven al mismo path, continúa normalmente; si difieren, se usa configured (configured existente, o legacy inexistente); legacy-only (configured inexistente y legacy distinto existente) produce error duro. Nunca fallback, fusión ni migración automática. |
 | **Consistency check** | Verificación de solo lectura que clasifica el estado del índice en uno de los estados de la sección 5. `TARGET_REQUIRED_FOR_V4.1`. |
-| **Conservative repair** | Operación separada que restaura la convergencia reindexando documentos presentes en disco, sin borrar vectores, sin mover almacenamiento y sin purgar datos legacy. `TARGET_REQUIRED_FOR_V4.1`. |
+| **Conservative repair** | Operación separada que restaura la convergencia: reindexa fuentes soportadas presentes en disco; retira chunks y entrada de manifiesto de fuentes conocidas que ya no existen; nunca borra vectores sin fuente ni manifiesto; nunca mueve ni migra almacenamiento. `TARGET_REQUIRED_FOR_V4.1`. |
 | **Committed indexing operation** | Operación de escritura del índice (sección 11) que adquiere el contrato de escritor único antes de mutar manifiesto o Chroma. `CURRENT` (operaciones) / exclusividad `TARGET_REQUIRED_FOR_V4.1`. |
 
 ---
@@ -144,10 +144,13 @@ Solo invariantes respaldados por el código y los tests actuales de la rama.
   Un manifiesto corrupto se respalda como `.bak` y se reconstruye vacío sin tocar
   ChromaDB. Evidencia: `core/index_manifest.py`; tests dedicados.
 - **INV-4 — Raíz vectorial autoritativa única (`CURRENT`).** Chroma y manifiesto
-  comparten raíz. Si la ruta configurada no existe pero hay un `cwd/vector_db` distinto,
-  la inicialización se detiene con error duro: no hay fallback, movimiento ni
-  combinación automática. Evidencia: `core/system/paths.py` `validate_vector_store_path`;
-  `tests/test_vector_paths.py`, `tests/test_backup_paths.py`.
+  comparten raíz. Política legacy de `validate_vector_store_path`: si configured y
+  legacy resuelven al mismo path, continúa normalmente; si difieren, se usa configured
+  (configured existente o legacy inexistente); si configured no existe y legacy es
+  distinto y existente (legacy-only), error duro `LegacyVectorStoreError` sin
+  fallback, movimiento, fusión ni migración automática. Evidencia:
+  `core/system/paths.py` `validate_vector_store_path`; `tests/test_vector_paths.py`,
+  `tests/test_backup_paths.py`.
 - **INV-5 — Reindexación deduplicante (`CURRENT`).** Antes de insertar la versión
   nueva, se eliminan los chunks previos del documento (esquema `doc_id` y variantes
   legacy `ruta`). Reindexar o reconstruir nunca duplica permanentemente. Evidencia:
@@ -179,48 +182,63 @@ reemplazarlo.
 
 | Estado | Cuándo aplica |
 |---|---|
-| `HEALTHY` | Manifiesto presente y legible; Chroma responde; todo source document soportado tiene chunks; no hay vectores registrables ni huérfanos; no hay entradas sin archivo pendientes de retiro. |
-| `HEALTHY_EMPTY` | Las tres capas están vacías (adopción inicial sin fuentes, sin manifiesto ni Chroma). |
-| `INCONSISTENT` | Existe al menos una divergencia accionable (sección 6): faltantes en Chroma con fuente presente, vectores sin entrada ni fuente, entradas sin archivo, fuentes sin indexar, o manifest/Chroma ausente con la otra capa no vacía. |
-| `DEGRADED` | La verificación no pudo evaluarse por completo sin evidencia de divergencia accionable: entradas malformadas ignoradas al leer el manifiesto, candidatos huérfanos legacy no confirmables, o limitaciones de verificación activas (p. ej., verificación profunda de conteos diferida). |
-| `UNAVAILABLE` | Manifiesto corrupto (ilegible estructuralmente) o Chroma inaccesible de modo que impide determinar la consistencia. **Nunca se convierte en `HEALTHY_EMPTY`.** |
+| `HEALTHY` | Manifiesto presente, válido y compatible; Chroma responde; todo source document soportado tiene chunks y coincide con la huella vigente del manifiesto. `size_bytes` y `modified_time_ns` coinciden, o fueron reconciliados mediante SHA-256; no hay fuentes sin indexar, vectores registrables, vectores huérfanos ni entradas de manifiesto correspondientes a fuentes ausentes. |
+| `HEALTHY_EMPTY` | Las capas están lógicamente vacías: no existen source documents soportados; el manifiesto está ausente o es válido y contiene cero entradas; y la colección `atlas_rag` está ausente o existe con cero chunks. Un manifiesto corrupto o incompatible, o un backend Chroma inaccesible, nunca producen `HEALTHY_EMPTY`. |
+| `INCONSISTENT` | Existe al menos una divergencia accionable de la sección 6: chunks faltantes, fuentes sin indexar, contenido modificado, metadatos del filesystem desactualizados, vectores sin entrada de manifiesto, entradas sin fuente, vectores huérfanos, manifiesto ausente con otras capas no vacías, o almacenamiento/colección Chroma ausente con fuentes o entradas de manifiesto presentes. |
+| `DEGRADED` | La verificación no pudo confirmar completamente un estado saludable y no existe una divergencia con mayor prioridad. Incluye entradas parcialmente malformadas que pueden aislarse, candidatos legacy no confirmables, limitaciones activas de verificación y estado del escritor desconocido. Mientras `writer_state_known=False`, un resultado nominal `HEALTHY` o `HEALTHY_EMPTY` se publica como `DEGRADED`. |
+| `UNAVAILABLE` | El manifiesto está presente pero es estructuralmente corrupto; el manifiesto es legible pero usa un `schema_version` incompatible; o el backend Chroma es inaccesible y no permite determinar la consistencia. Nunca se convierte en `HEALTHY_EMPTY`. |
 
 Reglas de derivación (`TARGET_REQUIRED_FOR_V4.1`):
 
 1. `UNAVAILABLE` tiene prioridad sobre cualquier otro estado.
 2. `INCONSISTENT` tiene prioridad sobre `DEGRADED`.
-3. `HEALTHY_EMPTY` aplica solo cuando las tres capas están vacías; si existen fuentes,
-   aplica `INCONSISTENT` (fuentes sin indexar), aunque el manifiesto y Chroma estén vacíos.
-4. El estado se calcula desde cero en cada verificación; no se persiste.
+3. `DEGRADED` tiene prioridad sobre `HEALTHY` y `HEALTHY_EMPTY`.
+4. Manifiesto ausente:
+   - con fuentes o Chroma presentes → `INCONSISTENT`;
+   - con las capas lógicamente vacías → `HEALTHY_EMPTY`.
+5. Manifiesto presente pero corrupto o incompatible → `UNAVAILABLE`.
+6. Almacenamiento Chroma o colección `atlas_rag` ausentes:
+   - con fuentes o entradas de manifiesto presentes → `INCONSISTENT`;
+   - con fuentes vacías y manifiesto ausente o válido vacío → `HEALTHY_EMPTY`.
+7. Backend Chroma inaccesible → `UNAVAILABLE`.
+8. Una fuente con `size_bytes` o `modified_time_ns` diferentes exige calcular SHA-256:
+   - SHA-256 diferente → contenido desactualizado;
+   - SHA-256 idéntico → contenido vectorial vigente, pero metadatos del manifiesto desactualizados.
+9. Mientras `writer_state_known=False`, un resultado nominal `HEALTHY` o `HEALTHY_EMPTY` se publica como `DEGRADED`, con `writer_active=False` y `possibly_transient=True`.
+10. El estado se calcula desde cero en cada verificación y no se persiste.
 
 ---
 
 ## 6. Categorías de divergencia requeridas
 
 Identificadores estables en inglés, aptos para campos de dataclass futuros.
-Para cada categoría se indica el estado de consistencia resultante y la acción prevista.
+Para cada categoría se indica el estado resultante y la acción prevista.
 
 | Identificador | Condición | Estado resultante | Acción prevista |
 |---|---|---|---|
-| `source_and_manifest_and_chroma_present` | Fuente en disco, entrada de manifiesto y chunks presentes | `HEALTHY` (nominal) | Ninguna |
-| `source_and_manifest_present_chroma_absent` | Fuente y entrada presentes; chunks ausentes | `INCONSISTENT` | Reparación conservadora: reindexar la fuente (dedup-safe) |
-| `source_present_manifest_absent_chroma_present` | Fuente presente; chunks sin entrada (vectores no registrados) | `INCONSISTENT` | Reparación: re-registrar reindexando la fuente |
-| `source_present_manifest_absent_chroma_absent` | Fuente sin indexar | `INCONSISTENT` | Reparación: indexar la fuente |
-| `source_absent_manifest_present` | Entrada sin archivo (pendiente de retiro) | `INCONSISTENT` | Sincronización/reparación: retirar chunks y entrada |
-| `source_absent_chroma_present` | Vectores huérfanos reales (sin entrada, sin archivo) | `INCONSISTENT` | Detectar y reportar; **nunca** purgar en v4.1 (sección 9) |
-| `manifest_absent_or_corrupt` | Manifiesto ausente o ilegible | `UNAVAILABLE` (corrupto) / ver reglas de ausencia | Reportar; no convertir en vacío saludable; reparación por re-registro si hay fuentes |
-| `chroma_absent_or_unavailable` | Almacenamiento vectorial inexistente con entradas en manifiesto, o backend inaccesible | `INCONSISTENT` (vectores perdidos → reindexar) / `UNAVAILABLE` (sin acceso para verificar) | Reportar; reparación por reindexación |
-| `manifest_and_chroma_empty_sources_present` | Manifiesto y Chroma vacíos con fuentes en disco | `INCONSISTENT` | Reparación: indexar todas las fuentes |
-| `all_layers_empty` | Las tres capas vacías | `HEALTHY_EMPTY` | Ninguna |
+| `source_and_manifest_and_chroma_present` | Fuente, entrada y chunks presentes; `size_bytes` y `modified_time_ns` coinciden con el manifiesto | `HEALTHY` nominal | Ninguna |
+| `source_and_manifest_present_chroma_absent` | Fuente y entrada presentes; chunks ausentes | `INCONSISTENT` | Reindexar la fuente mediante el flujo deduplicante |
+| `source_present_manifest_stale_chroma_present` | Fuente, entrada y chunks presentes; size/mtime difieren y el SHA-256 actual también difiere del manifiesto | `INCONSISTENT` | Reindexar la fuente; el contenido cambió |
+| `source_present_manifest_metadata_stale_content_same` | Fuente, entrada y chunks presentes; size/mtime difieren, pero el SHA-256 actual coincide con `content_sha256` | `INCONSISTENT` | Actualizar únicamente los metadatos del manifiesto mediante el comportamiento de sincronización existente; no reembedir ni reescribir chunks |
+| `source_present_manifest_absent_chroma_present` | Fuente presente; chunks presentes sin entrada de manifiesto | `INCONSISTENT` | Reindexar para registrar el estado mediante el flujo existente |
+| `source_present_manifest_absent_chroma_absent` | Fuente presente sin entrada ni chunks | `INCONSISTENT` | Indexar la fuente |
+| `source_absent_manifest_present` | Entrada conocida cuyo source document ya no existe | `INCONSISTENT` | Retirar chunks y entrada mediante la operación pública existente |
+| `source_absent_chroma_present` | Chunks sin entrada de manifiesto y sin source document | `INCONSISTENT` | Detectar y reportar; nunca purgar en Atlas 4.1 |
+| `manifest_absent` | Archivo de manifiesto inexistente | `INCONSISTENT` si existen fuentes o Chroma; `HEALTHY_EMPTY` si las capas están lógicamente vacías | Reportar; permitir reparación conservadora si existen fuentes |
+| `manifest_corrupt` | Manifiesto presente con JSON inválido o estructura no conforme | `UNAVAILABLE` | Reportar sin crear `.bak`, renombrar ni reconstruir durante el check |
+| `manifest_schema_incompatible` | JSON legible y estructuralmente válido con `schema_version` no soportado | `UNAVAILABLE` | Reportar como incompatibilidad, no como corrupción |
+| `chroma_absent` | La raíz de almacenamiento vectorial configurada no existe | `INCONSISTENT` si existen fuentes o entradas; `HEALTHY_EMPTY` si las demás capas están lógicamente vacías | Reportar; reconstruir conservadoramente desde fuentes cuando corresponda |
+| `chroma_collection_absent` | La raíz configurada existe, pero la colección `atlas_rag` no existe; se detecta sin `get_or_create_collection` | `INCONSISTENT` si existen fuentes o entradas; `HEALTHY_EMPTY` si fuentes y manifiesto están lógicamente vacíos | Reportar; reconstruir conservadoramente desde fuentes cuando corresponda |
+| `chroma_unavailable` | El backend o la colección existente no pueden abrirse por un error de acceso o funcionamiento | `UNAVAILABLE` | Reportar sin crear ni modificar almacenamiento |
+| `manifest_and_chroma_empty_sources_present` | Manifiesto ausente o válido vacío, Chroma ausente o vacío, y existen fuentes soportadas | `INCONSISTENT` | Indexar las fuentes |
+| `all_layers_empty` | No hay fuentes soportadas; el manifiesto está ausente o válido vacío; la colección está ausente o contiene cero chunks | `HEALTHY_EMPTY` nominal | Ninguna |
 
-Decisión contractual:
+Decisiones contractuales:
 
-- **`mismatch_chunk_counts` NO es un campo requerido de v4.1.** El manifiesto registra
-  `chunk_count` por documento, pero no existe semántica validada para reconciliar
-  desviaciones de conteo (estados intermedios de crash, duplicados legacy, límites de
-  chunking). La verificación de v4.1 se basa en presencia/ausencia de chunks por
-  identidad, no en conteos exactos. La verificación profunda de conteos es
-  `DEFERRED`.
+- `source_present_manifest_stale_chroma_present` aplica únicamente cuando el SHA-256 cambió.
+- `source_present_manifest_metadata_stale_content_same` aplica cuando size/mtime cambiaron pero el SHA-256 sigue siendo idéntico.
+- `HEALTHY` requiere que no exista ninguna de esas dos divergencias.
+- `mismatch_chunk_counts` no es un campo requerido de Atlas 4.1. Aunque el manifiesto registra `chunk_count`, no existe todavía una semántica validada para reconciliar diferencias de conteo frente a estados intermedios, duplicados legacy o cambios de chunking. La verificación profunda de conteos queda `DEFERRED`.
 
 ---
 
@@ -235,15 +253,23 @@ El primer verificador de consistencia:
 2. **No invoca `IndexManifest.load` si esa operación puede mutar un manifiesto
    corrupto.** `IndexManifest.load` respalda el archivo corrupto (efecto de escritura);
    el verificador inspecciona el manifiesto por una vía de lectura no mutante: lectura
-   del JSON crudo + validación estructural propia. La detección de corrupción se
-   reporta como `manifest_absent_or_corrupt` / `UNAVAILABLE`; el respaldo `.bak`
-   permanece exclusivamente en la vía de escritura.
+   del JSON crudo + validación estructural propia. La corrupción estructural se
+   reporta como `manifest_corrupt` → `UNAVAILABLE`; un JSON legible con `schema_version`
+   no soportado se reporta como `manifest_schema_incompatible` → `UNAVAILABLE`, sin
+   clasificarlo como corrupción. El respaldo `.bak` permanece exclusivamente en la vía
+   de escritura.
 3. **No crea almacenamiento Chroma.** No construye el cliente ni la colección si el
    almacenamiento no existe; cuando existe, accede a la colección existente sin
-   semántica de creación y sin `get_or_create` implícito (ver sección 10).
-4. **No embebe, no indexa y no contacta proveedores.** La verificación usa solo
-   identidades y metadatos de Chroma (IDs de chunk, `doc_id`, `ruta`); nunca invoca
-   consultas de texto que requieran embeddings ni ningún modelo.
+   semántica de creación y sin `get_or_create` implícito (ver sección 10). El adaptador
+   consulta una colección existente sin crearla y distingue colección ausente
+   (`chroma_collection_absent`) de backend inaccesible (`chroma_unavailable`).
+4. **No embebe, no indexa y no contacta proveedores.** La verificación utiliza únicamente identidades, metadatos, estadísticas del filesystem y metadatos de Chroma. Nunca ejecuta búsquedas que requieran embeddings ni invoca modelos. Para comparar una fuente con su entrada de manifiesto:
+   - si `size_bytes` y `modified_time_ns` coinciden, considera vigente la huella sin releer el contenido;
+   - si alguno difiere, calcula el SHA-256 en modo lectura;
+   - si el SHA-256 difiere, reporta `source_present_manifest_stale_chroma_present`;
+   - si el SHA-256 coincide, reporta `source_present_manifest_metadata_stale_content_same`.
+
+   El check nunca extrae texto, reembebe, indexa, reescribe chunks ni modifica el source document.
 5. **Reporta corrupción o indisponibilidad sin convertirlas en un estado vacío
    saludable.** `UNAVAILABLE` nunca deriva en `HEALTHY_EMPTY` (sección 5).
 6. **En ejecución real, inspecciona solo almacenamiento temporal o datos configurados
@@ -252,10 +278,12 @@ El primer verificador de consistencia:
 7. **En tests, usa fakes y datos temporales.** Prohibido ejecutar contra `memory/`,
    `vector_db/` o `.env` reales.
 
-Inspección de un manifiesto corrupto sin efectos de recuperación: el verificador lee
-el archivo con `json.load` (o equivalente) en modo lectura; si la estructura no
-cumple el esquema (`documents` como dict, `schema_version` compatible), lo clasifica
-como corrupto, reporta `UNAVAILABLE` y **no** crea `.bak`, no renombra y no reinicia
+Inspección del manifiesto sin efectos de recuperación: el verificador lee el archivo
+con `json.load` (o equivalente) en modo lectura. Si el contenido no es JSON válido o no
+cumple la estructura del esquema (`documents` como dict), lo clasifica como corrupto
+(`manifest_corrupt`); si es JSON estructuralmente válido pero `schema_version` no es
+soportado por Atlas 4.1, lo clasifica como incompatible (`manifest_schema_incompatible`).
+Ambos reportan `UNAVAILABLE` y **no** crean `.bak`, no renombran y no reinician
 estado. La decisión de respaldar y reconstruir sigue siendo del flujo de escritura
 existente (`IndexManifest.load`), no del verificador.
 
@@ -263,18 +291,24 @@ existente (`IndexManifest.load`), no del verificador.
 
 ## 8. Contrato de reparación conservadora
 
-Operación separada de la verificación (IDX-C2). `TARGET_REQUIRED_FOR_V4.1`.
+Operación separada de la verificación (IDX-C3). `TARGET_REQUIRED_FOR_V4.1`.
 
 **Puede:**
 
-1. Reindexar source documents soportados presentes en disco
-   (`source_and_manifest_present_chroma_absent`, `source_present_manifest_absent_*`,
-   `manifest_and_chroma_empty_sources_present`).
-2. Restaurar la convergencia manifiesto/vector a través del comportamiento de
-   indexación deduplicante existente (nunca vaciando la colección).
-3. Aislar fallos por documento: un documento fallido no detiene el resto.
-4. Ejecutar una verificación de consistencia posterior a la reparación (post-check) y
-   reportar el estado resultante.
+1. Reparar toda fuente soportada presente cuya representación en el manifiesto o en Chroma no corresponda al estado actual, reutilizando los flujos existentes de sincronización e indexación.
+2. Indexar una fuente que no tiene entrada de manifiesto ni chunks.
+3. Reindexar una fuente cuando faltan sus chunks, cuando falta su entrada de manifiesto o cuando su SHA-256 actual difiere del último contenido indexado.
+4. Restaurar el almacenamiento vectorial cuando la raíz configurada o la colección `atlas_rag` están ausentes y existen fuentes soportadas.
+5. Actualizar únicamente `size_bytes` y `modified_time_ns` del manifiesto cuando esos metadatos cambiaron pero el SHA-256 continúa siendo idéntico. En este caso no reembebe ni reescribe chunks.
+6. Retirar chunks y entrada de manifiesto cuando existe una entrada conocida y el source document correspondiente ya no existe, reutilizando la operación pública de eliminación o sincronización.
+7. Aislar los fallos por documento: un documento fallido no detiene el procesamiento de los demás.
+8. Ejecutar una verificación de consistencia posterior y reportar el estado resultante.
+
+Regla general:
+
+> Toda fuente soportada presente cuya representación en el manifiesto o en Chroma no corresponda al estado actual puede repararse reutilizando los flujos existentes de sincronización o indexación. Solo se reembebe cuando el contenido cambió o cuando faltan chunks. Si el SHA-256 coincide y únicamente cambiaron size/mtime, se actualiza solo el manifiesto.
+
+El retiro de estado correspondiente a una fuente conocida que ya no existe es una limpieza de estado derivado obsoleto. No es una purga de vectores huérfanos: los chunks sin fuente ni entrada de manifiesto continúan siendo únicamente detectados y reportados.
 
 **No puede:**
 
@@ -309,8 +343,8 @@ La reparación nunca debe presentar un resultado `repaired` sin post-check ejecu
    y muestra), sin borrarlos.
 2. **Nunca purgarlos automáticamente**, ni durante verificación ni durante reparación
    conservadora.
-3. **No exponer una opción interna `purgar_huérfanos=True`** en los primeros cortes de
-   implementación (IDX-C1, IDX-C2). La API de reparación no acepta la purga.
+3. **El verificador IDX-C1 y la reparación conservadora IDX-C3 no exponen ninguna
+   opción de purga.** La API de reparación no acepta la purga.
 4. La purga queda **diferida** hasta que exista un flujo separado de
    vista-previa-y-confirmación, especificado en su propio corte; la purga no es una
    superficie de v4.1 (sección 12).
@@ -325,9 +359,9 @@ construcción del cliente Chroma. `TARGET_REQUIRED_FOR_V4.1`.
 
 | Insumo | Origen previsto | Restricción |
 |---|---|---|
-| Inventario normalizado de fuentes | Iteración sobre `BASE_MEMORIA` con el mismo filtro de extensiones y carpetas ignoradas que el indexador | Reutilizar la política de `core/config.py`; no duplicar literales. Si `_iter_archivos`/`_ruta_relativa` se reutilizan, requieren adaptador interno explícito o elevación a API pública con test. |
+| Inventario normalizado de fuentes | Iteración sobre `BASE_MEMORIA` con el mismo filtro de extensiones y carpetas ignoradas que el indexador | Reutilizar la política de `core/config.py`; no duplicar literales. Si `_iter_archivos`/`_ruta_relativa` se reutilizan, requieren adaptador interno explícito con tests. En estos cortes no se eleva ningún helper a API pública: una nueva API pública requiere un corte documental propio. |
 | Datos del manifiesto sin mutación | Vía de lectura no mutante (JSON crudo + validación estructural) | No llamar `IndexManifest.load` si puede respaldar/reconstruir (sección 7.2). |
-| Metadatos de Chroma sin crear ni modificar almacenamiento | Acceso a la colección existente (identidades + metadatos de chunks) | Adaptador interno sobre `core/vector_store.py` que evite semántica de creación (`get_or_create`, `PersistentClient` sobre rutas inexistentes) y consultas con embeddings. La construcción del cliente queda en `core/vector_store.py`; el módulo de consistencia no la duplica. |
+| Metadatos de Chroma sin crear ni modificar almacenamiento | Acceso a la colección existente (identidades + metadatos de chunks) | Adaptador interno sobre `core/vector_store.py` que evite semántica de creación (`get_or_create`, `PersistentClient` sobre rutas inexistentes) y consultas con embeddings; consulta la colección existente sin crearla y distingue colección ausente (`chroma_collection_absent`) de backend inaccesible (`chroma_unavailable`). La construcción del cliente queda en `core/vector_store.py`; el módulo de consistencia no la duplica. |
 | Reindexación conservadora | Operación pública existente `indexar_archivo` (dedup-safe) | No reinventar el flujo delete-then-add ni el guard de contención. |
 
 Módulos de producción mínimos que pueden necesitar adaptadores internos estrechos
@@ -338,7 +372,8 @@ Módulos de producción mínimos que pueden necesitar adaptadores internos estre
 3. `core/vector_store.py` — acceso de solo lectura a la colección existente.
 
 Los adaptadores deben: vivir en `core/` (nunca en UI/CLI/API), ser mínimos, estar
-cubiertos por tests con fakes, y no cambiar los contratos públicos existentes.
+cubiertos por tests con fakes, y no cambiar los contratos públicos existentes ni
+elevar helpers privados a API pública.
 
 ---
 
@@ -348,25 +383,57 @@ cubiertos por tests con fakes, y no cambiar los contratos públicos existentes.
 
 1. **Escritores (`CURRENT`):** `indexar_archivo`, `eliminar_documento_indexado`,
    `sincronizar_indice`, `reconstruir_indice_completo` (y su alias `construir_indice`).
-   La reparación conservadora (IDX-C2) también es escritora y queda sujeta a este
+   La reparación conservadora (IDX-C3) también es escritora y queda sujeta a este
    contrato. La sincronización de cierre de estados de la reparación (post-check) no
    es escritora.
-2. **Verificación de estado:** es de solo lectura. Puede ejecutarse sin adquirir la
-   exclusividad, y en ese caso puede observar estados transitorios durante una
-   escritura concurrente (se reporta el estado observado, con marca de transitoriedad
-   si aplica).
+2. **Verificación de estado:** es de solo lectura y puede ejecutarse sin adquirir exclusividad, por lo que puede observar un estado transitorio durante una escritura concurrente. El reporte congela:
+
+   - `writer_state_known: bool`
+   - `writer_active: bool`
+   - `possibly_transient: bool`
+
+   Antes de IDX-C2, el verificador no dispone de un mecanismo confiable para conocer el estado del escritor y debe reportar:
+
+   ```text
+   writer_state_known=False
+   writer_active=False
+   possibly_transient=True
+   ```
+
+   Mientras `writer_state_known=False`, un resultado nominal `HEALTHY` o `HEALTHY_EMPTY` debe publicarse como `DEGRADED`. `UNAVAILABLE` conserva la máxima prioridad e `INCONSISTENT` conserva prioridad sobre `DEGRADED`.
+
+   Después de IDX-C2, si el mecanismo confirma que no existe un escritor activo:
+
+   ```text
+   writer_state_known=True
+   writer_active=False
+   possibly_transient=False
+   ```
+
+   Si confirma que existe un escritor activo:
+
+   ```text
+   writer_state_known=True
+   writer_active=True
+   possibly_transient=True
+   ```
+
+   En este último caso, el reporte debe advertir que el estado observado puede cambiar al terminar la operación escritora.
 3. **Fail-fast:** si otro escritor está activo, la operación entrante **falla de
    inmediato** con un estado estructurado de "ocupado"; no espera, no hace cola y no
    degrada a escritura sin exclusividad.
 4. **Windows obligatorio:** el mecanismo debe funcionar en Windows sin primitivas
    POSIX-only (sin `fcntl`); la exclusividad de creación de archivo
    (`O_CREAT|O_EXCL`) es la vía compatible declarada, sin decisión final aquí.
-5. **Seguridad del lock stale:** el mecanismo debe incluir detección de locks
-   obsoletos (proceso muerto o bloqueo colgante) con identificación (PID + timestamp)
-   y política de expiración. **No se declara aquí que la detección sea trivial ni qué
-   algoritmo se selecciona**: el diseño y la elección son parte de IDX-C3, con tests
-   de inyección de fallos.
-6. **Corte propio:** la implementación del bloqueo es su propio corte (IDX-C3); esta
+5. **Seguridad del lock stale:** el mecanismo debe detectar locks obsoletos (proceso
+   muerto o bloqueo colgante) con identificación (PID + timestamp), pero la
+   recuperación **nunca se decide por tiempo transcurrido**: se requiere evidencia de
+   que el proceso dueño está inactivo. Estados dudosos (PID reutilizado, metadatos
+   incompletos o ilegibles, condición ambigua) **bloquean la recuperación automática**
+   y se reportan para tratamiento explícito. El algoritmo concreto y su compatibilidad
+   Windows (sin primitivas POSIX-only) se deciden y prueban en IDX-C2 con tests de
+   inyección de fallos; esta SDD fija el contrato, no el algoritmo.
+6. **Corte propio:** la implementación del bloqueo es su propio corte (IDX-C2); esta
    SDD fija el contrato, no la implementación.
 
 ---
@@ -392,8 +459,8 @@ y reparación vive en `core/`. Doctor y Healer no reimplementan detección ni re
 |---|---|---|---|
 | 1 | **SDD-0** | Esta especificación gobernante. | `CURRENT` (este corte) |
 | 2 | **IDX-C1** | Verificación de consistencia de solo lectura (`core/index_consistency.py` + tests; sin superficies). | `TARGET_REQUIRED_FOR_V4.1` |
-| 3 | **IDX-C2** | Reparación conservadora con post-check obligatorio. | `TARGET_REQUIRED_FOR_V4.1` |
-| 4 | **IDX-C3** | Contrato de escritor único (lock fail-fast con seguridad de stale). | `TARGET_REQUIRED_FOR_V4.1` |
+| 3 | **IDX-C2** | Contrato de escritor único (lock fail-fast con seguridad de stale). | `TARGET_REQUIRED_FOR_V4.1` |
+| 4 | **IDX-C3** | Reparación conservadora con post-check obligatorio. | `TARGET_REQUIRED_FOR_V4.1` |
 | 5 | **IDX-C4** | Superficies de estado de solo lectura (check de Doctor + `!indexar status`). | `TARGET_REQUIRED_FOR_V4.1` |
 | 6 | **IDX-C5** | Superficie explícita de reparación conservadora (Healer + CLI, dry-run por defecto). | `TARGET_REQUIRED_FOR_V4.1` |
 | 7 | **DOC-C6** | Reconciliación documental final (feature doc, README, `.env.example`, `TECHNICAL_DEBT.md`, API reference si aplica). | `TARGET_REQUIRED_FOR_V4.1` |
@@ -402,9 +469,10 @@ y reparación vive en `core/`. Doctor y Healer no reimplementan detección ni re
 **Purga de huérfanos:** `DEFERRED` (requiere flujo de vista previa y confirmación;
 fuera de v4.1).
 
-Dependencias: IDX-C1 antes de IDX-C2 (el post-check usa la verificación); IDX-C3 antes
-de IDX-C5 (la reparación es escritora); IDX-C4 y IDX-C5 después de sus núcleos; DOC-C6
-antes de INT-C7.
+Dependencias: IDX-C1 antes de IDX-C3 (el post-check de la reparación usa la
+verificación); IDX-C2 antes de IDX-C3 (la reparación es escritora) y de IDX-C5
+(superficie de reparación); IDX-C4 y IDX-C5 después de sus núcleos; DOC-C6 antes de
+INT-C7.
 
 ---
 
@@ -453,8 +521,10 @@ antes de INT-C7.
 ## 15. Riesgo de composición de la rama
 
 La rama `atlas-v4.1-incremental-indexing` contiene, además de cambios de indexación,
-commits de agencia, gobernanza y auditoría. Composición verificada de los 13 commits
-únicos respecto de `origin/main` (merge-base `8aa3e378`):
+commits de agencia, gobernanza y auditoría. Clasificación de los 13 commits únicos
+respecto de `origin/main` (merge-base `8aa3e378`), verificada durante SDD-0 contra la
+referencia local. La frescura de `origin/main` respecto del remoto real permanece
+`UNVERIFIED` hasta el `git fetch` autorizado de INT-C7:
 
 - **Producto (indexación/rutas/seguridad):** `e457277`, `5a3fbcd`, `4cd4a56`, `5cac180`.
 - **Gobernanza y agencia:** `9caf3af`, `c842d66`, `4bc46af`, `b4154ab`, `1eef4be`.
