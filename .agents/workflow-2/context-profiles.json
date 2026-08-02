@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "measurement": {
+    "baseline_tolerance_percent": 2.0,
+    "encoding": "utf-8-sig",
+    "include_entire_file": true,
+    "newline_normalization": "lf",
+    "target_reduction_percent": 30,
+    "unit": "unicode_code_points",
+    "composition_note": "COMMON includes microcut-plan.md; OpenCode command files are excluded because they dispatch roles but are not loaded role context (combined impact below 0.5%)."
+  },
+  "opencode": {
+    "commands": {
+      "workflow-audit": {"agent": "workflow-auditor"},
+      "workflow-build": {"agent": "workflow-builder"},
+      "workflow-plan": {"agent": "workflow-planner"},
+      "workflow-review-plan": {"agent": "workflow-plan-reviewer"}
+    },
+    "roles": {
+      "workflow-auditor": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-builder": {
+        "edit": "allow",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-plan-reviewer": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-planner": {
+        "edit": "deny",
+        "external_directory": "ask",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      }
+    }
+  },
+  "profiles": {
+    "planner": {
+      "baseline_characters": 41880,
+      "files": [
+        "AGENTS.md",
+        ".opencode/project-identity.md",
+        ".agents/skills/workflow-2/SKILL.md",
+        ".agents/workflow-2/core.md",
+        ".agents/workflow-2/contracts/handoffs.md",
+        ".agents/workflow-2/policies/git.md",
+        ".agents/policies/git-safety.md",
+        ".agents/policies/testing.md",
+        ".agents/templates/final-report.md",
+        ".agents/workflow-2/templates/microcut-plan.md",
+        ".agents/workflow-2/roles/planner.md",
+        ".opencode/agents/workflow-planner.md"
+      ],
+      "no_growth_limit_characters": 41880,
+      "target_characters": 29316
+    },
+    "plan_reviewer": {
+      "baseline_characters": 42352,
+      "files": [
+        "AGENTS.md",
+        ".opencode/project-identity.md",
+        ".agents/skills/workflow-2/SKILL.md",
+        ".agents/workflow-2/core.md",
+        ".agents/workflow-2/contracts/handoffs.md",
+        ".agents/workflow-2/policies/git.md",
+        ".agents/policies/git-safety.md",
+        ".agents/policies/testing.md",
+        ".agents/templates/final-report.md",
+        ".agents/workflow-2/templates/microcut-plan.md",
+        ".agents/workflow-2/templates/plan-review.md",
+        ".agents/workflow-2/roles/plan-reviewer.md",
+        ".opencode/agents/workflow-plan-reviewer.md"
+      ],
+      "no_growth_limit_characters": 42352,
+      "target_characters": 29646
+    },
+    "builder": {
+      "baseline_characters": 45511,
+      "files": [
+        "AGENTS.md",
+        ".opencode/project-identity.md",
+        ".agents/skills/workflow-2/SKILL.md",
+        ".agents/workflow-2/core.md",
+        ".agents/workflow-2/contracts/handoffs.md",
+        ".agents/workflow-2/policies/git.md",
+        ".agents/policies/git-safety.md",
+        ".agents/policies/testing.md",
+        ".agents/templates/final-report.md",
+        ".agents/workflow-2/templates/microcut-plan.md",
+        ".agents/workflow-2/templates/build-report.md",
+        ".agents/workflow-2/roles/builder.md",
+        ".agents/workflow-2/policies/testing.md",
+        ".agents/workflow-2/policies/definition-of-done.md",
+        ".agents/workflow-2/policies/engineering.md",
+        ".opencode/agents/workflow-builder.md"
+      ],
+      "no_growth_limit_characters": 45511,
+      "target_characters": 31858
+    },
+    "auditor": {
+      "baseline_characters": 43858,
+      "files": [
+        "AGENTS.md",
+        ".opencode/project-identity.md",
+        ".agents/skills/workflow-2/SKILL.md",
+        ".agents/workflow-2/core.md",
+        ".agents/workflow-2/contracts/handoffs.md",
+        ".agents/workflow-2/policies/git.md",
+        ".agents/policies/git-safety.md",
+        ".agents/policies/testing.md",
+        ".agents/templates/final-report.md",
+        ".agents/workflow-2/templates/microcut-plan.md",
+        ".agents/workflow-2/templates/audit-report.md",
+        ".agents/workflow-2/roles/auditor.md",
+        ".agents/workflow-2/policies/testing.md",
+        ".agents/workflow-2/policies/definition-of-done.md",
+        ".opencode/agents/workflow-auditor.md"
+      ],
+      "no_growth_limit_characters": 43858,
+      "target_characters": 30701
+    }
+  },
+  "project_profile": {
+    "optional_path": ".agents/workflow-2/project-profile.json",
+    "schema": 1
+  }
+}

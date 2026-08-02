@@ -10,6 +10,7 @@ from typing import Iterable
 BEGIN = "<!-- workflow-2:begin -->"
 END = "<!-- workflow-2:end -->"
 INSTALL_STATE = Path(".agents/workflow-2/install-state.json")
+PROJECT_PROFILE = Path(".agents/workflow-2/project-profile.json")
 
 
 def template_root() -> Path:
@@ -138,7 +139,11 @@ def managed_source_files(source_root: Path) -> list[Path]:
     result = []
     for path in sorted(set(candidates)):
         rel = path.relative_to(source_root)
-        if rel == INSTALL_STATE or "__pycache__" in rel.parts or path.suffix == ".pyc":
+        if (
+            rel in {INSTALL_STATE, PROJECT_PROFILE}
+            or "__pycache__" in rel.parts
+            or path.suffix == ".pyc"
+        ):
             continue
         result.append(path)
     return result

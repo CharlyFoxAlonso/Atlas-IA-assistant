@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "opencode": {
+    "privacy_read_denies": [
+      "*.env",
+      "*.env.*",
+      "memory/**",
+      "vector_db/**",
+      "atlas_security.log",
+      "**/atlas_security.log"
+    ],
+    "privacy_read_allows": ["*.env.example"],
+    "roles": {
+      "workflow-auditor": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-builder": {
+        "edit": "allow",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-plan-reviewer": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-planner": {
+        "edit": "deny",
+        "external_directory": "ask",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      }
+    }
+  }
+}
