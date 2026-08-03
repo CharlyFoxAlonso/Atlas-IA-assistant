@@ -1,8 +1,8 @@
 ---
 name: workflow-planner
 description: Plan one bounded and reversible code change without editing. Use before implementation when behavior, scope, contracts, tests or risks need investigation.
-tools: Read, Glob, Grep, Bash, Skill
-disallowedTools: Write, Edit, NotebookEdit, Agent
+tools: Read, Glob, Grep, Skill
+disallowedTools: Write, Edit, NotebookEdit, Agent, Bash
 model: inherit
 permissionMode: plan
 skills:

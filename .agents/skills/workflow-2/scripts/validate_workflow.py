@@ -66,6 +66,62 @@ COMMON_OPENCODE_PERMISSIONS = {
     "websearch": "ask",
 }
 
+HARDENED_READ_ONLY_ROLES = {
+    "workflow-planner",
+    "workflow-plan-reviewer",
+}
+
+READ_ONLY_GIT_COMMANDS = [
+    "git status --short",
+    "git diff",
+    "git diff --check",
+    "git diff --stat",
+    "git diff --name-only",
+    "git diff --cached --name-only",
+    "git diff --cached --stat",
+    "git log -5 --oneline",
+    "git log -10 --oneline",
+    "git show --stat HEAD",
+    "git rev-parse HEAD",
+    "git branch --show-current",
+    "git remote",
+    "git remote -v",
+    "git ls-files .",
+    "git ls-files --others --exclude-standard",
+    "git ls-tree -r HEAD",
+    "git grep workflow-2",
+    "git worktree list",
+    "git worktree list --porcelain",
+]
+
+READ_ONLY_WORKFLOW_COMMANDS = [
+    "python -B .agents/skills/workflow-2/scripts/validate_workflow.py .",
+    "python -B .agents/skills/workflow-2/scripts/context_report.py . --roles planner,plan-reviewer,builder,auditor --verify-baseline --check",
+    "python -B tests/test_workflow_2.py -v",
+    "python -B .agents/skills/workflow-2/scripts/migrate_repo.py .",
+]
+
+MUTATING_GIT_COMMANDS = [
+    "git add .",
+    "git commit -m test",
+    "git push origin main",
+    "git pull origin main",
+    "git switch main",
+    "git checkout -- AGENTS.md",
+    "git restore AGENTS.md",
+    "git reset --hard",
+    "git clean -fd",
+    "git stash",
+    "git merge other",
+    "git rebase main",
+    "git cherry-pick HEAD",
+    "git revert HEAD",
+    "git tag v1",
+    "git branch new-branch",
+    "git remote add origin https://example.invalid/repo.git",
+    "git worktree add ../copy",
+]
+
 RULE_OWNERSHIP = Path(".agents/workflow-2/rule-ownership.json")
 SECTION = re.compile(r"^##\s+(.+?)\s*$")
 
@@ -86,6 +142,28 @@ def top_level_value(text: str, key: str) -> str | None:
         if not line.startswith(" ") and line.startswith(prefix):
             return line.split(":", 1)[1].strip().strip('"\'')
     return None
+
+
+def comma_separated_value(text: str, key: str) -> set[str]:
+    value = top_level_value(text, key)
+    if value is None:
+        return set()
+    return {item.strip() for item in value.split(",") if item.strip()}
+
+
+def validate_claude_read_only_agent(path: Path, role: str) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    errors: list[str] = []
+    if top_level_value(text, "permissionMode") != "plan":
+        errors.append(f"Claude {role} must use permissionMode: plan")
+    tools = comma_separated_value(text, "tools")
+    disallowed = comma_separated_value(text, "disallowedTools")
+    for tool in ("Bash", "Write", "Edit"):
+        if tool in tools:
+            errors.append(f"Claude {role} may not expose {tool}")
+        if tool not in disallowed:
+            errors.append(f"Claude {role} must disallow {tool}")
+    return errors
 
 
 def permission_value(text: str, key: str) -> str | None:
@@ -168,11 +246,46 @@ def validate_opencode_agent(
         errors.append(f"OpenCode {name} has an invalid expected skill configuration")
     else:
         for skill in skills:
-            if (str(skill), "allow") not in skill_rules:
-                errors.append(f"OpenCode {name} must explicitly allow skill {skill}")
+            if name in HARDENED_READ_ONLY_ROLES:
+                allowed = effective_permission(skill_rules, str(skill)) == "allow"
+            else:
+                allowed = (str(skill), "allow") in skill_rules
+            if not allowed:
+                errors.append(f"OpenCode {name} must effectively allow skill {skill}")
 
     shell_default = str(config["shell_default"])
-    if permission_value(text, "bash") != shell_default:
+    if name in HARDENED_READ_ONLY_ROLES:
+        shell_rules = permission_rules(text, "bash")
+        if effective_permission(shell_rules, "python -c pass") != shell_default:
+            errors.append(f"OpenCode {name} must default shell commands to {shell_default}")
+        shell_allow = config.get("shell_allow", [])
+        if not isinstance(shell_allow, list) or not all(
+            isinstance(command, str) for command in shell_allow
+        ):
+            errors.append(f"OpenCode {name} has an invalid shell allowlist")
+            shell_allow = []
+        allowed_commands = [*READ_ONLY_GIT_COMMANDS, *shell_allow]
+        for command in allowed_commands:
+            if effective_permission(shell_rules, command) != "allow":
+                errors.append(f"OpenCode {name} must allow read-only command: {command}")
+        for command in [
+            *MUTATING_GIT_COMMANDS,
+            "python -c pass",
+            "python -B -m compileall .",
+        ]:
+            if effective_permission(shell_rules, command) != "deny":
+                errors.append(f"OpenCode {name} must deny unsafe command: {command}")
+        exact_allowlist = set(allowed_commands)
+        for pattern, effect in shell_rules:
+            if effect == "allow" and pattern not in exact_allowlist:
+                errors.append(
+                    f"read-only OpenCode {name} has unsafe shell allow pattern: {pattern}"
+                )
+            if effect == "ask":
+                errors.append(
+                    f"read-only OpenCode {name} may not ask for shell pattern: {pattern}"
+                )
+    elif permission_value(text, "bash") != shell_default:
         errors.append(f"OpenCode {name} must default shell commands to {shell_default}")
     read_rules = permission_rules(text, "read")
     if effective_permission(read_rules, "ordinary.md") != "allow":
@@ -193,6 +306,43 @@ def valid_opencode_expectation(name: str, config: object) -> list[str]:
     for key in ("edit", "external_directory", "shell_default"):
         if config.get(key) not in {"allow", "ask", "deny"}:
             errors.append(f"OpenCode role expectation {name}.{key} is invalid")
+    if name in HARDENED_READ_ONLY_ROLES:
+        if config.get("edit") != "deny":
+            errors.append(f"read-only OpenCode role expectation {name} must deny edit")
+        if config.get("external_directory") != "deny":
+            errors.append(
+                f"read-only OpenCode role expectation {name} must deny external_directory"
+            )
+        if config.get("shell_default") != "deny":
+            errors.append(
+                f"read-only OpenCode role expectation {name} must deny shell by default"
+            )
+        shell_allow = config.get("shell_allow")
+        if not isinstance(shell_allow, list) or not all(
+            isinstance(command, str) and command for command in shell_allow
+        ):
+            errors.append(f"OpenCode role expectation {name}.shell_allow must be strings")
+        else:
+            if len(shell_allow) != len(set(shell_allow)):
+                errors.append(f"OpenCode role expectation {name}.shell_allow has duplicates")
+            expected = (
+                []
+                if name == "workflow-planner"
+                else READ_ONLY_WORKFLOW_COMMANDS
+            )
+            if shell_allow != expected:
+                errors.append(
+                    f"read-only OpenCode role expectation {name} has an invalid exact shell allowlist"
+                )
+            for command in shell_allow:
+                if "compileall" in command:
+                    errors.append(
+                        f"read-only OpenCode role expectation {name} may not allow compileall"
+                    )
+                elif command not in READ_ONLY_WORKFLOW_COMMANDS:
+                    errors.append(
+                        f"read-only OpenCode role expectation {name} has unsafe shell command: {command}"
+                    )
     skills = config.get("skills")
     if not isinstance(skills, list) or not all(isinstance(skill, str) for skill in skills):
         errors.append(f"OpenCode role expectation {name}.skills must be strings")
@@ -530,10 +680,18 @@ def validate(root: Path) -> list[str]:
 
     errors.extend(validate_opencode_commands(root, opencode_commands))
 
-    for role in ("planner", "plan-reviewer", "auditor"):
-        claude_role = (root / f".claude/agents/workflow-{role}.md").read_text(encoding="utf-8")
-        if "permissionMode: plan" not in claude_role or "disallowedTools:" not in claude_role:
-            errors.append(f"Claude {role} must be read-only")
+    for role in ("planner", "plan-reviewer"):
+        errors.extend(
+            validate_claude_read_only_agent(
+                root / f".claude/agents/workflow-{role}.md", role
+            )
+        )
+
+    claude_auditor = (root / ".claude/agents/workflow-auditor.md").read_text(
+        encoding="utf-8"
+    )
+    if "permissionMode: plan" not in claude_auditor or "disallowedTools:" not in claude_auditor:
+        errors.append("Claude auditor must be read-only")
 
     if "Edit" not in (root / ".claude/agents/workflow-builder.md").read_text(encoding="utf-8"):
         errors.append("Claude Builder must include Edit")

@@ -1,8 +1,8 @@
 ---
 name: workflow-plan-reviewer
 description: Independently review and gate a Workflow 2.0 plan without editing. Use after Planner and before Builder.
-tools: Read, Glob, Grep, Bash, Skill
-disallowedTools: Write, Edit, NotebookEdit, Agent
+tools: Read, Glob, Grep, Skill
+disallowedTools: Write, Edit, NotebookEdit, Agent, Bash
 model: inherit
 permissionMode: plan
 skills:

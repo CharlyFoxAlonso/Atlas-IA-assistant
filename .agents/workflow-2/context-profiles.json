@@ -7,7 +7,7 @@
     "newline_normalization": "lf",
     "target_reduction_percent": 30,
     "unit": "unicode_code_points",
-    "composition_note": "COMMON includes microcut-plan.md; OpenCode command files are excluded because they dispatch roles but are not loaded role context (combined impact below 0.5%)."
+    "composition_note": "COMMON includes microcut-plan.md; OpenCode command files are excluded because they dispatch roles but are not loaded role context (combined impact below 0.5%). Planner and Plan Reviewer baselines include the exact read-only permission adapters added by the hardening cut."
   },
   "opencode": {
     "commands": {
@@ -32,20 +32,27 @@
       "workflow-plan-reviewer": {
         "edit": "deny",
         "external_directory": "deny",
-        "shell_default": "ask",
+        "shell_allow": [
+          "python -B .agents/skills/workflow-2/scripts/validate_workflow.py .",
+          "python -B .agents/skills/workflow-2/scripts/context_report.py . --roles planner,plan-reviewer,builder,auditor --verify-baseline --check",
+          "python -B tests/test_workflow_2.py -v",
+          "python -B .agents/skills/workflow-2/scripts/migrate_repo.py ."
+        ],
+        "shell_default": "deny",
         "skills": ["workflow-2"]
       },
       "workflow-planner": {
         "edit": "deny",
-        "external_directory": "ask",
-        "shell_default": "ask",
+        "external_directory": "deny",
+        "shell_allow": [],
+        "shell_default": "deny",
         "skills": ["workflow-2"]
       }
     }
   },
   "profiles": {
     "planner": {
-      "baseline_characters": 41880,
+      "baseline_characters": 42566,
       "files": [
         "AGENTS.md",
         ".opencode/project-identity.md",
@@ -60,11 +67,11 @@
         ".agents/workflow-2/roles/planner.md",
         ".opencode/agents/workflow-planner.md"
       ],
-      "no_growth_limit_characters": 41880,
+      "no_growth_limit_characters": 42566,
       "target_characters": 29316
     },
     "plan_reviewer": {
-      "baseline_characters": 42352,
+      "baseline_characters": 43392,
       "files": [
         "AGENTS.md",
         ".opencode/project-identity.md",
@@ -80,7 +87,7 @@
         ".agents/workflow-2/roles/plan-reviewer.md",
         ".opencode/agents/workflow-plan-reviewer.md"
       ],
-      "no_growth_limit_characters": 42352,
+      "no_growth_limit_characters": 43392,
       "target_characters": 29646
     },
     "builder": {

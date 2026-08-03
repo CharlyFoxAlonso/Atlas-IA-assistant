@@ -23,10 +23,15 @@ from context_report import (  # noqa: E402
     validate_config,
 )
 from validate_workflow import (  # noqa: E402
+    READ_ONLY_WORKFLOW_COMMANDS,
+    load_configuration,
     opencode_configuration,
     privacy_configuration,
     validate,
+    validate_claude_read_only_agent,
+    validate_opencode_agent,
     validate_rule_ownership,
+    valid_opencode_expectation,
 )
 from workflow_lib import PROJECT_PROFILE, managed_source_files  # noqa: E402
 
@@ -41,8 +46,8 @@ class ContextReportTests(unittest.TestCase):
             {
                 "auditor": 43858,
                 "builder": 45511,
-                "plan_reviewer": 42352,
-                "planner": 41880,
+                "plan_reviewer": 43392,
+                "planner": 42566,
             },
         )
         self.assertEqual(
@@ -192,6 +197,125 @@ class OwnershipTests(unittest.TestCase):
                 "duplicate heading in rules.md: Same",
                 validate_rule_ownership(root, ownership),
             )
+
+
+class PermissionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        base, project, errors = load_configuration(REPOSITORY)
+        if errors:
+            raise AssertionError(errors)
+        cls.roles, _, role_errors = opencode_configuration(base, project)
+        if role_errors:
+            raise AssertionError(role_errors)
+        cls.privacy_denies, cls.privacy_allows, privacy_errors = (
+            privacy_configuration(project)
+        )
+        if privacy_errors:
+            raise AssertionError(privacy_errors)
+
+    def _role_config(self, name: str) -> dict[str, object]:
+        config = self.roles[name]
+        self.assertIsInstance(config, dict)
+        return dict(config)
+
+    def _validate_agent(self, name: str, source: str) -> list[str]:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / f"{name}.md"
+            path.write_text(source, encoding="utf-8")
+            return validate_opencode_agent(
+                path,
+                self._role_config(name),
+                self.privacy_denies,
+                self.privacy_allows,
+            )
+
+    def test_planner_denies_shell_by_default_without_workflow_commands(self) -> None:
+        config = self._role_config("workflow-planner")
+        self.assertEqual(config["edit"], "deny")
+        self.assertEqual(config["external_directory"], "deny")
+        self.assertEqual(config["shell_default"], "deny")
+        self.assertEqual(config["shell_allow"], [])
+        source = (REPOSITORY / ".opencode/agents/workflow-planner.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertEqual(self._validate_agent("workflow-planner", source), [])
+
+    def test_plan_reviewer_has_only_official_workflow_commands(self) -> None:
+        config = self._role_config("workflow-plan-reviewer")
+        self.assertEqual(config["shell_allow"], READ_ONLY_WORKFLOW_COMMANDS)
+        source = (
+            REPOSITORY / ".opencode/agents/workflow-plan-reviewer.md"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(self._validate_agent("workflow-plan-reviewer", source), [])
+
+    def test_read_only_role_rejects_shell_ask(self) -> None:
+        source = (REPOSITORY / ".opencode/agents/workflow-planner.md").read_text(
+            encoding="utf-8"
+        )
+        unsafe = source.replace('    "*": deny', '    "*": ask', 1)
+        self.assertIn(
+            "read-only OpenCode workflow-planner may not ask for shell pattern: *",
+            self._validate_agent("workflow-planner", unsafe),
+        )
+
+    def test_read_only_role_rejects_wildcard_shell_allow(self) -> None:
+        source = (REPOSITORY / ".opencode/agents/workflow-planner.md").read_text(
+            encoding="utf-8"
+        )
+        unsafe = source.replace(
+            '    "git diff --check": allow', '    "git diff *": allow', 1
+        )
+        self.assertIn(
+            "read-only OpenCode workflow-planner has unsafe shell allow pattern: git diff *",
+            self._validate_agent("workflow-planner", unsafe),
+        )
+
+    def test_read_only_role_rejects_external_directory_approval(self) -> None:
+        config = self._role_config("workflow-planner")
+        config["external_directory"] = "ask"
+        self.assertIn(
+            "read-only OpenCode role expectation workflow-planner must deny external_directory",
+            valid_opencode_expectation("workflow-planner", config),
+        )
+
+    def test_read_only_role_rejects_compileall(self) -> None:
+        config = self._role_config("workflow-plan-reviewer")
+        config["shell_allow"] = [
+            *config["shell_allow"],
+            "python -B -m compileall .",
+        ]
+        self.assertIn(
+            "read-only OpenCode role expectation workflow-plan-reviewer may not allow compileall",
+            valid_opencode_expectation("workflow-plan-reviewer", config),
+        )
+
+    def test_read_only_role_rejects_unapproved_exact_command(self) -> None:
+        config = self._role_config("workflow-plan-reviewer")
+        config["shell_allow"] = [
+            *config["shell_allow"],
+            "python -c write_file.py",
+        ]
+        self.assertIn(
+            "read-only OpenCode role expectation workflow-plan-reviewer has unsafe shell command: python -c write_file.py",
+            valid_opencode_expectation("workflow-plan-reviewer", config),
+        )
+
+    def test_claude_planner_and_reviewer_exclude_mutating_tools_and_bash(self) -> None:
+        for role in ("planner", "plan-reviewer"):
+            path = REPOSITORY / f".claude/agents/workflow-{role}.md"
+            self.assertEqual(validate_claude_read_only_agent(path, role), [])
+
+    def test_claude_read_only_role_rejects_bash(self) -> None:
+        source = (REPOSITORY / ".claude/agents/workflow-planner.md").read_text(
+            encoding="utf-8"
+        )
+        unsafe = source.replace("tools: Read, Glob, Grep, Skill", "tools: Read, Glob, Grep, Bash, Skill")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "workflow-planner.md"
+            path.write_text(unsafe, encoding="utf-8")
+            errors = validate_claude_read_only_agent(path, "planner")
+        self.assertIn("Claude planner may not expose Bash", errors)
 
 
 class IntegrationTests(unittest.TestCase):
