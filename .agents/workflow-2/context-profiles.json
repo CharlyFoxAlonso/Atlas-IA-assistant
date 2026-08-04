@@ -114,7 +114,7 @@
       "target_characters": 31858
     },
     "auditor": {
-      "baseline_characters": 43858,
+      "baseline_characters": 45731,
       "files": [
         "AGENTS.md",
         ".opencode/project-identity.md",
@@ -132,7 +132,7 @@
         ".agents/workflow-2/policies/definition-of-done.md",
         ".opencode/agents/workflow-auditor.md"
       ],
-      "no_growth_limit_characters": 43858,
+      "no_growth_limit_characters": 45731,
       "target_characters": 30701
     }
   },

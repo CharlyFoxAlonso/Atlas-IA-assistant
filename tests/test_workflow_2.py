@@ -44,7 +44,7 @@ class ContextReportTests(unittest.TestCase):
         self.assertEqual(
             {role: result["characters"] for role, result in report.items()},
             {
-                "auditor": 43858,
+                "auditor": 45731,
                 "builder": 45511,
                 "plan_reviewer": 43392,
                 "planner": 42566,
@@ -340,6 +340,27 @@ class IntegrationTests(unittest.TestCase):
             }
             self.assertIn(".agents/workflow-2/core.md", managed)
             self.assertNotIn(PROJECT_PROFILE.as_posix(), managed)
+
+    def test_only_canonical_opencode_workflow_agents_remain(self) -> None:
+        agents = REPOSITORY / ".opencode/agents"
+        self.assertEqual(
+            {path.name for path in agents.glob("*.md")},
+            {
+                "workflow-auditor.md",
+                "workflow-builder.md",
+                "workflow-plan-reviewer.md",
+                "workflow-planner.md",
+            },
+        )
+
+    def test_atlas_audit_profile_is_consolidated_in_canonical_agent(self) -> None:
+        auditor = (
+            REPOSITORY / ".opencode/agents/workflow-auditor.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("## Audit mode", auditor)
+        self.assertIn("## Atlas-specific evidence", auditor)
+        self.assertIn("PASS WITH OBSERVATIONS", auditor)
+        self.assertNotIn("ACCEPT WITH FOLLOW-UP", auditor)
 
 
 if __name__ == "__main__":
