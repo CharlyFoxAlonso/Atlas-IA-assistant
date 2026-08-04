@@ -7,7 +7,10 @@ se necesita una búsqueda, no al importar este módulo.
 """
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
 from core.config import CHROMA_PATH, COLLECTION_NAME
 from core.system.paths import validate_vector_store_path
@@ -425,3 +428,139 @@ def obtener_estadisticas():
         "nombre_coleccion": COLLECTION_NAME,
         "ruta_db": CHROMA_PATH
     }
+
+
+# ============================================
+# ACCESO DE SOLO LECTURA (IDX-C1)
+# ============================================
+
+IDX_PUBLIC_ERROR_MESSAGES = {
+    "legacy_vector_store_detected": (
+        "Legacy vector store detected; configured vector storage is unavailable "
+        "until storage is moved or ATLAS_DATA_DIR is restored."
+    ),
+    "chroma_backend_unavailable": (
+        "Chroma backend unavailable while opening existing collection."
+    ),
+    "chroma_collection_read_failed": "Chroma collection could not be read.",
+    "consistency_verification_failed": (
+        "Consistency verification encountered an internal error."
+    ),
+    "raw_chroma_error_rejected": (
+        "Chroma read access reported an unsafe external error."
+    ),
+}
+
+IDX_SAFE_ERROR_TYPES = {
+    "Exception",
+    "RuntimeError",
+    "ValueError",
+    "OSError",
+    "FileNotFoundError",
+    "PermissionError",
+    "LegacyVectorStoreError",
+}
+
+
+def _tipo_error_seguro(error) -> str:
+    nombre = error if isinstance(error, str) else type(error).__name__
+    return nombre if nombre in IDX_SAFE_ERROR_TYPES else "Exception"
+
+
+def _render_idx_error(error_code: str, error_type: Optional[str]) -> str:
+    mensaje = IDX_PUBLIC_ERROR_MESSAGES[error_code]
+    tipo = _tipo_error_seguro(error_type or "Exception")
+    return f"{error_code}: {mensaje} [{tipo}]"
+
+
+@dataclass(frozen=True)
+class ChromaReadStatus:
+    """
+    Estado público y serializable del acceso de solo lectura a Chroma.
+
+    No contiene el handle operativo de la colección: IDX-C1 solo publica
+    metadata allowlisted y mantiene los objetos de backend fuera de las
+    superficies serializables.
+    """
+    root_present: bool = False
+    collection_present: bool = False
+    unavailable: bool = False
+    error_code: Optional[str] = None
+    error_type: Optional[str] = None
+    error: Optional[str] = None
+
+    def __post_init__(self):
+        code = self.error_code
+        error_type = _tipo_error_seguro(self.error_type or "Exception")
+        if code is None and self.error is not None:
+            code = "raw_chroma_error_rejected"
+        if code is None:
+            object.__setattr__(self, "error", None)
+            object.__setattr__(self, "error_type", None)
+            return
+        if code not in IDX_PUBLIC_ERROR_MESSAGES:
+            code = "raw_chroma_error_rejected"
+            error_type = "Exception"
+        object.__setattr__(self, "error_code", code)
+        object.__setattr__(self, "error_type", error_type)
+        object.__setattr__(self, "error", _render_idx_error(code, error_type))
+
+
+class _ChromaReadAccess:
+    """
+    Acceso operativo interno a Chroma para IDX-C1.
+
+    No es dataclass ni superficie pública serializable. El handle puede
+    contener objetos Chroma o fakes de tests; la garantía de seguridad es
+    que solo `status` cruza hacia reportes públicos.
+    """
+    __slots__ = ("status", "_collection")
+
+    def __init__(self, status: Optional[ChromaReadStatus] = None, collection=None):
+        self.status = status or ChromaReadStatus()
+        self._collection = collection
+
+
+def _abrir_coleccion_existente(chroma_path, collection_name):
+    """
+    Abre SOLO una colección Chroma existente en modo lectura (IDX-C1).
+
+    Nunca crea almacenamiento: si la raíz no existe o no contiene el
+    archivo `chroma.sqlite3`, no construye el cliente y reporta la
+    colección como ausente. Sobre una raíz existente usa `get_collection`
+    (nunca `get_or_create_collection`). Un `ValueError` de `get_collection`
+    (colección inexistente en chromadb 0.5.x) se reporta como colección
+    ausente; cualquier otro error se reporta como backend inaccesible.
+    """
+    root = Path(chroma_path).expanduser().resolve()
+    root_present = root.is_dir()
+    if not root_present or not (root / "chroma.sqlite3").is_file():
+        return _ChromaReadAccess(ChromaReadStatus(root_present=root_present))
+    try:
+        import chromadb
+        cliente = chromadb.PersistentClient(path=str(root))
+        coleccion = cliente.get_collection(name=collection_name)
+        return _ChromaReadAccess(
+            ChromaReadStatus(
+                root_present=True,
+                collection_present=True,
+            ),
+            collection=coleccion,
+        )
+    except ValueError:
+        # chromadb 0.5.x lanza ValueError cuando la colección no existe.
+        return _ChromaReadAccess(ChromaReadStatus(root_present=True))
+    except Exception as e:
+        # Backend inaccesible: la colección se intentó abrir pero el fallo
+        # es del backend, no "colección ausente" (unavailable es la señal
+        # autoritativa; collection_present=True evita clasificarla como
+        # colección inexistente).
+        return _ChromaReadAccess(
+            ChromaReadStatus(
+                root_present=True,
+                collection_present=True,
+                unavailable=True,
+                error_code="chroma_backend_unavailable",
+                error_type=_tipo_error_seguro(e),
+            )
+        )
