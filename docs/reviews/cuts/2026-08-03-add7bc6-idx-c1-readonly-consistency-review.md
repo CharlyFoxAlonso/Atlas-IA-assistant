@@ -1,12 +1,12 @@
 # Informe de Auditoría — IDX-C1 Verificación de Consistencia Read-Only
 
 **Archivo:** `docs/reviews/cuts/2026-08-03-add7bc6-idx-c1-readonly-consistency-review.md`
-**Fecha:** 2026-08-03  
-**Repositorio:** Atlas  
-**Rama:** `atlas-v4.1-incremental-indexing`  
-**HEAD auditado:** `add7bc65b15ee0e2b638f31f9e0a06f7b06b04ab`  
-**Baseline (commit previo al corte):** `add7bc6` (mismo — el corte no ha sido commiteado)  
-**Rol:** Auditor (Workflow 2.0)  
+**Fecha:** 2026-08-03
+**Repositorio:** Atlas
+**Rama:** `atlas-v4.1-incremental-indexing`
+**HEAD auditado:** `add7bc65b15ee0e2b638f31f9e0a06f7b06b04ab`
+**Baseline (commit previo al corte):** `add7bc6` (mismo — el corte no ha sido commiteado)
+**Rol:** Auditor (Workflow 2.0)
 **SDD gobernante:** `docs/spec/atlas-v4.1-incremental-indexing-sdd.md` (secciones 5–7, 10–11)
 
 ---
@@ -199,5 +199,5 @@ Determinar si el microcorte **IDX-C1** implementa fielmente el contrato de verif
 
 ---
 
-**Fin del informe.**  
+**Fin del informe.**
 No se realizaron stage, commit ni push. Working tree final idéntico al inicial.
