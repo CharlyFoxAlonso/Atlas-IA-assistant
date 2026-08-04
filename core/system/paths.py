@@ -32,6 +32,11 @@ class AtlasPaths:
     managed_bin_dir: Path
     models_dir: Path
 
+    @property
+    def index_writer_lock_path(self) -> Path:
+        """Single-writer index lock, scoped to the configured data root."""
+        return (self.data_dir / "index_writer.lock").resolve()
+
     def to_dict(self) -> dict[str, str]:
         return {key: str(value) for key, value in vars(self).items()}
 

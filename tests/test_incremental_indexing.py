@@ -19,9 +19,16 @@ from unittest import mock
 import core.indexer as indexer
 import core.ingestion_manager as im
 import core.local_ingestion_manager as lim
+import core.vector_store as vector_store
 from core.index_manifest import IndexManifest
+from core.index_writer_lock import (
+    IndexWriterBusyError,
+    IndexWriterLock,
+    derive_lock_path_for_manifest,
+)
 from core.indexer import (
     IndexResult,
+    STATUS_BUSY,
     construir_indice,
     eliminar_documento_indexado,
     indexar_archivo,
@@ -116,6 +123,92 @@ class CasoBase(unittest.TestCase):
     def indexar(self, ruta):
         return indexar_archivo(ruta, memoria_base=self.base,
                                manifest_path=self.manifest_path)
+
+
+class IndexWriterBusyTests(CasoBase):
+    def _tomar_lock_externo(self):
+        return IndexWriterLock.acquire(
+            derive_lock_path_for_manifest(self.manifest_path)
+        )
+
+    def test_indexar_archivo_ocupado_devuelve_busy_sanitizado(self):
+        ruta = escribir(self.base, "doc.md")
+        owner = self._tomar_lock_externo()
+        try:
+            res = self.indexar(ruta)
+        finally:
+            owner.release()
+
+        self.assertEqual(res.status, STATUS_BUSY)
+        self.assertTrue(res.busy)
+        self.assertEqual(
+            res.error,
+            "Index writer is busy; another indexing operation is active.",
+        )
+        self.assertNotIn(str(self.tmp.name), list(res.to_dict().values()))
+
+    def test_eliminar_documento_ocupado_devuelve_busy_sanitizado(self):
+        owner = self._tomar_lock_externo()
+        try:
+            res = eliminar_documento_indexado(
+                "doc.md",
+                manifest_path=self.manifest_path,
+            )
+        finally:
+            owner.release()
+
+        self.assertEqual(res.status, STATUS_BUSY)
+        self.assertTrue(res.busy)
+        self.assertEqual(
+            res.error,
+            "Index writer is busy; another indexing operation is active.",
+        )
+
+    def test_sincronizar_ocupado_devuelve_busy_sanitizado(self):
+        escribir(self.base, "doc.md")
+        owner = self._tomar_lock_externo()
+        try:
+            res = self.sync()
+        finally:
+            owner.release()
+
+        self.assertTrue(res.busy)
+        self.assertEqual(res.items[0].status, STATUS_BUSY)
+        self.assertEqual(
+            res.items[0].error,
+            "Index writer is busy; another indexing operation is active.",
+        )
+
+    def test_construir_indice_ocupado_eleva_busy(self):
+        owner = self._tomar_lock_externo()
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(IndexWriterBusyError):
+                    construir_indice(
+                        memoria_base=self.base,
+                        manifest_path=self.manifest_path,
+                    )
+        finally:
+            owner.release()
+
+    def test_vector_store_directo_ocupado_eleva_busy(self):
+        lock_path = derive_lock_path_for_manifest(self.manifest_path)
+        owner = self._tomar_lock_externo()
+        try:
+            with self.assertRaises(IndexWriterBusyError):
+                vector_store.agregar_documento(
+                    "doc.md",
+                    CONTENIDO_BASE,
+                    metadata={"doc_id": "doc.md"},
+                    lock_path=lock_path,
+                )
+            with self.assertRaises(IndexWriterBusyError):
+                vector_store.eliminar_documento(
+                    "doc.md",
+                    lock_path=lock_path,
+                )
+        finally:
+            owner.release()
 
 
 # ============================================

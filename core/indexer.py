@@ -31,6 +31,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import config
 from core.index_manifest import IndexManifest, ManifestEntry
+from core.index_writer_lock import (
+    IndexWriterBusyError,
+    acquire_index_writer_lock,
+)
 from core.vector_store import (
     _variantes_ruta_legacy,
     agregar_documento,
@@ -49,6 +53,7 @@ STATUS_SKIPPED = "skipped"
 STATUS_FAILED = "failed"
 STATUS_DELETED = "deleted"
 STATUS_NOT_FOUND = "not_found"
+STATUS_BUSY = "busy"
 
 
 # ============================================
@@ -64,6 +69,7 @@ class IndexResult:
     chunk_count: int = 0
     duration_seconds: float = 0.0
     error: Optional[str] = None
+    busy: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -78,6 +84,7 @@ class DeleteResult:
     chunks_removed: int = 0
     duration_seconds: float = 0.0
     error: Optional[str] = None
+    busy: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -96,6 +103,7 @@ class SyncResult:
     duration_seconds: float = 0.0
     mode: str = "sync"  # "sync" | "rebuild"
     items: List[IndexResult] = field(default_factory=list)
+    busy: bool = False
 
     def to_dict(self) -> dict:
         data = asdict(self)
@@ -154,6 +162,53 @@ def _sha256_archivo(ruta: str) -> str:
     return h.hexdigest()
 
 
+def _busy_message(error: IndexWriterBusyError) -> str:
+    return error.public_message
+
+
+def _busy_index_result(path: str, inicio: float,
+                       error: IndexWriterBusyError) -> IndexResult:
+    return IndexResult(
+        path,
+        STATUS_BUSY,
+        0,
+        time.perf_counter() - inicio,
+        _busy_message(error),
+        True,
+    )
+
+
+def _busy_delete_result(path: str, inicio: float,
+                        error: IndexWriterBusyError) -> DeleteResult:
+    return DeleteResult(
+        path,
+        STATUS_BUSY,
+        0,
+        time.perf_counter() - inicio,
+        _busy_message(error),
+        True,
+    )
+
+
+def _busy_sync_result(mode: str, inicio: float,
+                      error: IndexWriterBusyError) -> SyncResult:
+    return SyncResult(
+        duration_seconds=time.perf_counter() - inicio,
+        mode=mode,
+        busy=True,
+        items=[
+            IndexResult(
+                "(index_writer)",
+                STATUS_BUSY,
+                0,
+                0.0,
+                _busy_message(error),
+                True,
+            )
+        ],
+    )
+
+
 def _iter_archivos(memoria_base: str):
     """Recorre recursivamente los archivos soportados de Atlas_Memory."""
     for root, dirs, files in os.walk(memoria_base):
@@ -169,7 +224,10 @@ def _iter_archivos(memoria_base: str):
 
 
 def _indexar_en_manifest(ruta: str, base: str,
-                         manifest: IndexManifest) -> IndexResult:
+                         manifest: IndexManifest,
+                         *,
+                         lock_path: Optional[os.PathLike[str] | str] = None
+                         ) -> IndexResult:
     """
     Núcleo de indexación de UN archivo. Actualiza `manifest` en memoria
     (el caller decide cuándo persistirlo). Nunca toca otros documentos.
@@ -198,7 +256,12 @@ def _indexar_en_manifest(ruta: str, base: str,
             "doc_id": rel,  # identidad estable (v4.1)
         }
 
-        chunks = agregar_documento(doc_id=rel, texto=contenido, metadata=metadata)
+        chunks = agregar_documento(
+            doc_id=rel,
+            texto=contenido,
+            metadata=metadata,
+            lock_path=lock_path,
+        )
         duracion = time.perf_counter() - inicio
 
         if chunks <= 0:
@@ -251,7 +314,9 @@ def _marcar_error_en_manifest(manifest: IndexManifest, rel: str,
 
 def indexar_archivo(ruta_archivo: str,
                     memoria_base: Optional[str] = None,
-                    manifest_path: Optional[str] = None) -> IndexResult:
+                    manifest_path: Optional[str] = None,
+                    *,
+                    lock_path: Optional[os.PathLike[str] | str] = None) -> IndexResult:
     """
     Indexa UN solo archivo de Atlas_Memory y actualiza el manifiesto.
 
@@ -298,24 +363,37 @@ def indexar_archivo(ruta_archivo: str,
             time.perf_counter() - inicio, error,
         )
 
-    manifest = IndexManifest.load(manifest_path)
-    resultado = _indexar_en_manifest(ruta, base, manifest)
     try:
-        manifest.save(manifest_path)
-    except OSError as e:
-        # La indexación en ChromaDB ya ocurrió; el manifiesto se puede
-        # reconstruir con sincronizar_indice(). Se reporta, no se oculta.
-        log_seguridad(
-            "INDEX_MANIFEST_SAVE_ERROR",
-            f"No se pudo guardar el manifiesto: {type(e).__name__}: {e}",
-        )
-        resultado.status = STATUS_FAILED
-        resultado.error = f"indexado en ChromaDB pero falló el manifiesto: {e}"
-    return resultado
+        with acquire_index_writer_lock(
+            lock_path=lock_path,
+            manifest_path=manifest_path,
+        ) as writer_lock:
+            manifest = IndexManifest.load(manifest_path)
+            resultado = _indexar_en_manifest(
+                ruta,
+                base,
+                manifest,
+                lock_path=writer_lock.lock_path,
+            )
+            try:
+                manifest.save(manifest_path)
+            except OSError as e:
+                log_seguridad(
+                    "INDEX_MANIFEST_SAVE_ERROR",
+                    f"No se pudo guardar el manifiesto: {type(e).__name__}: {e}",
+                )
+                resultado.status = STATUS_FAILED
+                resultado.error = f"indexado en ChromaDB pero fallo el manifiesto: {e}"
+            return resultado
+    except IndexWriterBusyError as e:
+        return _busy_index_result(os.path.basename(ruta), inicio, e)
+
 
 
 def eliminar_documento_indexado(relative_path: str,
-                                manifest_path: Optional[str] = None
+                                manifest_path: Optional[str] = None,
+                                *,
+                                lock_path: Optional[os.PathLike[str] | str] = None
                                 ) -> DeleteResult:
     """
     Retira del índice un documento que ya no existe en disco.
@@ -331,37 +409,47 @@ def eliminar_documento_indexado(relative_path: str,
     rel = _normalizar_ruta_relativa(relative_path)
 
     try:
-        eliminados = eliminar_documento(
-            rel, rutas_legacy=_variantes_ruta_legacy(rel)
-        )
-    except Exception as e:
-        duracion = time.perf_counter() - inicio
-        error = f"{type(e).__name__}: {e}"
-        log_seguridad("INDEX_DELETE_FAILED", f"{rel}: {error}")
-        return DeleteResult(rel, STATUS_FAILED, 0, duracion, error)
+        with acquire_index_writer_lock(
+            lock_path=lock_path,
+            manifest_path=manifest_path,
+        ) as writer_lock:
+            try:
+                eliminados = eliminar_documento(
+                    rel,
+                    rutas_legacy=_variantes_ruta_legacy(rel),
+                    lock_path=writer_lock.lock_path,
+                )
+            except Exception as e:
+                duracion = time.perf_counter() - inicio
+                error = f"{type(e).__name__}: {e}"
+                log_seguridad("INDEX_DELETE_FAILED", f"{rel}: {error}")
+                return DeleteResult(rel, STATUS_FAILED, 0, duracion, error)
 
-    manifest = IndexManifest.load(manifest_path)
-    existia_en_manifest = manifest.remove(rel)
-    try:
-        manifest.save(manifest_path)
-    except OSError as e:
-        log_seguridad(
-            "INDEX_MANIFEST_SAVE_ERROR",
-            f"No se pudo guardar el manifiesto: {type(e).__name__}: {e}",
-        )
+            manifest = IndexManifest.load(manifest_path)
+            existia_en_manifest = manifest.remove(rel)
+            try:
+                manifest.save(manifest_path)
+            except OSError as e:
+                log_seguridad(
+                    "INDEX_MANIFEST_SAVE_ERROR",
+                    f"No se pudo guardar el manifiesto: {type(e).__name__}: {e}",
+                )
 
-    duracion = time.perf_counter() - inicio
-    if eliminados > 0 or existia_en_manifest:
-        log_seguridad(
-            "INDEX_DOCUMENT_REMOVED",
-            f"{rel}: {eliminados} chunks eliminados",
-        )
-        return DeleteResult(rel, STATUS_DELETED, eliminados, duracion)
-    return DeleteResult(rel, STATUS_NOT_FOUND, 0, duracion)
-
+            duracion = time.perf_counter() - inicio
+            if eliminados > 0 or existia_en_manifest:
+                log_seguridad(
+                    "INDEX_DOCUMENT_REMOVED",
+                    f"{rel}: {eliminados} chunks eliminados",
+                )
+                return DeleteResult(rel, STATUS_DELETED, eliminados, duracion)
+            return DeleteResult(rel, STATUS_NOT_FOUND, 0, duracion)
+    except IndexWriterBusyError as e:
+        return _busy_delete_result(rel, inicio, e)
 
 def sincronizar_indice(memoria_base: Optional[str] = None,
-                       manifest_path: Optional[str] = None
+                       manifest_path: Optional[str] = None,
+                       *,
+                       lock_path: Optional[os.PathLike[str] | str] = None
                        ) -> SyncResult:
     """
     Recorre la biblioteca y procesa SOLO las diferencias respecto del
@@ -378,11 +466,18 @@ def sincronizar_indice(memoria_base: Optional[str] = None,
     cambios"; para una app personal local se acepta a cambio del
     rendimiento, y la reconstrucción explícita sigue disponible.
     """
-    return _sincronizar(memoria_base, manifest_path, forzar=False)
+    return _sincronizar(
+        memoria_base,
+        manifest_path,
+        forzar=False,
+        lock_path=lock_path,
+    )
 
 
 def reconstruir_indice_completo(memoria_base: Optional[str] = None,
-                                manifest_path: Optional[str] = None
+                                manifest_path: Optional[str] = None,
+                                *,
+                                lock_path: Optional[os.PathLike[str] | str] = None
                                 ) -> SyncResult:
     """
     Reindexa TODOS los documentos de la biblioteca (modo "rebuild").
@@ -392,12 +487,45 @@ def reconstruir_indice_completo(memoria_base: Optional[str] = None,
     reemplaza cada documento por identidad estable y retira los que
     ya no existen en disco.
     """
-    return _sincronizar(memoria_base, manifest_path, forzar=True)
+    return _sincronizar(
+        memoria_base,
+        manifest_path,
+        forzar=True,
+        lock_path=lock_path,
+    )
 
 
 def _sincronizar(memoria_base: Optional[str],
                  manifest_path: Optional[str],
-                 forzar: bool) -> SyncResult:
+                 forzar: bool,
+                 *,
+                 lock_path: Optional[os.PathLike[str] | str] = None,
+                 raise_busy: bool = False) -> SyncResult:
+    inicio = time.perf_counter()
+    modo = "rebuild" if forzar else "sync"
+    try:
+        with acquire_index_writer_lock(
+            lock_path=lock_path,
+            manifest_path=manifest_path,
+        ) as writer_lock:
+            return _sincronizar_unlocked(
+                memoria_base,
+                manifest_path,
+                forzar,
+                lock_path=writer_lock.lock_path,
+            )
+    except IndexWriterBusyError as e:
+        if raise_busy:
+            raise
+        return _busy_sync_result(modo, inicio, e)
+
+
+def _sincronizar_unlocked(memoria_base: Optional[str],
+                          manifest_path: Optional[str],
+                          forzar: bool,
+                          *,
+                          lock_path: Optional[os.PathLike[str] | str] = None
+                          ) -> SyncResult:
     inicio = time.perf_counter()
     base = memoria_base or MEMORIA_BASE
     modo = "rebuild" if forzar else "sync"
@@ -460,7 +588,12 @@ def _sincronizar(memoria_base: Optional[str],
                     log_seguridad("INDEX_DOCUMENT_SKIPPED", rel)
                     continue
 
-                item = _indexar_en_manifest(ruta, base, manifest)
+                item = _indexar_en_manifest(
+                    ruta,
+                    base,
+                    manifest,
+                    lock_path=lock_path,
+                )
                 if item.status == STATUS_INDEXED:
                     resultado.reindexed_modified += 1
                 else:
@@ -470,7 +603,12 @@ def _sincronizar(memoria_base: Optional[str],
 
         # Nuevo (o rebuild forzado de un conocido)
         conocido = manifest.get(rel) is not None
-        item = _indexar_en_manifest(ruta, base, manifest)
+        item = _indexar_en_manifest(
+            ruta,
+            base,
+            manifest,
+            lock_path=lock_path,
+        )
         if item.status == STATUS_INDEXED:
             if forzar and conocido:
                 resultado.reindexed_modified += 1
@@ -488,7 +626,9 @@ def _sincronizar(memoria_base: Optional[str],
     for rel in sorted(set(manifest.documents.keys()) - encontrados):
         try:
             eliminados = eliminar_documento(
-                rel, rutas_legacy=_variantes_ruta_legacy(rel)
+                rel,
+                rutas_legacy=_variantes_ruta_legacy(rel),
+                lock_path=lock_path,
             )
         except Exception as e:
             resultado.failed += 1
@@ -531,7 +671,9 @@ def _sincronizar(memoria_base: Optional[str],
 # ============================================
 
 def construir_indice(memoria_base: Optional[str] = None,
-                     manifest_path: Optional[str] = None):
+                     manifest_path: Optional[str] = None,
+                     *,
+                     lock_path: Optional[os.PathLike[str] | str] = None):
     """
     Alias de compatibilidad histórica: ejecuta una RECONSTRUCCIÓN COMPLETA
     explícita y devuelve la lista de archivos indexados (contrato anterior).
@@ -539,8 +681,12 @@ def construir_indice(memoria_base: Optional[str] = None,
     Para el mantenimiento incremental habitual, usar sincronizar_indice().
     """
     print("🔄 Reconstrucción completa del índice (todos los documentos)...")
-    resultado = reconstruir_indice_completo(
-        memoria_base=memoria_base, manifest_path=manifest_path
+    resultado = _sincronizar(
+        memoria_base,
+        manifest_path,
+        forzar=True,
+        lock_path=lock_path,
+        raise_busy=True,
     )
     for item in resultado.items:
         if item.status == STATUS_INDEXED:

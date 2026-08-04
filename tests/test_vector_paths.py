@@ -172,6 +172,7 @@ vector_store = importlib.import_module("core.vector_store")
 print("ATLAS_TEST_RESULT=" + json.dumps({
     "config_chroma": config.CHROMA_PATH,
     "config_manifest": config.INDEX_MANIFEST_PATH,
+    "config_lock": config.INDEX_WRITER_LOCK_PATH,
     "vector_chroma": vector_store.CHROMA_PATH,
     "vector_collection": vector_store.COLLECTION_NAME,
     "config_collection": config.COLLECTION_NAME,
@@ -190,6 +191,14 @@ print("ATLAS_TEST_RESULT=" + json.dumps({
 
         self.assertEqual(Path(result["config_chroma"]), expected_chroma)
         self.assertEqual(Path(result["config_manifest"]), expected_manifest)
+        self.assertEqual(
+            Path(result["config_lock"]),
+            data_dir.resolve() / "index_writer.lock",
+        )
+        self.assertNotEqual(
+            Path(result["config_lock"]).parent,
+            Path(result["config_chroma"]),
+        )
         self.assertEqual(result["vector_chroma"], result["config_chroma"])
         self.assertEqual(result["vector_collection"], result["config_collection"])
         self.assertEqual(result["chroma_type"], "str")
@@ -212,6 +221,7 @@ config = importlib.import_module("core.config")
 print("ATLAS_TEST_RESULT=" + json.dumps({
     "chroma": config.CHROMA_PATH,
     "manifest": config.INDEX_MANIFEST_PATH,
+    "lock": config.INDEX_WRITER_LOCK_PATH,
 }))
 """,
                         cwd=cwd,

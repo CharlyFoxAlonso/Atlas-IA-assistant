@@ -71,6 +71,11 @@ class PathIntegrationTests(unittest.TestCase):
                 data_dir.resolve() / "memory" / "Atlas_Memory",
             )
             self.assertEqual(paths.chroma_dir, data_dir.resolve() / "vector_db")
+            self.assertEqual(
+                paths.index_writer_lock_path,
+                data_dir.resolve() / "index_writer.lock",
+            )
+            self.assertNotEqual(paths.index_writer_lock_path.parent, paths.chroma_dir)
             self.assertFalse(data_dir.exists())
 
     def test_successive_calls_reflect_environment_changes_without_cache(self):
@@ -114,6 +119,10 @@ class PathIntegrationTests(unittest.TestCase):
                 paths.private_memory_dir / "00_Sistema" / "Prompts",
                 paths.project_root / "memory" / "Atlas_Memory" / "00_Sistema" / "Prompts",
             )
+            self.assertEqual(
+                paths.index_writer_lock_path,
+                paths.project_root / "index_writer.lock",
+            )
 
     def test_config_constants_are_captured_at_import_time(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -150,6 +159,7 @@ class PathIntegrationTests(unittest.TestCase):
             expected = get_paths(packaged=False, environment=environment)
             expected_chroma = data_dir.resolve() / "vector_db"
             expected_manifest = expected_chroma / "index_manifest.json"
+            expected_lock = data_dir.resolve() / "index_writer.lock"
 
             with isolated_config_import(environment, root) as config:
                 self.assertEqual(config.BASE_MEMORIA, str(expected.private_memory_dir))
@@ -163,11 +173,17 @@ class PathIntegrationTests(unittest.TestCase):
                 )
                 self.assertEqual(config.CHROMA_PATH, str(expected_chroma))
                 self.assertEqual(config.INDEX_MANIFEST_PATH, str(expected_manifest))
+                self.assertEqual(config.INDEX_WRITER_LOCK_PATH, str(expected_lock))
                 self.assertIsInstance(config.CHROMA_PATH, str)
                 self.assertTrue(Path(config.CHROMA_PATH).is_absolute())
                 self.assertTrue(Path(config.INDEX_MANIFEST_PATH).is_absolute())
+                self.assertTrue(Path(config.INDEX_WRITER_LOCK_PATH).is_absolute())
                 self.assertEqual(
                     Path(config.INDEX_MANIFEST_PATH).parent,
+                    Path(config.CHROMA_PATH),
+                )
+                self.assertNotEqual(
+                    Path(config.INDEX_WRITER_LOCK_PATH).parent,
                     Path(config.CHROMA_PATH),
                 )
 

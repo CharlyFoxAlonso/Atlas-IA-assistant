@@ -204,6 +204,7 @@ UMBRAL_SEMANTICO = 200
 # El manifiesto vive junto a la base vectorial que describe (vector_db/),
 # es un dato local (gitignored) y no contiene contenido de documentos.
 INDEX_MANIFEST_PATH = str(_ATLAS_PATHS.chroma_dir / "index_manifest.json")
+INDEX_WRITER_LOCK_PATH = str(_ATLAS_PATHS.index_writer_lock_path)
 INDEX_SCHEMA_VERSION = 1
 INDEX_SUPPORTED_EXTENSIONS = {'.md', '.pdf', '.txt', '.docx', '.pptx'}
 # Carpetas que el indexador ignora dentro de BASE_MEMORIA

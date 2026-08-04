@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.config import CHROMA_PATH, COLLECTION_NAME
+from core.index_writer_lock import acquire_index_writer_lock
 from core.system.paths import validate_vector_store_path
 
 # ============================================
@@ -220,7 +221,12 @@ def _ids_chunks_documento(col, doc_id, rutas_legacy=None):
     return list(dict.fromkeys(ids))
 
 
-def eliminar_documento(doc_id, rutas_legacy=None):
+def eliminar_documento(doc_id, rutas_legacy=None, *, lock_path=None):
+    with acquire_index_writer_lock(lock_path=lock_path):
+        return _eliminar_documento_unlocked(doc_id, rutas_legacy=rutas_legacy)
+
+
+def _eliminar_documento_unlocked(doc_id, rutas_legacy=None):
     """
     Elimina de ChromaDB todos los chunks de un documento.
 
@@ -251,7 +257,17 @@ def eliminar_documento(doc_id, rutas_legacy=None):
     return len(ids)
 
 
-def agregar_documento(doc_id, texto, metadata=None):
+def agregar_documento(doc_id, texto, metadata=None, *, lock_path=None):
+    with acquire_index_writer_lock(lock_path=lock_path):
+        return _agregar_documento_unlocked(
+            doc_id,
+            texto,
+            metadata=metadata,
+            lock_path=lock_path,
+        )
+
+
+def _agregar_documento_unlocked(doc_id, texto, metadata=None, *, lock_path=None):
     """
     Agrega un documento a la base de datos vectorial.
 
@@ -287,7 +303,11 @@ def agregar_documento(doc_id, texto, metadata=None):
     if "doc_id" in base_metadata:
         ids = [f"{doc_id}:chunk:{i}" for i in range(len(chunks))]
         rutas_legacy = _variantes_ruta_legacy(base_metadata["doc_id"])
-        eliminar_documento(doc_id, rutas_legacy=rutas_legacy)
+        eliminar_documento(
+            doc_id,
+            rutas_legacy=rutas_legacy,
+            lock_path=lock_path,
+        )
     else:
         ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
         try:

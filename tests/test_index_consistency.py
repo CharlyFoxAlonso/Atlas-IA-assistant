@@ -28,6 +28,10 @@ from core.index_consistency import (
     _render_issue,
     verificar_consistencia,
 )
+from core.index_writer_lock import (
+    acquire_index_writer_lock,
+    derive_lock_path_for_manifest,
+)
 from core.system.paths import LegacyVectorStoreError
 from core.vector_store import (
     ChromaReadStatus,
@@ -194,7 +198,7 @@ class CasoBase(unittest.TestCase):
 
 class EstadosNominalesTests(CasoBase):
 
-    def test_healthy_observado_y_publicado_degraded(self):
+    def test_healthy_observado_y_publicado_healthy_sin_writer_activo(self):
         ruta = escribir(self.base, "doc.md")
         rel = "doc.md"
         escribir_manifest(self.manifest_path, {rel: entrada_para(ruta, rel)})
@@ -203,29 +207,58 @@ class EstadosNominalesTests(CasoBase):
         reporte = self._verificar()
 
         self.assertEqual(reporte.observed_state, ConsistencyState.HEALTHY.value)
-        self.assertEqual(reporte.published_state, ConsistencyState.DEGRADED.value)
+        self.assertEqual(reporte.published_state, ConsistencyState.HEALTHY.value)
         self.assertEqual(reporte.sources_count, 1)
         self.assertEqual(reporte.manifest_entries_count, 1)
         self.assertEqual(reporte.chunk_count, 1)
         self.assertEqual(reporte.divergences, {})
         self.assertEqual(reporte.orphan_count, 0)
-        self.assertFalse(reporte.writer_state_known)
+        self.assertTrue(reporte.writer_state_known)
         self.assertFalse(reporte.writer_active)
-        self.assertTrue(reporte.possibly_transient)
+        self.assertFalse(reporte.possibly_transient)
         self.assertTrue(reporte.checked_at.endswith("+00:00"))
+        self.assertFalse(derive_lock_path_for_manifest(self.manifest_path).exists())
 
-    def test_healthy_empty_observado_y_publicado_degraded(self):
+    def test_healthy_empty_observado_y_publicado_healthy_empty_sin_writer_activo(self):
         # Sin fuentes, sin manifiesto, sin Chroma.
         self._parchear_chroma(ChromaReadStatus(root_present=False))
 
         reporte = self._verificar()
 
         self.assertEqual(reporte.observed_state, ConsistencyState.HEALTHY_EMPTY.value)
-        self.assertEqual(reporte.published_state, ConsistencyState.DEGRADED.value)
+        self.assertEqual(reporte.published_state, ConsistencyState.HEALTHY_EMPTY.value)
         self.assertEqual(reporte.sources_count, 0)
         self.assertEqual(reporte.manifest_entries_count, 0)
         self.assertEqual(reporte.chunk_count, 0)
         self.assertEqual(reporte.divergences, {})
+
+    def test_writer_activo_degrada_solo_estado_nominal(self):
+        ruta = escribir(self.base, "doc.md")
+        rel = "doc.md"
+        escribir_manifest(self.manifest_path, {rel: entrada_para(ruta, rel)})
+        self._parchear_chroma(FakeCollection({f"{rel}:chunk:0": {"doc_id": rel}}))
+        lock_path = derive_lock_path_for_manifest(self.manifest_path)
+
+        with acquire_index_writer_lock(lock_path=lock_path):
+            reporte = self._verificar()
+
+        self.assertEqual(reporte.observed_state, ConsistencyState.HEALTHY.value)
+        self.assertEqual(reporte.published_state, ConsistencyState.DEGRADED.value)
+        self.assertTrue(reporte.writer_state_known)
+        self.assertTrue(reporte.writer_active)
+        self.assertTrue(reporte.possibly_transient)
+
+    def test_writer_activo_no_degrada_inconsistent(self):
+        escribir(self.base, "doc.md")
+        self._parchear_chroma(ChromaReadStatus(root_present=False))
+        lock_path = derive_lock_path_for_manifest(self.manifest_path)
+
+        with acquire_index_writer_lock(lock_path=lock_path):
+            reporte = self._verificar()
+
+        self.assertEqual(reporte.observed_state, ConsistencyState.INCONSISTENT.value)
+        self.assertEqual(reporte.published_state, ConsistencyState.INCONSISTENT.value)
+        self.assertTrue(reporte.writer_active)
 
 
 class CategoriasInconsistentTests(CasoBase):

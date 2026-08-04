@@ -60,6 +60,7 @@ from typing import Dict, List, Optional, Tuple
 
 from core import config
 from core.index_manifest import ManifestEntry
+from core.index_writer_lock import inspect_index_writer_state
 from core.system.paths import LegacyVectorStoreError, validate_vector_store_path
 from core.vector_store import (
     ChromaReadStatus,
@@ -383,6 +384,7 @@ def verificar_consistencia(
     manifest_path: Optional[str] = None,
     chroma_path: Optional[str] = None,
     collection_name: Optional[str] = None,
+    lock_path: Optional[str] = None,
 ) -> ConsistencyReport:
     """Verifica la consistencia del índice en modo SOLO LECTURA (IDX-C1).
 
@@ -584,12 +586,19 @@ def verificar_consistencia(
     for issue in issues_estructurados:
         issues_renderizados.append(_render_issue(issue))
 
-    # Publicación (SDD §11.2): antes de IDX-C2 el estado del escritor es
-    # desconocido; HEALTHY/HEALTHY_EMPTY nominales se publican como DEGRADED.
-    writer_state_known = False
-    writer_active = False
-    possibly_transient = True
-    if observed in (ConsistencyState.HEALTHY, ConsistencyState.HEALTHY_EMPTY):
+    # IDX-C2: read-only writer inspection degrades only nominal states when
+    # the writer is active or the lock state is unknown.
+    writer_state = inspect_index_writer_state(
+        lock_path=lock_path,
+        manifest_path=manifest_ruta,
+    )
+    writer_state_known = writer_state.writer_state_known
+    writer_active = writer_state.writer_active
+    possibly_transient = writer_state.possibly_transient
+    if (
+        observed in (ConsistencyState.HEALTHY, ConsistencyState.HEALTHY_EMPTY)
+        and (not writer_state_known or writer_active)
+    ):
         published = ConsistencyState.DEGRADED
     else:
         published = observed
