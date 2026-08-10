@@ -186,6 +186,23 @@ class ConsistencyReport:
     checked_at: str = ""
 
 
+@dataclass(frozen=True)
+class _ConsistencySnapshot:
+    """Fotografía privada y read-only compartida por IDX-C1 e IDX-C3."""
+
+    base: str
+    manifest_path: str
+    chroma_path: str
+    collection_name: str
+    report: ConsistencyReport
+    sources: Tuple[str, ...]
+    manifest_entries: Dict[str, ManifestEntry]
+    manifest_malformed_entries: int
+    chunks_by_identity: Dict[str, Tuple[str, ...]]
+    orphan_ids: Tuple[str, ...]
+    categories_by_identity: Dict[str, Optional[str]]
+
+
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -315,8 +332,8 @@ def _leer_chunks_por_documento(collection) -> Tuple[Dict[str, List[str]], List[s
     """
     try:
         resultado = collection.get(include=["metadatas"])
-    except Exception as e:
-        raise _ChromaCollectionReadFailed(_tipo_error_seguro(e)) from e
+    except Exception as exc:
+        raise _ChromaCollectionReadFailed(_tipo_error_seguro(exc)) from exc
 
     ids = resultado.get("ids", []) or []
     metadatas = resultado.get("metadatas", []) or []
@@ -336,7 +353,7 @@ def _leer_chunks_por_documento(collection) -> Tuple[Dict[str, List[str]], List[s
 
 
 def _clasificar_fuente(rel: str, entry: Optional[ManifestEntry], chunks: int,
-                       ruta_abs: str, divergencias: Dict[str, int]) -> None:
+                       ruta_abs: str, divergencias: Dict[str, int]) -> Optional[str]:
     """Clasifica una fuente contra su entrada y sus chunks (SDD §6)."""
     if entry is None:
         categoria = (
@@ -345,11 +362,12 @@ def _clasificar_fuente(rel: str, entry: Optional[ManifestEntry], chunks: int,
             else DivergenceCategory.SOURCE_PRESENT_MANIFEST_ABSENT_CHROMA_ABSENT
         )
         _sumar(divergencias, categoria)
-        return
+        return categoria.value
 
     if chunks == 0:
-        _sumar(divergencias, DivergenceCategory.SOURCE_AND_MANIFEST_PRESENT_CHROMA_ABSENT)
-        return
+        categoria = DivergenceCategory.SOURCE_AND_MANIFEST_PRESENT_CHROMA_ABSENT
+        _sumar(divergencias, categoria)
+        return categoria.value
 
     try:
         stat = os.stat(ruta_abs)
@@ -357,12 +375,13 @@ def _clasificar_fuente(rel: str, entry: Optional[ManifestEntry], chunks: int,
         # Fuente no observable en el momento de la verificación: la
         # existencia de las fuentes pertenece al filesystem (SDD §3), por
         # lo que se trata como ausente.
-        _sumar(divergencias, DivergenceCategory.SOURCE_ABSENT_MANIFEST_PRESENT)
-        return
+        categoria = DivergenceCategory.SOURCE_ABSENT_MANIFEST_PRESENT
+        _sumar(divergencias, categoria)
+        return categoria.value
 
     if stat.st_size == entry.size_bytes and stat.st_mtime_ns == entry.modified_time_ns:
         # Atajo: tamaño y mtime intactos -> huella vigente sin releer (SDD §7.4).
-        return
+        return None
 
     try:
         digest = _sha256_archivo(ruta_abs)
@@ -371,21 +390,27 @@ def _clasificar_fuente(rel: str, entry: Optional[ManifestEntry], chunks: int,
         divergencias[VERIFICATION_LIMITATION] = (
             divergencias.get(VERIFICATION_LIMITATION, 0) + 1
         )
-        return
+        return VERIFICATION_LIMITATION
 
     if digest == entry.content_sha256:
-        _sumar(divergencias, DivergenceCategory.SOURCE_PRESENT_MANIFEST_METADATA_STALE_CONTENT_SAME)
+        categoria = DivergenceCategory.SOURCE_PRESENT_MANIFEST_METADATA_STALE_CONTENT_SAME
+        _sumar(divergencias, categoria)
+        return categoria.value
     else:
-        _sumar(divergencias, DivergenceCategory.SOURCE_PRESENT_MANIFEST_STALE_CHROMA_PRESENT)
+        categoria = DivergenceCategory.SOURCE_PRESENT_MANIFEST_STALE_CHROMA_PRESENT
+        _sumar(divergencias, categoria)
+        return categoria.value
+
+    return None
 
 
-def verificar_consistencia(
+def _capturar_snapshot_consistencia(
     memoria_base: Optional[str] = None,
     manifest_path: Optional[str] = None,
     chroma_path: Optional[str] = None,
     collection_name: Optional[str] = None,
     lock_path: Optional[str] = None,
-) -> ConsistencyReport:
+) -> _ConsistencySnapshot:
     """Verifica la consistencia del índice en modo SOLO LECTURA (IDX-C1).
 
     Args:
@@ -397,7 +422,7 @@ def verificar_consistencia(
         collection_name: Nombre de la colección (default config.COLLECTION_NAME).
 
     Returns:
-        ConsistencyReport. Nunca lanza por condiciones de datos.
+        _ConsistencySnapshot. Nunca lanza por condiciones de datos.
     """
     base = memoria_base or config.BASE_MEMORIA
     manifest_ruta = manifest_path or config.INDEX_MANIFEST_PATH
@@ -419,6 +444,7 @@ def verificar_consistencia(
     total_chunks = 0
     orphan_count = 0
     orphan_sample: Tuple[str, ...] = ()
+    categorias_por_identidad: Dict[str, Optional[str]] = {}
 
     try:
         # 1. Ruta vectorial autoritativa (solo lectura; política INV-4).
@@ -456,19 +482,19 @@ def verificar_consistencia(
                         error_code="chroma_collection_read_failed",
                         error_type=e.error_type,
                     )
-                except Exception as e:
+                except Exception as exc:
                     chroma = ChromaReadStatus(
                         root_present=True,
                         collection_present=True,
                         unavailable=True,
                         error_code="chroma_collection_read_failed",
-                        error_type=_tipo_error_seguro(e),
+                        error_type=_tipo_error_seguro(exc),
                     )
 
         # 5. Clasificación por fuente.
         for rel in fuentes:
             ruta_abs = os.path.join(base, rel.replace("/", os.sep))
-            _clasificar_fuente(
+            categorias_por_identidad[rel] = _clasificar_fuente(
                 rel,
                 manifest.entries.get(rel),
                 len(chunks_por_doc.get(rel, [])),
@@ -478,6 +504,9 @@ def verificar_consistencia(
 
         # 6. Entradas de manifiesto sin fuente en disco.
         for rel in sorted(set(manifest.entries) - set(fuentes)):
+            categorias_por_identidad[rel] = (
+                DivergenceCategory.SOURCE_ABSENT_MANIFEST_PRESENT.value
+            )
             _sumar(divergencias, DivergenceCategory.SOURCE_ABSENT_MANIFEST_PRESENT)
 
         # 7. Chunks huérfanos: sin fuente y sin entrada de manifiesto.
@@ -485,10 +514,11 @@ def verificar_consistencia(
         for rel, ids in chunks_por_doc.items():
             if rel not in fuentes and rel not in manifest.entries:
                 huérfanos.extend(ids)
-        orphan_count = len(huérfanos)
+        orphan_ids = huérfanos
+        orphan_count = len(orphan_ids)
         # Orden determinista (OBS-04): no depende del orden de inserción de
         # dicts, de Chroma ni de los fakes.
-        orphan_sample = tuple(sorted(huérfanos)[:ORPHAN_SAMPLE_LIMIT])
+        orphan_sample = tuple(sorted(orphan_ids)[:ORPHAN_SAMPLE_LIMIT])
         if orphan_count:
             _sumar(
                 divergencias,
@@ -562,13 +592,13 @@ def verificar_consistencia(
         else:
             observed = ConsistencyState.HEALTHY
 
-    except Exception as e:  # pragma: no cover - red de seguridad del contrato
+    except Exception as exc:  # pragma: no cover - red de seguridad del contrato
         # Contrato: el verificador nunca lanza por condiciones de datos.
         # Un fallo interno inesperado se reporta como limitación activa de
         # verificación (DEGRADED), no como excepción.
         divergencias = {VERIFICATION_LIMITATION: 1}
         observed = ConsistencyState.DEGRADED
-        path_issue = _crear_issue("consistency_verification_failed", e)
+        path_issue = _crear_issue("consistency_verification_failed", exc)
 
     # Frontera final del reporte (OBS-02): no confiar en adaptadores/fakes.
     issues_renderizados: List[str] = []
@@ -603,7 +633,7 @@ def verificar_consistencia(
     else:
         published = observed
 
-    return ConsistencyReport(
+    report = ConsistencyReport(
         observed_state=observed.value,
         published_state=published.value,
         divergences=dict(sorted(divergencias.items())),
@@ -625,3 +655,36 @@ def verificar_consistencia(
         possibly_transient=possibly_transient,
         checked_at=checked_at,
     )
+    return _ConsistencySnapshot(
+        base=base,
+        manifest_path=manifest_ruta,
+        chroma_path=chroma_ruta,
+        collection_name=nombre_coleccion,
+        report=report,
+        sources=tuple(sorted(fuentes)),
+        manifest_entries=dict(manifest.entries),
+        manifest_malformed_entries=manifest.malformed_entries,
+        chunks_by_identity={
+            identidad: tuple(ids)
+            for identidad, ids in chunks_por_doc.items()
+        },
+        orphan_ids=tuple(orphan_ids),
+        categories_by_identity=dict(categorias_por_identidad),
+    )
+
+
+def verificar_consistencia(
+    memoria_base: Optional[str] = None,
+    manifest_path: Optional[str] = None,
+    chroma_path: Optional[str] = None,
+    collection_name: Optional[str] = None,
+    lock_path: Optional[str] = None,
+) -> ConsistencyReport:
+    """API pública read-only de IDX-C1, preservada sin cambios."""
+    return _capturar_snapshot_consistencia(
+        memoria_base=memoria_base,
+        manifest_path=manifest_path,
+        chroma_path=chroma_path,
+        collection_name=collection_name,
+        lock_path=lock_path,
+    ).report
