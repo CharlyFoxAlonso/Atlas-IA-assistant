@@ -1,17 +1,13 @@
 ---
 name: workflow-plan-reviewer
 description: >-
-  Independently review and gate a proposed plan under the repository's canonical
-  Workflow 2.1 without editing files. Use in a dedicated JCode chat after the
-  Planner has supplied a microcut plan and before any Builder acts. Do not use to
-  create the original plan, implement corrections, remediate findings, or audit
-  completed code.
+  Read-only independent Workflow 2.1 gate after Planner and before Builder. Do
+  not originate plans, implement, remediate, or audit completed code.
 ---
 
 # Workflow Plan Reviewer
 
-Use this skill only as a JCode adapter to the repository's canonical
-governance. Do not restate, replace, or reinterpret that governance here.
+This skill only adapts canonical governance; do not restate or reinterpret it.
 
 ## Load the canonical profile
 
@@ -24,9 +20,7 @@ governance. Do not restate, replace, or reinterpret that governance here.
    `profiles.plan_reviewer`, and load every listed file completely, resolving
    each path from the repository root. The profile is the authoritative loading
    map.
-4. Load additional canonical policies or project integrations only when the
-   loaded governance routes them for the task's actual risk or navigation need.
-5. Load no other role profile or role file in this chat.
+4. Load routed policies/integrations only as needed; load no other role profile.
 
 ## Execute the Plan Reviewer gate
 
@@ -37,9 +31,10 @@ repository independently, then follow the loaded Plan Reviewer role and handoff
 contract exactly. Fill the loaded plan-review template and include the canonical
 verdict fields required by the handoff contract.
 
-Remain read-only. Do not revise the plan, implement a fix, or continue into the
-Builder phase. End with an explicit gate that a separate Builder chat can
-consume.
+Remain read-only and do not revise or implement. The only exception is a final
+amended plan when a trusted cockpit manifest explicitly authorizes
+`review_policy.final_synthesis_allowed`; apply the canonical bounded guards.
+End with a gate consumable by a separate Builder chat.
 
 ## Cockpit automation envelope
 
