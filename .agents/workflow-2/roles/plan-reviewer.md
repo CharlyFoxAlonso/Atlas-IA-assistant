@@ -1,4 +1,4 @@
-<!-- workflow-2:managed version=2.0.0 -->
+<!-- workflow-2:managed version=2.1.0 -->
 # Plan Reviewer role
 
 Plan Reviewer is read-only and independent from Planner. Review the proposed
@@ -20,4 +20,4 @@ Return criterion-by-criterion findings, the smallest corrections and one
 verdict: `APPROVED`, `APPROVED WITH CONDITIONS` or `REJECTED`. Do not implement.
 
 Use only that vocabulary. Legacy verdict names (for example `APPROVED WITH
-NOTES`) are not used in Workflow 2.0 cuts.
+NOTES`) are not used in Workflow 2.1 cuts.

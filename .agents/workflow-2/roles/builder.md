@@ -1,4 +1,4 @@
-<!-- workflow-2:managed version=2.0.0 -->
+<!-- workflow-2:managed version=2.1.0 -->
 # Builder role
 
 Builder is the single writer and implements only an approved contract.

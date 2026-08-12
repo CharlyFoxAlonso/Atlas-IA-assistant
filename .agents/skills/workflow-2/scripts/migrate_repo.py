@@ -87,7 +87,7 @@ def apply(source_root: Path, target: Path, actions: list[Action]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Plan or apply a conservative Workflow 2.0 migration.")
+    parser = argparse.ArgumentParser(description="Plan or apply a conservative Workflow 2.1 migration.")
     parser.add_argument("repository", type=Path)
     parser.add_argument("--source", type=Path, default=template_root())
     parser.add_argument("--apply", action="store_true")
@@ -100,7 +100,7 @@ def main() -> int:
         return 2
     source_root = args.source.resolve()
     if not (source_root / ".agents/workflow-2/version.json").exists():
-        print("ERROR: source does not contain a Workflow 2.0 template.")
+        print("ERROR: source does not contain a Workflow 2.1 template.")
         return 2
 
     actions, conflicts = plan(source_root, root)
@@ -123,7 +123,7 @@ def main() -> int:
         return 3
 
     apply(source_root, root, actions)
-    print("Applied Workflow 2.0. Run validate_workflow.py and review the complete Git diff.")
+    print("Applied Workflow 2.1. Run validate_workflow.py and review the complete Git diff.")
     return 0
 
 

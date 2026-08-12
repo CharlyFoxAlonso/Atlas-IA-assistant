@@ -3,7 +3,7 @@ name: workflow-2
 description: Plan, review, implement, audit, debug, or migrate small software changes through evidence-based contracts. Use for microcuts, bug fixes, refactors, plan reviews, independent code audits, repository workflow setup, or migrations involving AGENTS.md, .agents, .opencode, CLAUDE.md, or .claude. Do not use to bypass approval, broaden scope, or perform mass repository rewrites.
 ---
 
-# Workflow 2.0
+# Workflow 2.1
 
 Turn a request into one small contractual change with a separate plan gate,
 single writer and independent audit.

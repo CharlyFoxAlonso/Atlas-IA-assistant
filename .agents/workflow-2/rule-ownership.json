@@ -524,11 +524,11 @@
     },
     {
       "id": "project.agents-md-workflow-2-0-routing.17",
-      "rule": "Workflow 2.0 routing",
-      "owner": "AGENTS.md#Workflow 2.0 routing",
+      "rule": "Workflow 2.1 routing",
+      "owner": "AGENTS.md#Workflow 2.1 routing",
       "scope": "project",
       "file": "AGENTS.md",
-      "section": "Workflow 2.0 routing"
+      "section": "Workflow 2.1 routing"
     },
     {
       "id": "project.agents-playbooks-audit-md-document.1",

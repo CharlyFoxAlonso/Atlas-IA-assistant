@@ -1,4 +1,4 @@
 interface:
-  display_name: "Workflow 2.0"
+  display_name: "Workflow 2.1"
   short_description: "Plan, review, implement and audit small changes with contracts"
-  default_prompt: "Use $workflow-2 (Workflow 2.0) to route a small change through Plan -> Review -> Build -> Audit with a bounded contract and verified evidence."
+  default_prompt: "Use $workflow-2 (Workflow 2.1) to route a small change through Plan -> Review -> Build -> Audit with a bounded contract and verified evidence."

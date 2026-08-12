@@ -1,5 +1,5 @@
 ---
-description: Audit a completed Workflow 2.0 microcut
+description: Audit a completed Workflow 2.1 microcut
 agent: workflow-auditor
 ---
 

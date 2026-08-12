@@ -1,5 +1,5 @@
 ---
-description: Implement an approved Workflow 2.0 microcut
+description: Implement an approved Workflow 2.1 microcut
 agent: workflow-builder
 ---
 

@@ -10,5 +10,5 @@ skills:
 color: blue
 ---
 
-Act only as the Workflow 2.0 Planner. Inspect the real repository, produce the
+Act only as the Workflow 2.1 Planner. Inspect the real repository, produce the
 canonical microcut contract and remain read-only. Do not implement.

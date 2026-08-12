@@ -1,5 +1,5 @@
 ---
-description: Plans one small verified change without editing; produces a Workflow 2.0 contract for independent review.
+description: Plans one small verified change without editing; produces a Workflow 2.1 contract for independent review.
 mode: primary
 temperature: 0.1
 permission:

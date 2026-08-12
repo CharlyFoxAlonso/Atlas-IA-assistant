@@ -1,5 +1,5 @@
 ---
-description: Independently audits a Workflow 2.0 implementation and emits a technical verdict without modifying files.
+description: Independently audits a Workflow 2.1 implementation and emits a technical verdict without modifying files.
 mode: primary
 temperature: 0.1
 permission:

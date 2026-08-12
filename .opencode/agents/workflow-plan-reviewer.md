@@ -1,5 +1,5 @@
 ---
-description: Independently reviews a Workflow 2.0 plan for scope, contracts, risk, tests and reversibility without editing.
+description: Independently reviews a Workflow 2.1 plan for scope, contracts, risk, tests and reversibility without editing.
 mode: primary
 temperature: 0.1
 permission:

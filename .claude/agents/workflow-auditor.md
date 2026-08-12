@@ -1,6 +1,6 @@
 ---
 name: workflow-auditor
-description: Independently audit a completed Workflow 2.0 change against its contract, diff and evidence without editing.
+description: Independently audit a completed Workflow 2.1 change against its contract, diff and evidence without editing.
 tools: Read, Glob, Grep, Bash, Skill
 disallowedTools: Write, Edit, NotebookEdit, Agent
 model: inherit

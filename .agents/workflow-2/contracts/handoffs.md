@@ -1,4 +1,4 @@
-<!-- workflow-2:managed version=2.0.0 -->
+<!-- workflow-2:managed version=2.1.0 -->
 # Contracts and handoffs
 
 ## Planner → Plan Reviewer

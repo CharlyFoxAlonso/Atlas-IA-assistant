@@ -558,7 +558,7 @@ Prefer small verified cuts over speculative redesign.
 Current source, the actual diff, and executed tests take priority over indexed data, reports, summaries, and confidence.
 
 <!-- workflow-2:begin -->
-## Workflow 2.0 routing
+## Workflow 2.1 routing
 
 For every repository task, read `.agents/workflow-2/core.md` and
 `.agents/workflow-2/contracts/handoffs.md`.
@@ -576,10 +576,10 @@ their scope. Do not broaden scope or overwrite existing user work.
 
 Authority hierarchy:
 - `AGENTS.md` remains the global authority for every task.
-- Workflow 2.0 roles govern all microcuts: Plan → Plan Review → Build → Audit.
+- Workflow 2.1 roles govern all microcuts: Plan → Plan Review → Build → Audit.
 - Git rules: `.agents/policies/git-safety.md` is the single normative source.
 - Testing rules: `.agents/policies/testing.md` is the single normative source.
 - The playbooks under `.agents/playbooks/` are legacy/supporting: they apply
-  only to tasks not governed by Workflow 2.0, and their verdict vocabularies
-  must not be used in Workflow 2.0 cuts.
+  only to tasks not governed by Workflow 2.1, and their verdict vocabularies
+  must not be used in Workflow 2.1 cuts.
 <!-- workflow-2:end -->

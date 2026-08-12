@@ -1,5 +1,5 @@
 ---
-description: Review and gate a Workflow 2.0 plan
+description: Review and gate a Workflow 2.1 plan
 agent: workflow-plan-reviewer
 ---
 

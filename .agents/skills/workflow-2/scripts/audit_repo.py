@@ -89,7 +89,7 @@ def markdown(report: dict[str, object]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Audit a repository before Workflow 2.0 migration.")
+    parser = argparse.ArgumentParser(description="Audit a repository before Workflow 2.1 migration.")
     parser.add_argument("repository", type=Path)
     parser.add_argument("--markdown", action="store_true")
     args = parser.parse_args()

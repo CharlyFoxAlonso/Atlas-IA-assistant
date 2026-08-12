@@ -1,5 +1,5 @@
-<!-- workflow-2:managed version=2.0.0 -->
-# Workflow 2.0 core
+<!-- workflow-2:managed version=2.1.0 -->
+# Workflow 2.1 core
 
 ## Permanent rules
 
@@ -34,24 +34,24 @@ newly approved contract.
 ## Authority hierarchy
 
 1. `AGENTS.md` is the global authority for every task.
-2. Workflow 2.0 roles govern all microcuts: Planner → Plan Reviewer → approval
+2. Workflow 2.1 roles govern all microcuts: Planner → Plan Reviewer → approval
    → Builder → Auditor.
 3. Project policies are the single normative sources for their domains:
    `.agents/policies/git-safety.md` (Git) and `.agents/policies/testing.md`
    (testing and evidence). The local `policies/git.md` and
    `policies/testing.md` are routing references to those sources.
 4. The playbooks under `.agents/playbooks/` are legacy/supporting: they apply
-   only to tasks not governed by Workflow 2.0.
+   only to tasks not governed by Workflow 2.1.
 
 ## Verdict vocabulary
 
-Workflow 2.0 cuts use exactly these verdicts:
+Workflow 2.1 cuts use exactly these verdicts:
 
 - Plan Reviewer: `APPROVED | APPROVED WITH CONDITIONS | REJECTED`
 - Auditor: `PASS | PASS WITH OBSERVATIONS | FAIL | INCONCLUSIVE`
 
 Legacy vocabularies (for example `HEALTHY`, `ACCEPT`, `APPROVED WITH NOTES`,
-`REQUEST CHANGES`) must not be used in new Workflow 2.0 cuts.
+`REQUEST CHANGES`) must not be used in new Workflow 2.1 cuts.
 
 ## Policy routing
 

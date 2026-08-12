@@ -1,6 +1,6 @@
 ---
 name: workflow-builder
-description: Implement only an approved Workflow 2.0 microcut, verify it and hand it to an independent auditor.
+description: Implement only an approved Workflow 2.1 microcut, verify it and hand it to an independent auditor.
 tools: Read, Glob, Grep, Edit, Write, Bash, Skill
 disallowedTools: Agent
 model: inherit

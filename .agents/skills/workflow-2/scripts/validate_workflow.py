@@ -716,18 +716,18 @@ def validate(root: Path) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate a Workflow 2.0 template or installation."
+        description="Validate a Workflow 2.1 template or installation."
     )
     parser.add_argument("repository", nargs="?", type=Path, default=template_root())
     args = parser.parse_args()
     root = args.repository.resolve()
     errors = validate(root)
     if errors:
-        print("Workflow 2.0 validation failed:")
+        print("Workflow 2.1 validation failed:")
         for error in errors:
             print(f"- {error}")
         return 1
-    print(f"Workflow 2.0 validation passed: {root}")
+    print(f"Workflow 2.1 validation passed: {root}")
     return 0
 
 

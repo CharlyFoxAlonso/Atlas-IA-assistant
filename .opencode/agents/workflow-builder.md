@@ -1,5 +1,5 @@
 ---
-description: Implements only an approved Workflow 2.0 microcut, runs evidence and hands the diff to an independent auditor.
+description: Implements only an approved Workflow 2.1 microcut, runs evidence and hands the diff to an independent auditor.
 mode: primary
 temperature: 0.1
 permission:

@@ -1,5 +1,5 @@
 ---
-description: Prepare a Workflow 2.0 microcut plan
+description: Prepare a Workflow 2.1 microcut plan
 agent: workflow-planner
 ---
 
