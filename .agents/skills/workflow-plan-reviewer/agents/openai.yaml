@@ -1,0 +1,7 @@
+interface:
+  display_name: "Workflow Plan Reviewer"
+  short_description: "Revisar planes Workflow 2.1 independientemente"
+  default_prompt: "Usa $workflow-plan-reviewer para revisar este plan contra la solicitud y la evidencia real del repositorio, sin modificar archivos."
+
+policy:
+  allow_implicit_invocation: false

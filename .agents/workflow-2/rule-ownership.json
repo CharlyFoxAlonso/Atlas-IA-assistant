@@ -267,6 +267,54 @@
       "section": "Renegotiation"
     },
     {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-trust-boundary.2",
+      "rule": "Trust boundary",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Trust boundary",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Trust boundary"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-planner-output.3",
+      "rule": "Planner output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Planner output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Planner output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-plan-reviewer-output.4",
+      "rule": "Plan Reviewer output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Plan Reviewer output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Plan Reviewer output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-builder-output.5",
+      "rule": "Builder output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Builder output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Builder output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-auditor-output.6",
+      "rule": "Auditor output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Auditor output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Auditor output"
+    },
+    {
       "id": "canonical.agents-workflow-2-roles-auditor-md-document.1",
       "rule": "Document-level rules",
       "owner": ".agents/workflow-2/roles/auditor.md#@document",
