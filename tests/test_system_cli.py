@@ -16,8 +16,8 @@ from core.system.__main__ import (
 from core.system.result_types import LaunchResult, RepairResult
 
 
-def diagnosis(ready=True, warnings=None, in_venv=True):
-    return {
+def diagnosis(ready=True, warnings=None, in_venv=True, index_state=None):
+    report = {
         "atlas_version": "4.1.0",
         "health_score": 90,
         "ready_to_start": ready,
@@ -29,6 +29,32 @@ def diagnosis(ready=True, warnings=None, in_venv=True):
         "capabilities": {"local_llm": True},
         "environment": {"NVIDIA_API_KEY": True},
     }
+    if index_state is not None:
+        labels = {
+            "HEALTHY": "Saludable",
+            "HEALTHY_EMPTY": "Saludable y vacío",
+            "DEGRADED": "Degradado",
+            "INCONSISTENT": "Inconsistente",
+            "UNAVAILABLE": "No disponible",
+        }
+        report["index_consistency"] = {
+            "state": index_state,
+            "state_label": labels[index_state],
+            "observed_state": index_state,
+            "observed_state_label": labels[index_state],
+            "healthy": index_state in {"HEALTHY", "HEALTHY_EMPTY"},
+            "severity": "success" if index_state in {"HEALTHY", "HEALTHY_EMPTY"} else "warning",
+            "writer_state": "inactive",
+            "writer_label": "Inactivo",
+            "possibly_transient": False,
+            "sources_count": 1,
+            "manifest_entries_count": 1,
+            "chunk_count": 2,
+            "divergences": {},
+            "orphan_count": 0,
+            "issues": [],
+        }
+    return report
 
 
 class CliTests(unittest.TestCase):
@@ -45,13 +71,18 @@ class CliTests(unittest.TestCase):
         launcher.assert_not_called()
 
     @patch("core.system.__main__.diagnosticar_sistema", return_value=diagnosis())
-    def test_doctor_json_is_valid_and_contains_no_secret_value(self, _doctor):
+    def test_doctor_json_is_valid_and_contains_no_secret_value(self, doctor):
         output = io.StringIO()
         code = main(["doctor", "--json"], stdout=output)
         payload = json.loads(output.getvalue())
         self.assertEqual(code, EXIT_OK)
         self.assertTrue(payload["environment"]["NVIDIA_API_KEY"])
         self.assertNotIn("secret-value", output.getvalue())
+        doctor.assert_called_once_with(
+            profile="ui",
+            deep_packages=False,
+            include_index_consistency=True,
+        )
 
     @patch("core.system.__main__.diagnosticar_sistema", return_value=diagnosis(False, in_venv=False))
     def test_doctor_not_ready_and_explains_global_python(self, _doctor):
@@ -65,6 +96,24 @@ class CliTests(unittest.TestCase):
     def test_doctor_warning_uses_exit_one(self, _doctor):
         code = main(["doctor"], stdout=io.StringIO())
         self.assertEqual(code, EXIT_NOT_READY)
+
+    @patch(
+        "core.system.__main__.diagnosticar_sistema",
+        return_value=diagnosis(
+            True,
+            warnings=["Index consistency: UNAVAILABLE"],
+            index_state="UNAVAILABLE",
+        ),
+    )
+    def test_human_doctor_renders_controlled_unavailable_index(self, _doctor):
+        output = io.StringIO()
+        code = main(["doctor"], stdout=output)
+        rendered = output.getvalue()
+        self.assertEqual(code, EXIT_NOT_READY)
+        self.assertIn("Estado del índice", rendered)
+        self.assertIn("UNAVAILABLE", rendered)
+        self.assertIn("Escritor: Inactivo", rendered)
+        self.assertNotIn("Traceback", rendered)
 
     def test_argument_error_uses_exit_two(self):
         error = io.StringIO()

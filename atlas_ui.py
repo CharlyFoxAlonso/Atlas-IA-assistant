@@ -25,6 +25,10 @@ from core.security import reporte_seguridad_completo
 from core.diary_manager import agregar_entrada, leer_diario_hoy, buscar_en_diario
 from core.temp_rules import agregar_regla, listar_reglas, limpiar_reglas
 from core.vector_store import obtener_estadisticas
+from core.index_status import (
+    consultar_estado_indice_si_solicitado,
+    presentar_resultado_sincronizacion,
+)
 from core.exam_mode import ejecutar_examen_completo, corregir_respuesta, generar_informe_final
 from core.chat_manager import (
     listar_chats, crear_chat, activar_chat, eliminar_chat,
@@ -84,6 +88,7 @@ def _ensure_state():
         "system_diagnosis_error": None,
         "system_repair_preview": None,
         "system_repair_component": "folders",
+        "index_status": None,
     }
     for key, default in defaults.items():
         if key not in st.session_state:
@@ -115,11 +120,57 @@ _ensure_state()
 def _refresh_system_diagnosis():
     """Actualiza el diagnóstico de solo lectura almacenado en la sesión."""
     try:
-        st.session_state.system_diagnosis = diagnosticar_sistema()
+        st.session_state.system_diagnosis = diagnosticar_sistema(
+            include_index_consistency=False
+        )
         st.session_state.system_diagnosis_error = None
     except Exception as exc:
         st.session_state.system_diagnosis = None
         st.session_state.system_diagnosis_error = f"{type(exc).__name__}: {exc}"
+
+
+def _render_index_status(status):
+    """Renderiza únicamente la proyección pública y segura de IDX-C4."""
+    headline = f"{status.state} — {status.state_label}"
+    if status.severity == "success":
+        st.success(headline)
+    elif status.severity == "error":
+        st.error(headline)
+    else:
+        st.warning(headline)
+
+    if status.observed_state != status.state:
+        st.caption(
+            "Estado observado: "
+            f"{status.observed_state} — {status.observed_state_label}"
+        )
+    st.caption(
+        f"Escritor: {status.writer_label} ({status.writer_state})"
+    )
+    if status.possibly_transient:
+        st.caption("La condición puede ser transitoria mientras actúa otro escritor.")
+
+    sources = "?" if status.sources_count is None else status.sources_count
+    manifest = (
+        "?" if status.manifest_entries_count is None
+        else status.manifest_entries_count
+    )
+    chunks = "?" if status.chunk_count is None else status.chunk_count
+    st.caption(
+        f"Fuentes: {sources} · Manifiesto: {manifest} · Chunks: {chunks}"
+    )
+    st.caption(
+        "Huérfanos: "
+        + ("?" if status.orphan_count is None else str(status.orphan_count))
+    )
+    if status.divergences:
+        st.markdown("**Divergencias**")
+        for category, count in status.divergences.items():
+            st.caption(f"• {category}: {count}")
+    if status.issues:
+        st.markdown("**Issues**")
+        for issue in status.issues:
+            st.caption(f"• {issue.code}: {issue.message}")
 
 
 def _render_system_status_panel():
@@ -350,6 +401,18 @@ with st.sidebar:
     # SECCIÓN: Estado
     # ========================================
     st.subheader("📊 Estado")
+    solicitud_estado_indice = st.button(
+        "🔎 Consultar estado del índice",
+        use_container_width=True,
+        key="index_status_refresh",
+    )
+    if solicitud_estado_indice:
+        with st.spinner("Consultando el índice en modo solo lectura..."):
+            nuevo_estado = consultar_estado_indice_si_solicitado(solicitud_estado_indice)
+            if nuevo_estado is not None:
+                st.session_state.index_status = nuevo_estado
+
+    index_status = st.session_state.get("index_status")
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Historial", len(st.session_state.messages))
@@ -357,14 +420,13 @@ with st.sidebar:
         info = ver_historial()
         st.metric("Memoria", info['cantidad'])
     with col3:
-        try:
-            stats = obtener_estadisticas()
-            st.metric("Chunks", stats['total_chunks'])
-            if stats['total_chunks'] == 0:
-                st.caption("⚠️ RAG vacío: ejecutá `!indexar`")
-        except Exception as e:
-            st.metric("Chunks", "?")
-            st.caption(f"RAG no inicializado: {type(e).__name__}")
+        chunks = index_status.chunk_count if index_status is not None else None
+        st.metric("Chunks", "?" if chunks is None else chunks)
+
+    if index_status is None:
+        st.caption("El estado del índice se consulta sólo bajo pedido.")
+    else:
+        _render_index_status(index_status)
 
     reglas_activas = listar_reglas()
     if reglas_activas:
@@ -1168,6 +1230,7 @@ def _render_ayuda_modal():
             cmd_list = [
                 ("`!indexar`", "Reconstrucción completa del índice semántico desde `memory/Atlas_Memory/`."),
                 ("`!indexar sync`", "Sincronización incremental: procesa sólo archivos nuevos, modificados o eliminados."),
+                ("`!indexar status`", "Consulta read-only del estado, capas y escritor del índice."),
                 ("`!limpiar` o `!limpiar_historial`", "Borra el historial de la sesión actual."),
                 ("`!historial`", "Informa cantidad de mensajes acumulados."),
                 ("`!categorias`", "Lista las categorías de memoria persistente."),
@@ -1439,26 +1502,31 @@ Ruta de DB: {stats['ruta_db']}""")
                             else:
                                 st.info("No encontré nada.")
 
-            # !INDEXAR [sync|rebuild]
+            # !INDEXAR [status|sync|rebuild]
             elif comando == "!indexar":
                 sub_idx = args[0].lower() if args else "rebuild"
-                if sub_idx == "sync":
+                status_exact = len(args) == 1 and sub_idx == "status"
+                if status_exact:
+                    with st.spinner("Consultando el índice en modo solo lectura..."):
+                        status = consultar_estado_indice_si_solicitado(True)
+                        if status is not None:
+                            st.session_state.index_status = status
+                            _render_index_status(status)
+                elif sub_idx == "sync":
                     with st.spinner("🔄 Sincronización incremental (sólo cambios)..."):
                         try:
                             from core.indexer import sincronizar_indice
                             sync = sincronizar_indice()
-                            st.success(
-                                f"✅ Escaneados: {sync.scanned} · "
-                                f"Nuevos: {sync.indexed_new} · "
-                                f"Modificados: {sync.reindexed_modified} · "
-                                f"Sin cambios: {sync.skipped_unchanged} · "
-                                f"Retirados: {sync.removed_deleted} · "
-                                f"Fallidos: {sync.failed} "
-                                f"({sync.duration_seconds:.1f}s)"
-                            )
-                            for item in sync.items:
-                                if item.status == "failed":
-                                    st.warning(f"⚠️ {item.path}: {item.error}")
+                            presentation = presentar_resultado_sincronizacion(sync)
+                            if presentation.busy:
+                                st.warning(
+                                    f"⏳ Índice ocupado: {presentation.message}"
+                                )
+                            else:
+                                st.success(f"✅ {presentation.message}")
+                                for item in sync.items:
+                                    if item.status == "failed":
+                                        st.warning(f"⚠️ {item.path}: {item.error}")
                         except Exception as e:
                             st.error(f"❌ Error: {e}")
                 else:

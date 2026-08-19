@@ -9,6 +9,11 @@ from core.brain import pensar_con_streaming, analizar_para_memoria, limpiar_hist
 from core.router import listar_agentes
 from core.memory_manager import guardar_en_memoria, listar_categorias
 from core.indexer import construir_indice
+from core.index_status import (
+    consultar_estado_indice_si_solicitado,
+    format_index_status_lines,
+    presentar_resultado_sincronizacion,
+)
 from core.vision import analizar_pantalla, limpiar_capturas_antiguas
 from core.speech_input import escuchar, probar_microfono
 from core.speech_output import hablar, listar_voces_disponibles
@@ -88,6 +93,7 @@ def mostrar_ayuda():
 ║     • !limpiar_historial  → Limpia historial                ║
 ║     • !analizar           → Fuerza análisis de memoria      ║
 ║     • !indexar [sync]     → Reconstruye / sincroniza índice ║
+║     • !indexar status     → Consulta estado del índice      ║
 ║     • !seguridad          → Reporte de seguridad            ║
 ║                                                             ║
 ║  🚪 SALIR:  "salir", "exit", "quit"                          ║
@@ -480,25 +486,27 @@ def chat():
                 continue
 
             # ============================
-            # !indexar [sync|rebuild]
+            # !indexar [status|sync|rebuild]
             # ============================
             if pregunta_lower.startswith("!indexar"):
                 partes_idx = pregunta_lower.split(maxsplit=1)
                 sub_idx = partes_idx[1].strip() if len(partes_idx) > 1 else "rebuild"
-                if sub_idx == "sync":
+                if sub_idx == "status":
+                    status = consultar_estado_indice_si_solicitado(True)
+                    print("\n🔎 Estado del índice")
+                    for line in format_index_status_lines(status):
+                        print(f"   {line}")
+                    print()
+                elif sub_idx == "sync":
                     print("\n🔄 Sincronización incremental (sólo cambios)...")
                     try:
                         from core.indexer import sincronizar_indice
                         sync = sincronizar_indice()
-                        print(
-                            f"✅ Escaneados: {sync.scanned} | "
-                            f"Nuevos: {sync.indexed_new} | "
-                            f"Modificados: {sync.reindexed_modified} | "
-                            f"Sin cambios: {sync.skipped_unchanged} | "
-                            f"Retirados: {sync.removed_deleted} | "
-                            f"Fallidos: {sync.failed} "
-                            f"({sync.duration_seconds:.1f}s)\n"
-                        )
+                        presentation = presentar_resultado_sincronizacion(sync)
+                        if presentation.busy:
+                            print(f"⏳ Índice ocupado: {presentation.message}\n")
+                        else:
+                            print(f"✅ {presentation.message}\n")
                     except Exception as e:
                         print(f"❌ Error: {e}\n")
                 else:

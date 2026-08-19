@@ -8,6 +8,7 @@ import json
 import sys
 from typing import Any, Optional, Sequence, TextIO
 
+from core.index_status import format_index_status_lines
 from core.system.doctor import diagnosticar_sistema
 from core.system.healer import ALL_COMPONENTS, Healer, SAFE_COMPONENTS
 from core.system.launcher import LAUNCH_TARGETS, Launcher
@@ -135,6 +136,11 @@ def _human_doctor(report: dict, stream: TextIO) -> None:
     stream.write(f"Salud: {report.get('health_score', 0)}/100\n")
     stream.write(_runtime_line(report) + "\n")
     stream.write(f"Datos: {report.get('data_location', 'desconocido')}\n")
+    index_status = report.get("index_consistency")
+    if index_status:
+        stream.write("Estado del índice:\n")
+        for line in format_index_status_lines(index_status):
+            stream.write(f"  {line}\n")
     critical = report.get("critical_issues", [])
     warnings = report.get("warnings", [])
     if critical:
@@ -180,7 +186,11 @@ def _doctor_exit(report: dict) -> int:
 
 
 def _doctor(args: argparse.Namespace, stdout: TextIO) -> int:
-    report = diagnosticar_sistema(profile=args.profile, deep_packages=args.deep)
+    report = diagnosticar_sistema(
+        profile=args.profile,
+        deep_packages=args.deep,
+        include_index_consistency=True,
+    )
     if args.json:
         _write_json(report, stdout)
     else:
