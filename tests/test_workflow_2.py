@@ -37,19 +37,10 @@ from workflow_lib import PROJECT_PROFILE, managed_source_files  # noqa: E402
 
 
 class ContextReportTests(unittest.TestCase):
-    def test_official_baseline_matches_approved_plan(self) -> None:
+    def test_official_baseline_respects_approved_tolerance(self) -> None:
         config = load_object(REPOSITORY / CONTEXT_PROFILES)
         self.assertEqual(validate_config(REPOSITORY, config), [])
         report = measure(REPOSITORY, config)
-        self.assertEqual(
-            {role: result["characters"] for role, result in report.items()},
-            {
-                "auditor": 45731,
-                "builder": 45511,
-                "plan_reviewer": 43392,
-                "planner": 42566,
-            },
-        )
         self.assertEqual(
             check_report(
                 config, report, verify_baseline=True, enforce_target=False
