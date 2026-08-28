@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "opencode": {
+    "privacy_read_denies": [
+      "*.env",
+      "*.env.*",
+      "memory/**",
+      "vector_db/**",
+      "atlas_security.log",
+      "**/atlas_security.log"
+    ],
+    "privacy_read_allows": ["*.env.example"],
+    "roles": {
+      "workflow-auditor": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-builder": {
+        "edit": "allow",
+        "external_directory": "deny",
+        "shell_default": "ask",
+        "skills": ["workflow-2"]
+      },
+      "workflow-plan-reviewer": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_allow": [
+          "python -B .agents/skills/workflow-2/scripts/validate_workflow.py .",
+          "python -B .agents/skills/workflow-2/scripts/context_report.py . --roles planner,plan-reviewer,builder,auditor --verify-baseline --check",
+          "python -B tests/test_workflow_2.py -v",
+          "python -B .agents/skills/workflow-2/scripts/migrate_repo.py ."
+        ],
+        "shell_default": "deny",
+        "skills": ["workflow-2"]
+      },
+      "workflow-planner": {
+        "edit": "deny",
+        "external_directory": "deny",
+        "shell_allow": [],
+        "shell_default": "deny",
+        "skills": ["workflow-2"]
+      }
+    }
+  }
+}

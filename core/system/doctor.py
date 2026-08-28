@@ -18,6 +18,7 @@ from typing import Any, Mapping, Optional
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
+from core.index_status import IndexStatusView, consultar_estado_indice
 from core.system.command_runner import run_command
 from core.system.paths import AtlasPaths, get_paths
 from core.system.result_types import CheckResult, DiagnosisResult
@@ -327,6 +328,16 @@ def _derive_capabilities(
     }
 
 
+def _index_consistency_check(status: IndexStatusView) -> CheckResult:
+    return CheckResult(
+        name="index_consistency",
+        status="ok" if status.healthy else "warning",
+        severity="recommended",
+        message=f"Index consistency: {status.state}",
+        details=status.to_dict(),
+    )
+
+
 def _build_checks(
     python: Mapping[str, Any],
     disk: Mapping[str, Any],
@@ -335,6 +346,7 @@ def _build_checks(
     ollama: Mapping[str, Any],
     capabilities: Mapping[str, bool],
     execution_mode: str,
+    index_status: Optional[IndexStatusView] = None,
 ) -> list[CheckResult]:
     checks = [
         _check("python_version", python["supported_version"], "critical", f"Python {python['version']}"),
@@ -353,6 +365,8 @@ def _build_checks(
         _check("ollama", ollama["functional"], "recommended", "Configured local Ollama model"),
         _check("rag", capabilities["rag"], "recommended", "Semantic RAG stack"),
     ]
+    if index_status is not None:
+        checks.append(_index_consistency_check(index_status))
     return checks
 
 
@@ -396,6 +410,7 @@ def diagnosticar_sistema(
     environment: Optional[Mapping[str, str]] = None,
     profile: str = "ui",
     deep_packages: bool = False,
+    include_index_consistency: bool = False,
 ) -> dict[str, Any]:
     """Inspect the current system and return a JSON-serializable report."""
     selected_paths = paths or get_paths()
@@ -419,8 +434,23 @@ def diagnosticar_sistema(
     environment_presence = _read_env_presence(selected_paths, env)
     folders = _detect_folders(selected_paths)
     capabilities = _derive_capabilities(packages, tools, environment_presence, ollama)
+    index_status = None
+    if include_index_consistency:
+        index_status = consultar_estado_indice(
+            memoria_base=str(selected_paths.private_memory_dir),
+            manifest_path=str(selected_paths.chroma_dir / "index_manifest.json"),
+            chroma_path=str(selected_paths.chroma_dir),
+            lock_path=str(selected_paths.index_writer_lock_path),
+        )
     checks = _build_checks(
-        python, disk, folders, packages, ollama, capabilities, selected_paths.mode
+        python,
+        disk,
+        folders,
+        packages,
+        ollama,
+        capabilities,
+        selected_paths.mode,
+        index_status=index_status,
     )
     profiles = _startup_profiles(checks, packages)
     if profile not in profiles:
@@ -472,8 +502,16 @@ def diagnosticar_sistema(
         startup_profiles=profiles,
         package_validation="import" if deep_packages else "metadata",
     )
+    if index_status is not None:
+        diagnosis["index_consistency"] = index_status.to_dict()
     return diagnosis
 
 
 if __name__ == "__main__":
-    print(json.dumps(diagnosticar_sistema(), indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            diagnosticar_sistema(include_index_consistency=True),
+            indent=2,
+            ensure_ascii=False,
+        )
+    )

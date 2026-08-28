@@ -8,6 +8,7 @@ import json
 import sys
 from typing import Any, Optional, Sequence, TextIO
 
+from core.index_status import format_index_status_lines
 from core.system.doctor import diagnosticar_sistema
 from core.system.healer import ALL_COMPONENTS, Healer, SAFE_COMPONENTS
 from core.system.launcher import LAUNCH_TARGETS, Launcher
@@ -16,6 +17,30 @@ EXIT_OK = 0
 EXIT_NOT_READY = 1
 EXIT_ARGUMENT_ERROR = 2
 EXIT_OPERATION_FAILED = 3
+
+_CLI_USAGE_MESSAGES = {
+    "allow_heavy_requires_apply": "--allow-heavy requiere --apply",
+    "heavy_repair_requires_consent": (
+        "las reparaciones pesadas requieren --apply y --allow-heavy"
+    ),
+}
+
+
+class _CliUsageError(Exception):
+    """Known CLI usage error with an allowlisted public message."""
+
+    def __init__(self, code: str) -> None:
+        self.public_message = _CLI_USAGE_MESSAGES[code]
+        super().__init__(code)
+
+
+def _safe_cli_error_type(error: object) -> str:
+    try:
+        from core.vector_store import _tipo_error_seguro
+
+        return _tipo_error_seguro(error)
+    except Exception:
+        return "Exception"
 
 
 class AtlasArgumentParser(argparse.ArgumentParser):
@@ -38,6 +63,7 @@ COMPONENTES DE HEALER:
   ollama_service     Verificar o iniciar Ollama instalado
   python_packages    Instalar requirements (pesado)
   ollama_model       Descargar el modelo configurado (pesado)
+  index_consistency  Previsualizar o reparar conservadoramente el índice
 
 EJEMPLOS:
   python -m core.system doctor
@@ -46,6 +72,8 @@ EJEMPLOS:
   python -m core.system heal
   python -m core.system heal folders
   python -m core.system heal folders --apply
+  python -m core.system heal index_consistency
+  python -m core.system heal index_consistency --apply
   python -m core.system heal python_packages --apply --allow-heavy
   python -m core.system launch
   python -m core.system launch --target ui --port 8401 --apply
@@ -135,6 +163,11 @@ def _human_doctor(report: dict, stream: TextIO) -> None:
     stream.write(f"Salud: {report.get('health_score', 0)}/100\n")
     stream.write(_runtime_line(report) + "\n")
     stream.write(f"Datos: {report.get('data_location', 'desconocido')}\n")
+    index_status = report.get("index_consistency")
+    if index_status:
+        stream.write("Estado del índice:\n")
+        for line in format_index_status_lines(index_status):
+            stream.write(f"  {line}\n")
     critical = report.get("critical_issues", [])
     warnings = report.get("warnings", [])
     if critical:
@@ -154,10 +187,72 @@ def _human_repair(report: dict, stream: TextIO) -> None:
     stream.write(f"Atlas Healer — {mode}\n")
     results = report.get("results", [report])
     for result in results:
+        if result.get("component") == "index_consistency":
+            _human_index_repair(result, stream)
+            continue
         status = "OK" if result.get("success") else "FALLO/ADVERTENCIA"
         stream.write(f"  [{status}] {result.get('component')}: {result.get('message', '')}\n")
     if report.get("dry_run", True):
         stream.write("No se realizó ningún cambio. Usá --apply para aplicar esta operación.\n")
+
+
+def _human_index_repair(result: dict, stream: TextIO) -> None:
+    actions = result.get("actions") or []
+    action = actions[0] if actions and isinstance(actions[0], dict) else {}
+    outcome = action.get("status")
+    labels = {
+        "not_needed": "NO REQUERIDA",
+        "planned": "VISTA PREVIA",
+        "blocked": "BLOQUEADO",
+        "busy": "OCUPADO",
+        "completed": "COMPLETADO",
+        "partial": "RESULTADO PARCIAL",
+        "failed": "FALLÓ",
+        "still_inconsistent": "SIGUE INCONSISTENTE",
+        "unavailable": "NO DISPONIBLE",
+    }
+    stream.write(f"  [{labels.get(outcome, 'NO DISPONIBLE')}] index_consistency\n")
+
+    if action.get("action") == "preview_index_repair":
+        status = action.get("index_status")
+        if isinstance(status, dict):
+            try:
+                for line in format_index_status_lines(status):
+                    stream.write(f"    {line}\n")
+            except Exception:
+                stream.write("    No se pudo presentar el diagnóstico de forma segura.\n")
+        return
+
+    if outcome == "busy":
+        stream.write(f"    {action.get('busy_message') or 'El índice está ocupado.'}\n")
+    elif outcome == "blocked":
+        stream.write(
+            f"    Razón de bloqueo: {action.get('blocked_reason') or 'unavailable'}\n"
+        )
+
+    stream.write(
+        "    Estado: "
+        f"{action.get('pre_state', 'UNAVAILABLE')} → "
+        f"{action.get('post_state', 'UNAVAILABLE')} "
+        f"(observado: {action.get('post_observed', 'UNAVAILABLE')})\n"
+    )
+    stream.write(
+        "    Post-check: "
+        f"{'sí' if action.get('post_check_performed') else 'no'}\n"
+    )
+    stream.write(f"    Huérfanos: {action.get('orphan_count', 0)}\n")
+    for item in action.get("items") or []:
+        if not isinstance(item, dict):
+            continue
+        detail = (
+            f"    item {item.get('item', '?')}: "
+            f"{item.get('category', 'unknown')} / "
+            f"{item.get('action', 'skip')} / "
+            f"{item.get('status', 'failed')}"
+        )
+        if item.get("error_type"):
+            detail += f" [{item['error_type']}]"
+        stream.write(detail + "\n")
 
 
 def _human_launch(report: dict, stream: TextIO) -> None:
@@ -180,7 +275,11 @@ def _doctor_exit(report: dict) -> int:
 
 
 def _doctor(args: argparse.Namespace, stdout: TextIO) -> int:
-    report = diagnosticar_sistema(profile=args.profile, deep_packages=args.deep)
+    report = diagnosticar_sistema(
+        profile=args.profile,
+        deep_packages=args.deep,
+        include_index_consistency=True,
+    )
     if args.json:
         _write_json(report, stdout)
     else:
@@ -190,11 +289,17 @@ def _doctor(args: argparse.Namespace, stdout: TextIO) -> int:
 
 def _heal(args: argparse.Namespace, stdout: TextIO) -> int:
     if args.allow_heavy and not args.apply:
-        raise ValueError("--allow-heavy requiere --apply")
+        raise _CliUsageError("allow_heavy_requires_apply")
     if args.component in ("python_packages", "ollama_model") and args.apply and not args.allow_heavy:
-        raise ValueError("las reparaciones pesadas requieren --apply y --allow-heavy")
+        raise _CliUsageError("heavy_repair_requires_consent")
 
-    healer = Healer(dry_run=not args.apply, allow_heavy=args.allow_heavy)
+    healer_options = {
+        "dry_run": not args.apply,
+        "allow_heavy": args.allow_heavy,
+    }
+    if args.component == "index_consistency":
+        healer_options["diagnosis"] = {}
+    healer = Healer(**healer_options)
     if args.component == "all":
         report = healer.fix_all(include_heavy=args.allow_heavy)
     else:
@@ -252,8 +357,8 @@ def main(
             return _heal(args, out)
         if args.command == "launch":
             return _launch(args, out)
-    except ValueError as exc:
-        err.write(f"Error de argumentos: {exc}\n")
+    except _CliUsageError as exc:
+        err.write(f"Error de argumentos: {exc.public_message}\n")
         return EXIT_ARGUMENT_ERROR
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else EXIT_ARGUMENT_ERROR
@@ -261,7 +366,7 @@ def main(
         err.write("Operación cancelada por el usuario.\n")
         return EXIT_OPERATION_FAILED
     except Exception as exc:
-        err.write(f"La operación falló: {type(exc).__name__}: {exc}\n")
+        err.write(f"La operación falló: {_safe_cli_error_type(exc)}\n")
         return EXIT_OPERATION_FAILED
     return EXIT_ARGUMENT_ERROR
 

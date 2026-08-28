@@ -16,8 +16,8 @@ from core.system.__main__ import (
 from core.system.result_types import LaunchResult, RepairResult
 
 
-def diagnosis(ready=True, warnings=None, in_venv=True):
-    return {
+def diagnosis(ready=True, warnings=None, in_venv=True, index_state=None):
+    report = {
         "atlas_version": "4.1.0",
         "health_score": 90,
         "ready_to_start": ready,
@@ -29,6 +29,113 @@ def diagnosis(ready=True, warnings=None, in_venv=True):
         "capabilities": {"local_llm": True},
         "environment": {"NVIDIA_API_KEY": True},
     }
+    if index_state is not None:
+        labels = {
+            "HEALTHY": "Saludable",
+            "HEALTHY_EMPTY": "Saludable y vacío",
+            "DEGRADED": "Degradado",
+            "INCONSISTENT": "Inconsistente",
+            "UNAVAILABLE": "No disponible",
+        }
+        report["index_consistency"] = {
+            "state": index_state,
+            "state_label": labels[index_state],
+            "observed_state": index_state,
+            "observed_state_label": labels[index_state],
+            "healthy": index_state in {"HEALTHY", "HEALTHY_EMPTY"},
+            "severity": "success" if index_state in {"HEALTHY", "HEALTHY_EMPTY"} else "warning",
+            "writer_state": "inactive",
+            "writer_label": "Inactivo",
+            "possibly_transient": False,
+            "sources_count": 1,
+            "manifest_entries_count": 1,
+            "chunk_count": 2,
+            "divergences": {},
+            "orphan_count": 0,
+            "issues": [],
+        }
+    return report
+
+
+def index_status_payload(state="INCONSISTENT"):
+    labels = {
+        "HEALTHY": "Saludable",
+        "HEALTHY_EMPTY": "Saludable y vacío",
+        "DEGRADED": "Degradado",
+        "INCONSISTENT": "Inconsistente",
+        "UNAVAILABLE": "No disponible",
+    }
+    return {
+        "state": state,
+        "state_label": labels[state],
+        "observed_state": state,
+        "observed_state_label": labels[state],
+        "healthy": state in {"HEALTHY", "HEALTHY_EMPTY"},
+        "severity": "success" if state in {"HEALTHY", "HEALTHY_EMPTY"} else "warning",
+        "writer_state": "inactive",
+        "writer_label": "Inactivo",
+        "possibly_transient": state == "DEGRADED",
+        "sources_count": 2,
+        "manifest_entries_count": 1,
+        "chunk_count": 3,
+        "divergences": {"manifest_absent": 1} if state == "INCONSISTENT" else {},
+        "orphan_count": 0,
+        "issues": [],
+    }
+
+
+def index_preview_result(state="INCONSISTENT"):
+    ready = state in {"HEALTHY", "HEALTHY_EMPTY", "INCONSISTENT"}
+    action_status = (
+        "not_needed"
+        if state in {"HEALTHY", "HEALTHY_EMPTY"}
+        else "planned" if state == "INCONSISTENT" else "blocked"
+    )
+    return RepairResult(
+        "index_consistency",
+        success=ready,
+        dry_run=True,
+        risk="moderate",
+        message="Vista previa del índice disponible" if ready else "Diagnóstico no reparable automáticamente",
+        actions=[
+            {
+                "action": "preview_index_repair",
+                "status": action_status,
+                "index_status": index_status_payload(state),
+            }
+        ],
+    )
+
+
+def index_apply_result(*, status="completed", success=True, items=None):
+    return RepairResult(
+        "index_consistency",
+        success=success,
+        changed=status in {"completed", "partial"},
+        dry_run=False,
+        risk="moderate",
+        message="Reparación completada" if success else "Reparación no convergente",
+        actions=[
+            {
+                "action": "repair_index",
+                "status": status,
+                "pre_state": "INCONSISTENT",
+                "post_state": "HEALTHY" if success else "INCONSISTENT",
+                "post_observed": "HEALTHY" if success else "INCONSISTENT",
+                "post_check_performed": status != "busy",
+                "blocked": status == "blocked",
+                "blocked_reason": "manifest_corrupt" if status == "blocked" else None,
+                "busy": status == "busy",
+                "busy_message": (
+                    "Index writer is busy; another indexing operation is active."
+                    if status == "busy"
+                    else None
+                ),
+                "orphan_count": 1,
+                "items": items or [],
+            }
+        ],
+    )
 
 
 class CliTests(unittest.TestCase):
@@ -45,13 +152,18 @@ class CliTests(unittest.TestCase):
         launcher.assert_not_called()
 
     @patch("core.system.__main__.diagnosticar_sistema", return_value=diagnosis())
-    def test_doctor_json_is_valid_and_contains_no_secret_value(self, _doctor):
+    def test_doctor_json_is_valid_and_contains_no_secret_value(self, doctor):
         output = io.StringIO()
         code = main(["doctor", "--json"], stdout=output)
         payload = json.loads(output.getvalue())
         self.assertEqual(code, EXIT_OK)
         self.assertTrue(payload["environment"]["NVIDIA_API_KEY"])
         self.assertNotIn("secret-value", output.getvalue())
+        doctor.assert_called_once_with(
+            profile="ui",
+            deep_packages=False,
+            include_index_consistency=True,
+        )
 
     @patch("core.system.__main__.diagnosticar_sistema", return_value=diagnosis(False, in_venv=False))
     def test_doctor_not_ready_and_explains_global_python(self, _doctor):
@@ -66,11 +178,79 @@ class CliTests(unittest.TestCase):
         code = main(["doctor"], stdout=io.StringIO())
         self.assertEqual(code, EXIT_NOT_READY)
 
+    @patch(
+        "core.system.__main__.diagnosticar_sistema",
+        return_value=diagnosis(
+            True,
+            warnings=["Index consistency: UNAVAILABLE"],
+            index_state="UNAVAILABLE",
+        ),
+    )
+    def test_human_doctor_renders_controlled_unavailable_index(self, _doctor):
+        output = io.StringIO()
+        code = main(["doctor"], stdout=output)
+        rendered = output.getvalue()
+        self.assertEqual(code, EXIT_NOT_READY)
+        self.assertIn("Estado del índice", rendered)
+        self.assertIn("UNAVAILABLE", rendered)
+        self.assertIn("Escritor: Inactivo", rendered)
+        self.assertNotIn("Traceback", rendered)
+
     def test_argument_error_uses_exit_two(self):
         error = io.StringIO()
         code = main(["heal", "python_packages", "--apply"], stderr=error)
         self.assertEqual(code, EXIT_ARGUMENT_ERROR)
         self.assertIn("--allow-heavy", error.getvalue())
+
+    def test_allow_heavy_without_apply_remains_known_argument_error(self):
+        error = io.StringIO()
+        code = main(["heal", "folders", "--allow-heavy"], stderr=error)
+        self.assertEqual(code, EXIT_ARGUMENT_ERROR)
+        self.assertEqual(
+            error.getvalue(),
+            "Error de argumentos: --allow-heavy requiere --apply\n",
+        )
+
+    def test_unexpected_runtime_error_is_sanitized_in_json_mode(self):
+        private_message = r"C:\Users\synthetic\private.txt token=SYNTHETIC_SECRET"
+        output = io.StringIO()
+        error = io.StringIO()
+        with patch(
+            "core.system.__main__.Healer",
+            side_effect=RuntimeError(private_message),
+        ):
+            code = main(
+                ["heal", "index_consistency", "--apply", "--json"],
+                stdout=output,
+                stderr=error,
+            )
+
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(error.getvalue(), "La operación falló: RuntimeError\n")
+        self.assertNotIn(private_message, output.getvalue() + error.getvalue())
+        self.assertNotIn("Traceback", output.getvalue() + error.getvalue())
+
+    def test_unexpected_value_error_is_not_an_argument_error(self):
+        private_message = r"C:\Users\synthetic\private.txt token=SYNTHETIC_SECRET"
+        output = io.StringIO()
+        error = io.StringIO()
+        with patch(
+            "core.system.__main__.diagnosticar_sistema",
+            side_effect=ValueError(private_message),
+        ):
+            code = main(
+                ["doctor", "--json"],
+                stdout=output,
+                stderr=error,
+            )
+
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertNotEqual(code, EXIT_ARGUMENT_ERROR)
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(error.getvalue(), "La operación falló: ValueError\n")
+        self.assertNotIn(private_message, output.getvalue() + error.getvalue())
+        self.assertNotIn("Traceback", output.getvalue() + error.getvalue())
 
     def test_argparse_error_uses_exit_two_and_supplied_stderr(self):
         error = io.StringIO()
@@ -115,6 +295,124 @@ class CliTests(unittest.TestCase):
         code = main(["heal", "folders", "--apply"], stdout=io.StringIO())
         self.assertEqual(code, EXIT_OK)
         healer_class.assert_called_once_with(dry_run=False, allow_heavy=False)
+
+    @patch("core.system.__main__.Healer")
+    def test_index_heal_defaults_to_read_only_preview(self, healer_class):
+        healer_class.return_value.fix.return_value = index_preview_result()
+        output = io.StringIO()
+
+        code = main(["heal", "index_consistency", "--json"], stdout=output)
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual(code, EXIT_OK)
+        self.assertTrue(payload["dry_run"])
+        self.assertEqual(payload["results"][0]["actions"][0]["status"], "planned")
+        healer_class.assert_called_once_with(
+            diagnosis={},
+            dry_run=True,
+            allow_heavy=False,
+        )
+
+    @patch("core.system.__main__.Healer")
+    def test_index_heal_apply_is_explicit(self, healer_class):
+        healer_class.return_value.fix.return_value = index_apply_result()
+
+        code = main(
+            ["heal", "index_consistency", "--apply", "--json"],
+            stdout=io.StringIO(),
+        )
+
+        self.assertEqual(code, EXIT_OK)
+        healer_class.assert_called_once_with(
+            diagnosis={},
+            dry_run=False,
+            allow_heavy=False,
+        )
+
+    @patch("core.system.__main__.Healer")
+    def test_index_preview_degraded_uses_exit_one(self, healer_class):
+        healer_class.return_value.fix.return_value = index_preview_result("DEGRADED")
+
+        code = main(["heal", "index_consistency"], stdout=io.StringIO())
+
+        self.assertEqual(code, EXIT_NOT_READY)
+
+    def test_index_apply_non_success_outcomes_use_exit_three(self):
+        for outcome in ("busy", "blocked", "partial", "failed", "still_inconsistent"):
+            with self.subTest(outcome=outcome), patch("core.system.__main__.Healer") as healer_class:
+                healer_class.return_value.fix.return_value = index_apply_result(
+                    status=outcome,
+                    success=False,
+                )
+                code = main(
+                    ["heal", "index_consistency", "--apply"],
+                    stdout=io.StringIO(),
+                )
+                self.assertEqual(code, EXIT_OPERATION_FAILED)
+
+    @patch("core.system.__main__.Healer")
+    def test_human_index_busy_is_never_presented_as_success(self, healer_class):
+        healer_class.return_value.fix.return_value = index_apply_result(
+            status="busy",
+            success=False,
+        )
+        output = io.StringIO()
+
+        code = main(
+            ["heal", "index_consistency", "--apply"],
+            stdout=output,
+        )
+
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertIn("OCUPADO", output.getvalue())
+        self.assertNotIn("[OK] index_consistency", output.getvalue())
+
+    @patch("core.system.__main__.Healer")
+    def test_human_index_partial_lists_anonymous_item_statuses(self, healer_class):
+        healer_class.return_value.fix.return_value = index_apply_result(
+            status="partial",
+            success=False,
+            items=[
+                {
+                    "item": 1,
+                    "category": "manifest_absent",
+                    "action": "reindex",
+                    "status": "failed",
+                    "error_type": "RuntimeError",
+                },
+                {
+                    "item": 2,
+                    "category": "manifest_absent",
+                    "action": "reindex",
+                    "status": "still_inconsistent",
+                    "error_type": None,
+                },
+            ],
+        )
+        output = io.StringIO()
+
+        code = main(
+            ["heal", "index_consistency", "--apply"],
+            stdout=output,
+        )
+
+        rendered = output.getvalue()
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertIn("RESULTADO PARCIAL", rendered)
+        self.assertIn("item 1", rendered)
+        self.assertIn("still_inconsistent", rendered)
+        self.assertNotIn("identity", rendered)
+
+    def test_launcher_never_accepts_index_repair(self):
+        error = io.StringIO()
+        with patch("core.system.__main__.Launcher") as launcher_class:
+            code = main(
+                ["launch", "--repair", "index_consistency"],
+                stderr=error,
+            )
+        self.assertEqual(code, EXIT_ARGUMENT_ERROR)
+        self.assertIn("invalid choice", error.getvalue())
+        launcher_class.assert_not_called()
 
     @patch("core.system.__main__.Launcher")
     def test_launch_defaults_to_dry_run(self, launcher_class):

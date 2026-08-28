@@ -18,8 +18,8 @@ Este subsistema no implementa lógica de inteligencia artificial, RAG, memoria, 
 | `result_types.py` | Definir contratos serializables | No |
 | `command_runner.py` | Ejecutar procesos sin `shell=True` y devolver resultados estructurados | Solo por solicitud del consumidor |
 | `operational_log.py` | Registrar acciones reales en JSONL rotativo y redactado | Crea logs únicamente para operaciones reales |
-| `doctor.py` | Inspeccionar el equipo, dependencias y capacidades | No |
-| `healer.py` | Aplicar reparaciones explícitas, idempotentes y clasificadas por riesgo | Sí |
+| `doctor.py` | Inspeccionar el equipo, dependencias, capacidades y, de forma opt-in, consistencia del índice | No |
+| `healer.py` | Aplicar reparaciones explícitas, idempotentes y clasificadas por riesgo; proyectar IDX-C3 de forma segura | Sí |
 | `launcher.py` | Coordinar diagnóstico, reparaciones autorizadas y arranque | Puede iniciar Atlas |
 | `__main__.py` | Exponer la CLI técnica segura | Solo con `--apply` |
 
@@ -44,7 +44,11 @@ CLI, futura UI o instalador
                  └───────────────► Launcher ─► Atlas
 ```
 
-Doctor nunca llama a Healer. Healer consulta Doctor, pero no decide por sí mismo qué debe repararse. Launcher solo delega reparaciones seguras expresamente autorizadas y no contiene lógica de instalación.
+Doctor nunca llama a Healer. Healer consulta Doctor para su flujo general, pero no
+decide por sí mismo qué debe repararse. La ruta controlada `index_consistency` es la
+excepción explícita: recibe `diagnosis={}` y usa el proveedor read-only de estado del
+índice para evitar un Doctor general innecesario. Launcher solo delega reparaciones
+seguras expresamente autorizadas y no contiene lógica de instalación.
 
 ## Contratos
 
@@ -128,13 +132,19 @@ carpeta de aplicación/
 └── configuración
 ```
 
-`ATLAS_DATA_DIR` y `ATLAS_MEMORY_DIR` permiten seleccionar ubicaciones explícitas. El subsistema todavía no mueve la memoria existente.
+`ATLAS_DATA_DIR` selecciona la raíz general de datos y, por defecto, también la raíz
+de memoria; de ella derivan Chroma, caché, logs y demás datos locales.
+`ATLAS_MEMORY_DIR` reemplaza únicamente la ubicación de los documentos fuente y no
+reubica Chroma ni el manifiesto. El subsistema todavía no mueve datos existentes.
 
 ## Seguridad
 
 - Doctor es estrictamente de solo lectura.
 - Healer comienza con `dry_run=True`.
 - Las reparaciones reales requieren `--apply` desde la CLI.
+- `index_consistency` es un componente controlado: no pertenece a
+  `SAFE_COMPONENTS`, no participa de `fix_all` y Launcher no puede seleccionarlo como
+  reparación automática.
 - Paquetes y modelos requieren además `--allow-heavy`.
 - No se usa `shell=True`.
 - Los argumentos de procesos son listas.
@@ -153,6 +163,7 @@ Una UI puede importar las APIs públicas directamente:
 
 ```python
 from core.system import Healer, Launcher, diagnosticar_sistema
+from core.index_status import consultar_estado_indice
 ```
 
 No debe lanzar `python -m core.system` mediante un subproceso. La CLI y la UI son adaptadores distintos sobre las mismas APIs.
@@ -161,9 +172,36 @@ Integración recomendada:
 
 1. Mostrar `diagnosticar_sistema()` en una sección “Estado del sistema”.
 2. Presentar salud, preparación, capacidades y rutas sin valores secretos.
-3. Ofrecer simulación de reparaciones seguras.
-4. Pedir confirmación clara antes de llamar a Healer con `dry_run=False`.
-5. Mantener instalaciones pesadas y elevación de privilegios fuera de la UI de Streamlit hasta disponer de un bootstrapper confiable.
+3. Consultar el estado del índice solo por acción explícita; no hacerlo al importar,
+   renderizar ni en cada rerun.
+4. Para el índice, construir `Healer(diagnosis={}, dry_run=True)` para el preview y
+   repetir con `dry_run=False` únicamente después de una confirmación clara. No usar
+   `Healer()` genérico en esa ruta porque dispararía Doctor.
+5. Tratar `busy`, `blocked`, resultados parciales, fallos y
+   `still_inconsistent` como no exitosos. La proyección presenta ordinales, no
+   identidades documentales ni muestras de huérfanos.
+6. Mantener instalaciones pesadas y elevación de privilegios fuera de la UI hasta
+   disponer de un bootstrapper confiable.
+
+Estas reglas aplican a la futura NiceGUI. La UI debe importar los contratos Python
+existentes, no invocar la CLI como subproceso, y no duplicar diagnóstico,
+clasificación, lock ni reparación. No autorizan una API o factory nueva.
+
+## Reparación controlada del índice
+
+La CLI técnica actual separa consulta y consentimiento:
+
+```powershell
+python -m core.system heal index_consistency
+python -m core.system heal index_consistency --apply
+```
+
+El primer comando es un preview read-only y no adquiere el writer lock. El segundo
+autoriza a Healer a delegar en `reparar_indice()`, que aplica el lock fail-fast y el
+post-check de IDX-C3. Un preview `INCONSISTENT` planificado devuelve `0`; un preview
+`DEGRADED` o `UNAVAILABLE` bloqueado devuelve `1`; un error de argumentos devuelve
+`2`; una aplicación no exitosa devuelve `3`. Doctor, `!indexar status`, Streamlit y
+el arranque permanecen read-only o no ejecutan esta reparación.
 
 ## Cómo agregar una comprobación
 
@@ -191,5 +229,6 @@ Integración recomendada:
 - Política de descargas HTTPS, fuentes permitidas y SHA-256.
 - Detección específica por perfil de arranque UI/CLI.
 - Normalización de Unicode en consolas Windows capturadas.
-- Integración visual del diagnóstico en Streamlit.
+- Migración posterior a NiceGUI conservando las fronteras read-only y de
+  consentimiento existentes.
 - Rotación y retención de logs operativos.

@@ -23,7 +23,55 @@ logger = logging.getLogger(__name__)
 
 SAFE_COMPONENTS = ("folders", "config", "venv", "ollama_service")
 HEAVY_COMPONENTS = ("python_packages", "ollama_model")
-ALL_COMPONENTS = SAFE_COMPONENTS + HEAVY_COMPONENTS
+CONTROLLED_COMPONENTS = ("index_consistency",)
+ALL_COMPONENTS = SAFE_COMPONENTS + HEAVY_COMPONENTS + CONTROLLED_COMPONENTS
+
+_INDEX_STATES = frozenset(
+    {"HEALTHY", "HEALTHY_EMPTY", "DEGRADED", "INCONSISTENT", "UNAVAILABLE"}
+)
+_INDEX_PREVIEW_READY_STATES = frozenset(
+    {"HEALTHY", "HEALTHY_EMPTY", "INCONSISTENT"}
+)
+_INDEX_HEALTHY_STATES = frozenset({"HEALTHY", "HEALTHY_EMPTY"})
+_INDEX_BLOCKED_REASONS = frozenset(
+    {
+        "path_error",
+        "manifest_corrupt",
+        "manifest_schema_incompatible",
+        "chroma_unavailable",
+        "degraded_diagnosis",
+        "unavailable",
+        "malformed_manifest_entries",
+        "verification_limitation",
+        "chroma_collection_read_failed",
+        "writer_target_mismatch",
+    }
+)
+
+
+def _default_index_status_provider() -> object:
+    from core.index_status import consultar_estado_indice
+
+    return consultar_estado_indice()
+
+
+def _default_index_repairer() -> object:
+    from core.index_repair import reparar_indice
+
+    return reparar_indice()
+
+
+def _safe_index_error_type(error: object) -> str:
+    try:
+        from core.vector_store import _tipo_error_seguro
+
+        return _tipo_error_seguro(error)
+    except Exception:
+        return "Exception"
+
+
+def _safe_index_state(value: object) -> str:
+    return value if isinstance(value, str) and value in _INDEX_STATES else "UNAVAILABLE"
 
 
 class Healer:
@@ -37,6 +85,8 @@ class Healer:
         command_runner: Callable[..., CommandResult] = run_command,
         process_starter: Callable[..., CommandResult] = start_command,
         diagnostician: Callable[..., dict] = diagnosticar_sistema,
+        index_status_provider: Optional[Callable[[], object]] = None,
+        index_repairer: Optional[Callable[[], object]] = None,
     ) -> None:
         self.paths = paths or get_paths()
         self.dry_run = dry_run
@@ -44,7 +94,17 @@ class Healer:
         self._run = command_runner
         self._start = process_starter
         self._diagnose = diagnostician
-        self.diagnosis = diagnosis or self._fresh_diagnosis()
+        self._index_status_provider = (
+            index_status_provider
+            if index_status_provider is not None
+            else _default_index_status_provider
+        )
+        self._index_repairer = (
+            index_repairer
+            if index_repairer is not None
+            else _default_index_repairer
+        )
+        self.diagnosis = diagnosis if diagnosis is not None else self._fresh_diagnosis()
 
     def _fresh_diagnosis(self) -> dict:
         try:
@@ -63,6 +123,7 @@ class Healer:
         message: str = "",
         actions: Optional[list[dict]] = None,
         errors: Optional[list[str]] = None,
+        include_diagnosis: bool = True,
     ) -> RepairResult:
         result = RepairResult(
             component=component,
@@ -73,7 +134,7 @@ class Healer:
             message=message,
             actions=actions or [],
             errors=errors or [],
-            diagnosis_before=self.diagnosis,
+            diagnosis_before=self.diagnosis if include_diagnosis else None,
         )
         logger.info(
             "Atlas repair component=%s success=%s changed=%s dry_run=%s risk=%s",
@@ -127,12 +188,244 @@ class Healer:
             "python_packages": self.fix_python_packages,
             "ollama_service": self.fix_ollama_service,
             "ollama_model": self.fix_ollama_model,
+            "index_consistency": self.fix_index_consistency,
         }
         try:
             handler = handlers[component]
         except KeyError as exc:
             raise ValueError(f"Componente desconocido: {component}") from exc
         return handler()
+
+    def _index_unavailable_result(self, error: object) -> RepairResult:
+        error_type = _safe_index_error_type(error)
+        return self._result(
+            "index_consistency",
+            success=False,
+            changed=False,
+            risk="moderate",
+            message="No se pudo obtener un resultado seguro para el índice",
+            actions=[
+                {
+                    "action": (
+                        "preview_index_repair" if self.dry_run else "repair_index"
+                    ),
+                    "status": "unavailable",
+                }
+            ],
+            errors=[error_type],
+            include_diagnosis=False,
+        )
+
+    def _preview_index_consistency(self) -> RepairResult:
+        try:
+            from core.index_status import IndexStatusView
+
+            status = self._index_status_provider()
+            if type(status) is not IndexStatusView:
+                raise TypeError("invalid index status contract")
+            state = _safe_index_state(status.state)
+            observed_state = _safe_index_state(status.observed_state)
+            if state != status.state or observed_state != status.observed_state:
+                raise ValueError("invalid index status state")
+            status_payload = status.to_dict()
+        except Exception as exc:
+            return self._index_unavailable_result(exc)
+
+        if state in _INDEX_HEALTHY_STATES:
+            action_status = "not_needed"
+            message = "El índice ya está convergente; no se requiere reparación"
+        elif state == "INCONSISTENT":
+            action_status = "planned"
+            message = (
+                "La reparación conservadora está disponible; usá --apply para autorizarla"
+            )
+        else:
+            action_status = "blocked"
+            message = "El diagnóstico actual no permite una reparación automática segura"
+
+        return self._result(
+            "index_consistency",
+            success=state in _INDEX_PREVIEW_READY_STATES,
+            changed=False,
+            risk="moderate",
+            message=message,
+            actions=[
+                {
+                    "action": "preview_index_repair",
+                    "status": action_status,
+                    "index_status": status_payload,
+                }
+            ],
+            include_diagnosis=False,
+        )
+
+    @staticmethod
+    def _index_apply_status(report: object, items: list[dict]) -> str:
+        if report.busy:
+            return "busy"
+        if report.blocked:
+            return "blocked"
+        if report.success:
+            return "completed"
+
+        actionable = [item for item in items if item["status"] != "skipped"]
+        repaired = any(item["status"] == "repaired" for item in actionable)
+        has_divergence = (
+            any(
+                item["status"] in {"failed", "still_inconsistent"}
+                for item in actionable
+            )
+            or report.post_state not in _INDEX_HEALTHY_STATES
+        )
+        if repaired and has_divergence:
+            return "partial"
+        if actionable and all(item["status"] == "failed" for item in actionable):
+            return "failed"
+        return "still_inconsistent"
+
+    def _apply_index_consistency(self) -> RepairResult:
+        try:
+            from core.index_repair import RepairItem, RepairReport
+            from core.index_writer_lock import PUBLIC_BUSY_MESSAGES
+
+            report = self._index_repairer()
+            if type(report) is not RepairReport:
+                raise TypeError("invalid index repair contract")
+            states = (report.pre_state, report.post_state, report.post_observed)
+            if any(_safe_index_state(state) != state for state in states):
+                raise ValueError("invalid index repair state")
+            if type(report.post_check_performed) is not bool:
+                raise TypeError("invalid post-check contract")
+            if (
+                type(report.success) is not bool
+                or type(report.blocked) is not bool
+                or type(report.busy) is not bool
+            ):
+                raise TypeError("invalid index outcome contract")
+            if type(report.items) is not tuple:
+                raise TypeError("invalid repair items contract")
+            if type(report.orphan_count) is not int or report.orphan_count < 0:
+                raise ValueError("invalid orphan count")
+
+            safe_items = []
+            for ordinal, item in enumerate(report.items, start=1):
+                if type(item) is not RepairItem:
+                    raise TypeError("invalid repair item contract")
+                safe_items.append(
+                    {
+                        "item": ordinal,
+                        "category": item.category,
+                        "action": item.action,
+                        "status": item.status,
+                        "error_type": (
+                            _safe_index_error_type(item.error_type)
+                            if item.error_type is not None
+                            else None
+                        ),
+                    }
+                )
+
+            if report.busy:
+                if report.blocked or report.post_check_performed or safe_items:
+                    raise ValueError("contradictory busy repair report")
+            elif not report.post_check_performed:
+                raise ValueError("missing final post-check")
+            if report.blocked and safe_items:
+                raise ValueError("blocked repair report contains items")
+            if any(item["status"] == "attempted" for item in safe_items):
+                raise ValueError("unconfirmed repair item")
+
+            expected_success = (
+                report.post_check_performed
+                and report.post_state in _INDEX_HEALTHY_STATES
+                and not report.blocked
+                and not report.busy
+                and all(
+                    item["status"] in {"repaired", "skipped"}
+                    for item in safe_items
+                )
+            )
+            if report.success is not expected_success:
+                raise ValueError("contradictory repair success")
+
+            blocked_reason = None
+            if report.blocked:
+                blocked_reason = (
+                    report.blocked_reason
+                    if report.blocked_reason in _INDEX_BLOCKED_REASONS
+                    else "unavailable"
+                )
+            busy_message = None
+            if report.busy:
+                allowed_busy_messages = frozenset(PUBLIC_BUSY_MESSAGES.values())
+                busy_message = (
+                    report.busy_message
+                    if report.busy_message in allowed_busy_messages
+                    else PUBLIC_BUSY_MESSAGES["index_writer_busy"]
+                )
+
+            outcome_status = self._index_apply_status(report, safe_items)
+        except Exception as exc:
+            return self._index_unavailable_result(exc)
+
+        messages = {
+            "busy": "El índice está ocupado; no se ejecutó ninguna reparación",
+            "blocked": "La reparación fue bloqueada por un diagnóstico no seguro",
+            "completed": "La reparación fue confirmada por el post-check",
+            "partial": "La reparación fue parcial y el índice no convergió por completo",
+            "failed": "Las operaciones de reparación fallaron",
+            "still_inconsistent": "El post-check confirmó que el índice sigue inconsistente",
+        }
+        errors = []
+        if outcome_status == "busy":
+            errors.append("index_writer_busy")
+        elif outcome_status == "blocked":
+            errors.append(blocked_reason or "unavailable")
+        else:
+            errors.extend(
+                item["error_type"] or "Exception"
+                for item in safe_items
+                if item["status"] == "failed"
+            )
+            errors.extend(
+                "still_inconsistent"
+                for item in safe_items
+                if item["status"] == "still_inconsistent"
+            )
+            if not report.success and not errors:
+                errors.append("post_check_not_healthy")
+
+        return self._result(
+            "index_consistency",
+            success=report.success,
+            changed=any(item["status"] == "repaired" for item in safe_items),
+            risk="moderate",
+            message=messages[outcome_status],
+            actions=[
+                {
+                    "action": "repair_index",
+                    "status": outcome_status,
+                    "pre_state": report.pre_state,
+                    "post_state": report.post_state,
+                    "post_observed": report.post_observed,
+                    "post_check_performed": report.post_check_performed,
+                    "blocked": report.blocked,
+                    "blocked_reason": blocked_reason,
+                    "busy": report.busy,
+                    "busy_message": busy_message,
+                    "orphan_count": report.orphan_count,
+                    "items": safe_items,
+                }
+            ],
+            errors=errors,
+            include_diagnosis=False,
+        )
+
+    def fix_index_consistency(self) -> RepairResult:
+        """Preview or explicitly invoke IDX-C3 without duplicating its policy."""
+        if self.dry_run:
+            return self._preview_index_consistency()
+        return self._apply_index_consistency()
 
     def fix_folders(self) -> RepairResult:
         targets = {

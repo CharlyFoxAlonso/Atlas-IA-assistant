@@ -20,6 +20,8 @@ import os
 import subprocess
 from dotenv import load_dotenv
 
+from core.system.paths import get_paths
+
 load_dotenv()
 
 # ============================================
@@ -181,10 +183,11 @@ MODELOS_LOCALES_DISPONIBLES = {
 # ============================================
 # 📂 RUTAS BASE
 # ============================================
-BASE_MEMORIA = "memory/Atlas_Memory"
-BASE_ESTUDIO = "memory/Atlas_Memory/03_Conocimiento"
-BASE_PROMPTS = "memory/Atlas_Memory/00_Sistema/Prompts"
-CHROMA_PATH = "./vector_db"
+_ATLAS_PATHS = get_paths()
+BASE_MEMORIA = str(_ATLAS_PATHS.private_memory_dir)
+BASE_ESTUDIO = str(_ATLAS_PATHS.private_memory_dir / "03_Conocimiento")
+BASE_PROMPTS = str(_ATLAS_PATHS.private_memory_dir / "00_Sistema" / "Prompts")
+CHROMA_PATH = str(_ATLAS_PATHS.chroma_dir)
 COLLECTION_NAME = "atlas_rag"
 
 # ============================================
@@ -200,7 +203,8 @@ UMBRAL_SEMANTICO = 200
 # ============================================
 # El manifiesto vive junto a la base vectorial que describe (vector_db/),
 # es un dato local (gitignored) y no contiene contenido de documentos.
-INDEX_MANIFEST_PATH = os.path.join(CHROMA_PATH, "index_manifest.json")
+INDEX_MANIFEST_PATH = str(_ATLAS_PATHS.chroma_dir / "index_manifest.json")
+INDEX_WRITER_LOCK_PATH = str(_ATLAS_PATHS.index_writer_lock_path)
 INDEX_SCHEMA_VERSION = 1
 INDEX_SUPPORTED_EXTENSIONS = {'.md', '.pdf', '.txt', '.docx', '.pptx'}
 # Carpetas que el indexador ignora dentro de BASE_MEMORIA

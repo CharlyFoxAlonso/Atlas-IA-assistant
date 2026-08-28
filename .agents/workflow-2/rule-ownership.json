@@ -1,0 +1,2286 @@
+{
+  "schema": 1,
+  "identity": "repository-relative path plus Markdown section",
+  "section_level": 2,
+  "ignore_fenced_code": true,
+  "scan_roots": [
+    {
+      "path": ".agents/skills/workflow-2/SKILL.md",
+      "scope": "canonical"
+    },
+    {
+      "path": ".agents/skills/workflow-2/references",
+      "scope": "canonical"
+    },
+    {
+      "path": ".agents/workflow-2/core.md",
+      "scope": "canonical"
+    },
+    {
+      "path": ".agents/workflow-2/contracts",
+      "scope": "canonical"
+    },
+    {
+      "path": ".agents/workflow-2/roles",
+      "scope": "canonical"
+    },
+    {
+      "path": ".agents/workflow-2/policies",
+      "scope": "canonical"
+    },
+    {
+      "path": "AGENTS.md",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/playbooks/audit.md",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/playbooks/implement.md",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/playbooks/plan.md",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/playbooks/verify.md",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/policies",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/integrations",
+      "scope": "project"
+    },
+    {
+      "path": ".agents/skills/auditoria",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/project-identity.md",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/agents/workflow-auditor.md",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/auditoria",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/base-conocimiento",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/calidad-proyecto",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/configuracion-sistema",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/interfaz-usuario",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/multimodal",
+      "scope": "project"
+    },
+    {
+      "path": ".opencode/skills/nucleo-atlas",
+      "scope": "project"
+    }
+  ],
+  "rules": [
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".agents/skills/workflow-2/SKILL.md#frontmatter",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-document.2",
+      "rule": "Document-level rules",
+      "owner": ".agents/skills/workflow-2/SKILL.md#@document",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-select-the-mode.3",
+      "rule": "Select the mode",
+      "owner": ".agents/skills/workflow-2/SKILL.md#Select the mode",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "Select the mode"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-load-the-canonical-rules.4",
+      "rule": "Load the canonical rules",
+      "owner": ".agents/skills/workflow-2/SKILL.md#Load the canonical rules",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "Load the canonical rules"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-execute-the-contract.5",
+      "rule": "Execute the contract",
+      "owner": ".agents/skills/workflow-2/SKILL.md#Execute the contract",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "Execute the contract"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-migrate-repositories.6",
+      "rule": "Migrate repositories",
+      "owner": ".agents/skills/workflow-2/SKILL.md#Migrate repositories",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "Migrate repositories"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-skill-md-output.7",
+      "rule": "Output",
+      "owner": ".agents/skills/workflow-2/SKILL.md#Output",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/SKILL.md",
+      "section": "Output"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-references-migration-rules-md-before-applying.1",
+      "rule": "Before applying",
+      "owner": ".agents/skills/workflow-2/references/migration-rules.md#Before applying",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/references/migration-rules.md",
+      "section": "Before applying"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-references-migration-rules-md-preservation-contract.2",
+      "rule": "Preservation contract",
+      "owner": ".agents/skills/workflow-2/references/migration-rules.md#Preservation contract",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/references/migration-rules.md",
+      "section": "Preservation contract"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-references-migration-rules-md-after-applying.3",
+      "rule": "After applying",
+      "owner": ".agents/skills/workflow-2/references/migration-rules.md#After applying",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/references/migration-rules.md",
+      "section": "After applying"
+    },
+    {
+      "id": "canonical.agents-skills-workflow-2-references-role-selection-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/skills/workflow-2/references/role-selection.md#@document",
+      "scope": "canonical",
+      "file": ".agents/skills/workflow-2/references/role-selection.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-core-md-permanent-rules.1",
+      "rule": "Permanent rules",
+      "owner": ".agents/workflow-2/core.md#Permanent rules",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/core.md",
+      "section": "Permanent rules"
+    },
+    {
+      "id": "canonical.agents-workflow-2-core-md-role-sequence.2",
+      "rule": "Role sequence",
+      "owner": ".agents/workflow-2/core.md#Role sequence",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/core.md",
+      "section": "Role sequence"
+    },
+    {
+      "id": "canonical.agents-workflow-2-core-md-authority-hierarchy.3",
+      "rule": "Authority hierarchy",
+      "owner": ".agents/workflow-2/core.md#Authority hierarchy",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/core.md",
+      "section": "Authority hierarchy"
+    },
+    {
+      "id": "canonical.agents-workflow-2-core-md-verdict-vocabulary.4",
+      "rule": "Verdict vocabulary",
+      "owner": ".agents/workflow-2/core.md#Verdict vocabulary",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/core.md",
+      "section": "Verdict vocabulary"
+    },
+    {
+      "id": "canonical.agents-workflow-2-core-md-policy-routing.5",
+      "rule": "Policy routing",
+      "owner": ".agents/workflow-2/core.md#Policy routing",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/core.md",
+      "section": "Policy routing"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-handoffs-md-planner-plan-reviewer.1",
+      "rule": "Planner → Plan Reviewer",
+      "owner": ".agents/workflow-2/contracts/handoffs.md#Planner → Plan Reviewer",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/handoffs.md",
+      "section": "Planner → Plan Reviewer"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-handoffs-md-plan-reviewer-builder.2",
+      "rule": "Plan Reviewer → Builder",
+      "owner": ".agents/workflow-2/contracts/handoffs.md#Plan Reviewer → Builder",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/handoffs.md",
+      "section": "Plan Reviewer → Builder"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-handoffs-md-builder-authority.3",
+      "rule": "Builder authority",
+      "owner": ".agents/workflow-2/contracts/handoffs.md#Builder authority",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/handoffs.md",
+      "section": "Builder authority"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-handoffs-md-builder-auditor.4",
+      "rule": "Builder → Auditor",
+      "owner": ".agents/workflow-2/contracts/handoffs.md#Builder → Auditor",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/handoffs.md",
+      "section": "Builder → Auditor"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-handoffs-md-renegotiation.5",
+      "rule": "Renegotiation",
+      "owner": ".agents/workflow-2/contracts/handoffs.md#Renegotiation",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/handoffs.md",
+      "section": "Renegotiation"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-trust-boundary.2",
+      "rule": "Trust boundary",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Trust boundary",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Trust boundary"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-planner-output.3",
+      "rule": "Planner output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Planner output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Planner output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-plan-reviewer-output.4",
+      "rule": "Plan Reviewer output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Plan Reviewer output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Plan Reviewer output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-builder-output.5",
+      "rule": "Builder output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Builder output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Builder output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-contracts-automation-loop-md-auditor-output.6",
+      "rule": "Auditor output",
+      "owner": ".agents/workflow-2/contracts/automation-loop.md#Auditor output",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/contracts/automation-loop.md",
+      "section": "Auditor output"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-auditor-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/roles/auditor.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/auditor.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-auditor-md-review-dimensions.2",
+      "rule": "Review dimensions",
+      "owner": ".agents/workflow-2/roles/auditor.md#Review dimensions",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/auditor.md",
+      "section": "Review dimensions"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-builder-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/roles/builder.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/builder.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-builder-md-required-sequence.2",
+      "rule": "Required sequence",
+      "owner": ".agents/workflow-2/roles/builder.md#Required sequence",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/builder.md",
+      "section": "Required sequence"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-plan-reviewer-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/roles/plan-reviewer.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/plan-reviewer.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-planner-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/roles/planner.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/planner.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-roles-planner-md-required-sequence.2",
+      "rule": "Required sequence",
+      "owner": ".agents/workflow-2/roles/planner.md#Required sequence",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/roles/planner.md",
+      "section": "Required sequence"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-debugging-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/debugging.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/debugging.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-definition-of-done-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/definition-of-done.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/definition-of-done.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-engineering-md-easy-to-read-and-change.1",
+      "rule": "Easy to read and change",
+      "owner": ".agents/workflow-2/policies/engineering.md#Easy to read and change",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/engineering.md",
+      "section": "Easy to read and change"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-engineering-md-dry-and-cohesion.2",
+      "rule": "DRY and cohesion",
+      "owner": ".agents/workflow-2/policies/engineering.md#DRY and cohesion",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/engineering.md",
+      "section": "DRY and cohesion"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-engineering-md-change-discipline.3",
+      "rule": "Change discipline",
+      "owner": ".agents/workflow-2/policies/engineering.md#Change discipline",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/engineering.md",
+      "section": "Change discipline"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-git-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/git.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/git.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-prototypes-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/prototypes.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/prototypes.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-security-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/security.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/security.md",
+      "section": "@document"
+    },
+    {
+      "id": "canonical.agents-workflow-2-policies-testing-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/workflow-2/policies/testing.md#@document",
+      "scope": "canonical",
+      "file": ".agents/workflow-2/policies/testing.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-md-purpose.1",
+      "rule": "Purpose",
+      "owner": "AGENTS.md#Purpose",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "Purpose"
+    },
+    {
+      "id": "project.agents-md-1-required-instruction-routing.2",
+      "rule": "1. Required instruction routing",
+      "owner": "AGENTS.md#1. Required instruction routing",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "1. Required instruction routing"
+    },
+    {
+      "id": "project.agents-md-2-atlas-product-identity.3",
+      "rule": "2. Atlas product identity",
+      "owner": "AGENTS.md#2. Atlas product identity",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "2. Atlas product identity"
+    },
+    {
+      "id": "project.agents-md-3-product-and-repository-names.4",
+      "rule": "3. Product and repository names",
+      "owner": "AGENTS.md#3. Product and repository names",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "3. Product and repository names"
+    },
+    {
+      "id": "project.agents-md-4-sources-of-authority.5",
+      "rule": "4. Sources of authority",
+      "owner": "AGENTS.md#4. Sources of authority",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "4. Sources of authority"
+    },
+    {
+      "id": "project.agents-md-5-documentation-classification.6",
+      "rule": "5. Documentation classification",
+      "owner": "AGENTS.md#5. Documentation classification",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "5. Documentation classification"
+    },
+    {
+      "id": "project.agents-md-6-architectural-boundaries.7",
+      "rule": "6. Architectural boundaries",
+      "owner": "AGENTS.md#6. Architectural boundaries",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "6. Architectural boundaries"
+    },
+    {
+      "id": "project.agents-md-7-permanent-contracts.8",
+      "rule": "7. Permanent contracts",
+      "owner": "AGENTS.md#7. Permanent contracts",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "7. Permanent contracts"
+    },
+    {
+      "id": "project.agents-md-8-change-design-rules.9",
+      "rule": "8. Change design rules",
+      "owner": "AGENTS.md#8. Change design rules",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "8. Change design rules"
+    },
+    {
+      "id": "project.agents-md-9-testing-and-validation.10",
+      "rule": "9. Testing and validation",
+      "owner": "AGENTS.md#9. Testing and validation",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "9. Testing and validation"
+    },
+    {
+      "id": "project.agents-md-10-git-and-scope.11",
+      "rule": "10. Git and scope",
+      "owner": "AGENTS.md#10. Git and scope",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "10. Git and scope"
+    },
+    {
+      "id": "project.agents-md-11-codebase-memory-mcp.12",
+      "rule": "11. Codebase Memory MCP",
+      "owner": "AGENTS.md#11. Codebase Memory MCP",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "11. Codebase Memory MCP"
+    },
+    {
+      "id": "project.agents-md-12-agent-and-report-files.13",
+      "rule": "12. Agent and report files",
+      "owner": "AGENTS.md#12. Agent and report files",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "12. Agent and report files"
+    },
+    {
+      "id": "project.agents-md-13-task-mode-defaults.14",
+      "rule": "13. Task-mode defaults",
+      "owner": "AGENTS.md#13. Task-mode defaults",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "13. Task-mode defaults"
+    },
+    {
+      "id": "project.agents-md-14-prompt-economy.15",
+      "rule": "14. Prompt economy",
+      "owner": "AGENTS.md#14. Prompt economy",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "14. Prompt economy"
+    },
+    {
+      "id": "project.agents-md-15-final-rule.16",
+      "rule": "15. Final rule",
+      "owner": "AGENTS.md#15. Final rule",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "15. Final rule"
+    },
+    {
+      "id": "project.agents-md-workflow-2-0-routing.17",
+      "rule": "Workflow 2.1 routing",
+      "owner": "AGENTS.md#Workflow 2.1 routing",
+      "scope": "project",
+      "file": "AGENTS.md",
+      "section": "Workflow 2.1 routing"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/playbooks/audit.md#@document",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-1-audit-is-read-only.2",
+      "rule": "1. Audit is read-only",
+      "owner": ".agents/playbooks/audit.md#1. Audit is read-only",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "1. Audit is read-only"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-2-define-the-audit-target.3",
+      "rule": "2. Define the audit target",
+      "owner": ".agents/playbooks/audit.md#2. Define the audit target",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "2. Define the audit target"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-3-inspect-the-real-repository.4",
+      "rule": "3. Inspect the real repository",
+      "owner": ".agents/playbooks/audit.md#3. Inspect the real repository",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "3. Inspect the real repository"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-4-use-codebase-memory-optionally.5",
+      "rule": "4. Use Codebase Memory optionally",
+      "owner": ".agents/playbooks/audit.md#4. Use Codebase Memory optionally",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "4. Use Codebase Memory optionally"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-5-evidence-levels.6",
+      "rule": "5. Evidence levels",
+      "owner": ".agents/playbooks/audit.md#5. Evidence levels",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "5. Evidence levels"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-6-audit-dimensions.7",
+      "rule": "6. Audit dimensions",
+      "owner": ".agents/playbooks/audit.md#6. Audit dimensions",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "6. Audit dimensions"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-7-architecture-review.8",
+      "rule": "7. Architecture review",
+      "owner": ".agents/playbooks/audit.md#7. Architecture review",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "7. Architecture review"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-8-correctness-review.9",
+      "rule": "8. Correctness review",
+      "owner": ".agents/playbooks/audit.md#8. Correctness review",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "8. Correctness review"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-9-test-review.10",
+      "rule": "9. Test review",
+      "owner": ".agents/playbooks/audit.md#9. Test review",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "9. Test review"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-10-security-review.11",
+      "rule": "10. Security review",
+      "owner": ".agents/playbooks/audit.md#10. Security review",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "10. Security review"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-11-documentation-review.12",
+      "rule": "11. Documentation review",
+      "owner": ".agents/playbooks/audit.md#11. Documentation review",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "11. Documentation review"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-12-findings.13",
+      "rule": "12. Findings",
+      "owner": ".agents/playbooks/audit.md#12. Findings",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "12. Findings"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-13-recommendations.14",
+      "rule": "13. Recommendations",
+      "owner": ".agents/playbooks/audit.md#13. Recommendations",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "13. Recommendations"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-14-avoid-speculative-redesign.15",
+      "rule": "14. Avoid speculative redesign",
+      "owner": ".agents/playbooks/audit.md#14. Avoid speculative redesign",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "14. Avoid speculative redesign"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-15-final-report.16",
+      "rule": "15. Final report",
+      "owner": ".agents/playbooks/audit.md#15. Final report",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "15. Final report"
+    },
+    {
+      "id": "project.agents-playbooks-audit-md-final-rule.17",
+      "rule": "Final rule",
+      "owner": ".agents/playbooks/audit.md#Final rule",
+      "scope": "project",
+      "file": ".agents/playbooks/audit.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/playbooks/implement.md#@document",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-1-understand-the-task.2",
+      "rule": "1. Understand the task",
+      "owner": ".agents/playbooks/implement.md#1. Understand the task",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "1. Understand the task"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-2-establish-the-baseline.3",
+      "rule": "2. Establish the baseline",
+      "owner": ".agents/playbooks/implement.md#2. Establish the baseline",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "2. Establish the baseline"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-3-control-scope.4",
+      "rule": "3. Control scope",
+      "owner": ".agents/playbooks/implement.md#3. Control scope",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "3. Control scope"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-4-make-the-smallest-correct-change.5",
+      "rule": "4. Make the smallest correct change",
+      "owner": ".agents/playbooks/implement.md#4. Make the smallest correct change",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "4. Make the smallest correct change"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-5-preserve-contracts.6",
+      "rule": "5. Preserve contracts",
+      "owner": ".agents/playbooks/implement.md#5. Preserve contracts",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "5. Preserve contracts"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-6-separate-logic-from-effects.7",
+      "rule": "6. Separate logic from effects",
+      "owner": ".agents/playbooks/implement.md#6. Separate logic from effects",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "6. Separate logic from effects"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-7-avoid-speculative-architecture.8",
+      "rule": "7. Avoid speculative architecture",
+      "owner": ".agents/playbooks/implement.md#7. Avoid speculative architecture",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "7. Avoid speculative architecture"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-8-implement-incrementally.9",
+      "rule": "8. Implement incrementally",
+      "owner": ".agents/playbooks/implement.md#8. Implement incrementally",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "8. Implement incrementally"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-9-handle-errors-honestly.10",
+      "rule": "9. Handle errors honestly",
+      "owner": ".agents/playbooks/implement.md#9. Handle errors honestly",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "9. Handle errors honestly"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-10-dependencies.11",
+      "rule": "10. Dependencies",
+      "owner": ".agents/playbooks/implement.md#10. Dependencies",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "10. Dependencies"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-11-use-codebase-memory-optionally.12",
+      "rule": "11. Use Codebase Memory optionally",
+      "owner": ".agents/playbooks/implement.md#11. Use Codebase Memory optionally",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "11. Use Codebase Memory optionally"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-12-validate-the-implementation.13",
+      "rule": "12. Validate the implementation",
+      "owner": ".agents/playbooks/implement.md#12. Validate the implementation",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "12. Validate the implementation"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-13-review-the-diff.14",
+      "rule": "13. Review the diff",
+      "owner": ".agents/playbooks/implement.md#13. Review the diff",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "13. Review the diff"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-14-documentation.15",
+      "rule": "14. Documentation",
+      "owner": ".agents/playbooks/implement.md#14. Documentation",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "14. Documentation"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-15-final-report.16",
+      "rule": "15. Final report",
+      "owner": ".agents/playbooks/implement.md#15. Final report",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "15. Final report"
+    },
+    {
+      "id": "project.agents-playbooks-implement-md-final-rule.17",
+      "rule": "Final rule",
+      "owner": ".agents/playbooks/implement.md#Final rule",
+      "scope": "project",
+      "file": ".agents/playbooks/implement.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/playbooks/plan.md#@document",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-1-planning-is-read-only.2",
+      "rule": "1. Planning is read-only",
+      "owner": ".agents/playbooks/plan.md#1. Planning is read-only",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "1. Planning is read-only"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-2-understand-the-request.3",
+      "rule": "2. Understand the request",
+      "owner": ".agents/playbooks/plan.md#2. Understand the request",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "2. Understand the request"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-3-inspect-the-repository.4",
+      "rule": "3. Inspect the repository",
+      "owner": ".agents/playbooks/plan.md#3. Inspect the repository",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "3. Inspect the repository"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-4-use-codebase-memory-optionally.5",
+      "rule": "4. Use Codebase Memory optionally",
+      "owner": ".agents/playbooks/plan.md#4. Use Codebase Memory optionally",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "4. Use Codebase Memory optionally"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-5-separate-facts-from-assumptions.6",
+      "rule": "5. Separate facts from assumptions",
+      "owner": ".agents/playbooks/plan.md#5. Separate facts from assumptions",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "5. Separate facts from assumptions"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-6-analyze-contracts-and-impact.7",
+      "rule": "6. Analyze contracts and impact",
+      "owner": ".agents/playbooks/plan.md#6. Analyze contracts and impact",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "6. Analyze contracts and impact"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-7-prefer-the-smallest-viable-design.8",
+      "rule": "7. Prefer the smallest viable design",
+      "owner": ".agents/playbooks/plan.md#7. Prefer the smallest viable design",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "7. Prefer the smallest viable design"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-8-define-exact-scope.9",
+      "rule": "8. Define exact scope",
+      "owner": ".agents/playbooks/plan.md#8. Define exact scope",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "8. Define exact scope"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-9-define-implementation-steps.10",
+      "rule": "9. Define implementation steps",
+      "owner": ".agents/playbooks/plan.md#9. Define implementation steps",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "9. Define implementation steps"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-10-define-validation.11",
+      "rule": "10. Define validation",
+      "owner": ".agents/playbooks/plan.md#10. Define validation",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "10. Define validation"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-11-identify-risks.12",
+      "rule": "11. Identify risks",
+      "owner": ".agents/playbooks/plan.md#11. Identify risks",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "11. Identify risks"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-12-avoid-duplication.13",
+      "rule": "12. Avoid duplication",
+      "owner": ".agents/playbooks/plan.md#12. Avoid duplication",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "12. Avoid duplication"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-13-plan-output.14",
+      "rule": "13. Plan output",
+      "owner": ".agents/playbooks/plan.md#13. Plan output",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "13. Plan output"
+    },
+    {
+      "id": "project.agents-playbooks-plan-md-final-rule.15",
+      "rule": "Final rule",
+      "owner": ".agents/playbooks/plan.md#Final rule",
+      "scope": "project",
+      "file": ".agents/playbooks/plan.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/playbooks/verify.md#@document",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-1-verification-is-read-only.2",
+      "rule": "1. Verification is read-only",
+      "owner": ".agents/playbooks/verify.md#1. Verification is read-only",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "1. Verification is read-only"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-2-identify-the-contract.3",
+      "rule": "2. Identify the contract",
+      "owner": ".agents/playbooks/verify.md#2. Identify the contract",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "2. Identify the contract"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-3-inspect-repository-state.4",
+      "rule": "3. Inspect repository state",
+      "owner": ".agents/playbooks/verify.md#3. Inspect repository state",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "3. Inspect repository state"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-4-inspect-the-implementation.5",
+      "rule": "4. Inspect the implementation",
+      "owner": ".agents/playbooks/verify.md#4. Inspect the implementation",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "4. Inspect the implementation"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-5-use-codebase-memory-optionally.6",
+      "rule": "5. Use Codebase Memory optionally",
+      "owner": ".agents/playbooks/verify.md#5. Use Codebase Memory optionally",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "5. Use Codebase Memory optionally"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-6-validate-scope.7",
+      "rule": "6. Validate scope",
+      "owner": ".agents/playbooks/verify.md#6. Validate scope",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "6. Validate scope"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-7-validate-behavior.8",
+      "rule": "7. Validate behavior",
+      "owner": ".agents/playbooks/verify.md#7. Validate behavior",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "7. Validate behavior"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-8-verify-acceptance-criteria.9",
+      "rule": "8. Verify acceptance criteria",
+      "owner": ".agents/playbooks/verify.md#8. Verify acceptance criteria",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "8. Verify acceptance criteria"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-9-check-regressions.10",
+      "rule": "9. Check regressions",
+      "owner": ".agents/playbooks/verify.md#9. Check regressions",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "9. Check regressions"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-10-review-test-quality.11",
+      "rule": "10. Review test quality",
+      "owner": ".agents/playbooks/verify.md#10. Review test quality",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "10. Review test quality"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-11-classify-findings.12",
+      "rule": "11. Classify findings",
+      "owner": ".agents/playbooks/verify.md#11. Classify findings",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "11. Classify findings"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-12-do-not-overstate-results.13",
+      "rule": "12. Do not overstate results",
+      "owner": ".agents/playbooks/verify.md#12. Do not overstate results",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "12. Do not overstate results"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-13-final-report.14",
+      "rule": "13. Final report",
+      "owner": ".agents/playbooks/verify.md#13. Final report",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "13. Final report"
+    },
+    {
+      "id": "project.agents-playbooks-verify-md-final-rule.15",
+      "rule": "Final rule",
+      "owner": ".agents/playbooks/verify.md#Final rule",
+      "scope": "project",
+      "file": ".agents/playbooks/verify.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/policies/git-safety.md#@document",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-1-inspect-the-initial-state.2",
+      "rule": "1. Inspect the initial state",
+      "owner": ".agents/policies/git-safety.md#1. Inspect the initial state",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "1. Inspect the initial state"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-2-prohibited-operations.3",
+      "rule": "2. Prohibited operations",
+      "owner": ".agents/policies/git-safety.md#2. Prohibited operations",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "2. Prohibited operations"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-3-scope-control.4",
+      "rule": "3. Scope control",
+      "owner": ".agents/policies/git-safety.md#3. Scope control",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "3. Scope control"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-4-shared-modified-files.5",
+      "rule": "4. Shared modified files",
+      "owner": ".agents/policies/git-safety.md#4. Shared modified files",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "4. Shared modified files"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-5-no-automatic-cleanup.6",
+      "rule": "5. No automatic cleanup",
+      "owner": ".agents/policies/git-safety.md#5. No automatic cleanup",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "5. No automatic cleanup"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-6-formatting-and-line-endings.7",
+      "rule": "6. Formatting and line endings",
+      "owner": ".agents/policies/git-safety.md#6. Formatting and line endings",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "6. Formatting and line endings"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-7-commits.8",
+      "rule": "7. Commits",
+      "owner": ".agents/policies/git-safety.md#7. Commits",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "7. Commits"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-8-final-report.9",
+      "rule": "8. Final report",
+      "owner": ".agents/policies/git-safety.md#8. Final report",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "8. Final report"
+    },
+    {
+      "id": "project.agents-policies-git-safety-md-final-rule.10",
+      "rule": "Final rule",
+      "owner": ".agents/policies/git-safety.md#Final rule",
+      "scope": "project",
+      "file": ".agents/policies/git-safety.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-policies-testing-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/policies/testing.md#@document",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-policies-testing-md-1-evidence-first.2",
+      "rule": "1. Evidence first",
+      "owner": ".agents/policies/testing.md#1. Evidence first",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "1. Evidence first"
+    },
+    {
+      "id": "project.agents-policies-testing-md-2-evidence-categories.3",
+      "rule": "2. Evidence categories",
+      "owner": ".agents/policies/testing.md#2. Evidence categories",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "2. Evidence categories"
+    },
+    {
+      "id": "project.agents-policies-testing-md-3-baseline.4",
+      "rule": "3. Baseline",
+      "owner": ".agents/policies/testing.md#3. Baseline",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "3. Baseline"
+    },
+    {
+      "id": "project.agents-policies-testing-md-4-test-order.5",
+      "rule": "4. Test order",
+      "owner": ".agents/policies/testing.md#4. Test order",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "4. Test order"
+    },
+    {
+      "id": "project.agents-policies-testing-md-5-new-behavior.6",
+      "rule": "5. New behavior",
+      "owner": ".agents/policies/testing.md#5. New behavior",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "5. New behavior"
+    },
+    {
+      "id": "project.agents-policies-testing-md-6-failures.7",
+      "rule": "6. Failures",
+      "owner": ".agents/policies/testing.md#6. Failures",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "6. Failures"
+    },
+    {
+      "id": "project.agents-policies-testing-md-7-exit-codes.8",
+      "rule": "7. Exit codes",
+      "owner": ".agents/policies/testing.md#7. Exit codes",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "7. Exit codes"
+    },
+    {
+      "id": "project.agents-policies-testing-md-8-coverage.9",
+      "rule": "8. Coverage",
+      "owner": ".agents/policies/testing.md#8. Coverage",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "8. Coverage"
+    },
+    {
+      "id": "project.agents-policies-testing-md-9-unavailable-checks.10",
+      "rule": "9. Unavailable checks",
+      "owner": ".agents/policies/testing.md#9. Unavailable checks",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "9. Unavailable checks"
+    },
+    {
+      "id": "project.agents-policies-testing-md-10-final-report.11",
+      "rule": "10. Final report",
+      "owner": ".agents/policies/testing.md#10. Final report",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "10. Final report"
+    },
+    {
+      "id": "project.agents-policies-testing-md-final-rule.12",
+      "rule": "Final rule",
+      "owner": ".agents/policies/testing.md#Final rule",
+      "scope": "project",
+      "file": ".agents/policies/testing.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#@document",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-1-purpose.2",
+      "rule": "1. Purpose",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#1. Purpose",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "1. Purpose"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-2-when-to-use-it.3",
+      "rule": "2. When to use it",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#2. When to use it",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "2. When to use it"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-3-recommended-workflow.4",
+      "rule": "3. Recommended workflow",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#3. Recommended workflow",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "3. Recommended workflow"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-4-source-code-has-priority.5",
+      "rule": "4. Source code has priority",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#4. Source code has priority",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "4. Source code has priority"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-5-impact-analysis-limits.6",
+      "rule": "5. Impact analysis limits",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#5. Impact analysis limits",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "5. Impact analysis limits"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-6-planning-use.7",
+      "rule": "6. Planning use",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#6. Planning use",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "6. Planning use"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-7-implementation-use.8",
+      "rule": "7. Implementation use",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#7. Implementation use",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "7. Implementation use"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-8-index-refresh.9",
+      "rule": "8. Index refresh",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#8. Index refresh",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "8. Index refresh"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-9-unavailability-or-failure.10",
+      "rule": "9. Unavailability or failure",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#9. Unavailability or failure",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "9. Unavailability or failure"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-10-avoid-overuse.11",
+      "rule": "10. Avoid overuse",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#10. Avoid overuse",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "10. Avoid overuse"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-11-reporting.12",
+      "rule": "11. Reporting",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#11. Reporting",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "11. Reporting"
+    },
+    {
+      "id": "project.agents-integrations-codebase-memory-mcp-md-final-rule.13",
+      "rule": "Final rule",
+      "owner": ".agents/integrations/codebase-memory-mcp.md#Final rule",
+      "scope": "project",
+      "file": ".agents/integrations/codebase-memory-mcp.md",
+      "section": "Final rule"
+    },
+    {
+      "id": "project.agents-skills-auditoria-skill-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".agents/skills/auditoria/SKILL.MD#@document",
+      "scope": "project",
+      "file": ".agents/skills/auditoria/SKILL.MD",
+      "section": "@document"
+    },
+    {
+      "id": "project.agents-skills-auditoria-skill-md-objetivo.2",
+      "rule": "Objetivo",
+      "owner": ".agents/skills/auditoria/SKILL.MD#Objetivo",
+      "scope": "project",
+      "file": ".agents/skills/auditoria/SKILL.MD",
+      "section": "Objetivo"
+    },
+    {
+      "id": "project.agents-skills-auditoria-skill-md-procedimiento.3",
+      "rule": "Procedimiento",
+      "owner": ".agents/skills/auditoria/SKILL.MD#Procedimiento",
+      "scope": "project",
+      "file": ".agents/skills/auditoria/SKILL.MD",
+      "section": "Procedimiento"
+    },
+    {
+      "id": "project.agents-skills-auditoria-skill-md-formato-del-informe.4",
+      "rule": "Formato del informe",
+      "owner": ".agents/skills/auditoria/SKILL.MD#Formato del informe",
+      "scope": "project",
+      "file": ".agents/skills/auditoria/SKILL.MD",
+      "section": "Formato del informe"
+    },
+    {
+      "id": "project.agents-skills-auditoria-skill-md-reglas.5",
+      "rule": "Reglas",
+      "owner": ".agents/skills/auditoria/SKILL.MD#Reglas",
+      "scope": "project",
+      "file": ".agents/skills/auditoria/SKILL.MD",
+      "section": "Reglas"
+    },
+    {
+      "id": "project.opencode-project-identity-md-document.1",
+      "rule": "Document-level rules",
+      "owner": ".opencode/project-identity.md#@document",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.opencode-project-identity-md-mission.2",
+      "rule": "Mission",
+      "owner": ".opencode/project-identity.md#Mission",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Mission"
+    },
+    {
+      "id": "project.opencode-project-identity-md-technology-stack.3",
+      "rule": "Technology Stack",
+      "owner": ".opencode/project-identity.md#Technology Stack",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Technology Stack"
+    },
+    {
+      "id": "project.opencode-project-identity-md-entry-points.4",
+      "rule": "Entry Points",
+      "owner": ".opencode/project-identity.md#Entry Points",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Entry Points"
+    },
+    {
+      "id": "project.opencode-project-identity-md-key-directories.5",
+      "rule": "Key Directories",
+      "owner": ".opencode/project-identity.md#Key Directories",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Key Directories"
+    },
+    {
+      "id": "project.opencode-project-identity-md-core-components.6",
+      "rule": "Core Components",
+      "owner": ".opencode/project-identity.md#Core Components",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Core Components"
+    },
+    {
+      "id": "project.opencode-project-identity-md-conventions.7",
+      "rule": "Conventions",
+      "owner": ".opencode/project-identity.md#Conventions",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Conventions"
+    },
+    {
+      "id": "project.opencode-project-identity-md-environment-variables-env.8",
+      "rule": "Environment Variables (`.env`)",
+      "owner": ".opencode/project-identity.md#Environment Variables (`.env`)",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Environment Variables (`.env`)"
+    },
+    {
+      "id": "project.opencode-project-identity-md-design-principles.9",
+      "rule": "Design Principles",
+      "owner": ".opencode/project-identity.md#Design Principles",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Design Principles"
+    },
+    {
+      "id": "project.opencode-project-identity-md-architectural-invariants.10",
+      "rule": "Architectural Invariants",
+      "owner": ".opencode/project-identity.md#Architectural Invariants",
+      "scope": "project",
+      "file": ".opencode/project-identity.md",
+      "section": "Architectural Invariants"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/auditoria/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-procedimiento.5",
+      "rule": "Procedimiento",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Procedimiento",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Procedimiento"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-reglas.6",
+      "rule": "Reglas",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Reglas",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Reglas"
+    },
+    {
+      "id": "project.opencode-skills-auditoria-skill-md-formato-de-salida.7",
+      "rule": "Formato de salida",
+      "owner": ".opencode/skills/auditoria/SKILL.md#Formato de salida",
+      "scope": "project",
+      "file": ".opencode/skills/auditoria/SKILL.md",
+      "section": "Formato de salida"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-mapa-de-m-dulos.1",
+      "rule": "Mapa de módulos",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Mapa de módulos",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Mapa de módulos"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-pipeline-de-ingesta-web.2",
+      "rule": "Pipeline de ingesta (web)",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Pipeline de ingesta (web)",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Pipeline de ingesta (web)"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-pipeline-de-ingesta-local.3",
+      "rule": "Pipeline de ingesta (local)",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Pipeline de ingesta (local)",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Pipeline de ingesta (local)"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-pipeline-de-consulta.4",
+      "rule": "Pipeline de consulta",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Pipeline de consulta",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Pipeline de consulta"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-par-metros-rag.5",
+      "rule": "Parámetros RAG",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Parámetros RAG",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Parámetros RAG"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-invariantes.6",
+      "rule": "Invariantes",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Invariantes",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Invariantes"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-references-knowledge-md-riesgos-conocidos.7",
+      "rule": "Riesgos conocidos",
+      "owner": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md#Riesgos conocidos",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/references/KNOWLEDGE.md",
+      "section": "Riesgos conocidos"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-workflow.5",
+      "rule": "Workflow",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Workflow",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Workflow"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-gotchas-riesgos.7",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-relaciones.8",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-archivos-relacionados.9",
+      "rule": "Archivos relacionados",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Archivos relacionados",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Archivos relacionados"
+    },
+    {
+      "id": "project.opencode-skills-base-conocimiento-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/base-conocimiento/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/base-conocimiento/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-procedimiento.5",
+      "rule": "Procedimiento",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Procedimiento",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Procedimiento"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-reglas.7",
+      "rule": "Reglas",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Reglas",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Reglas"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-gotchas-riesgos.8",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-relaciones.9",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-calidad-proyecto-skill-md-formato-de-salida.11",
+      "rule": "Formato de salida",
+      "owner": ".opencode/skills/calidad-proyecto/SKILL.md#Formato de salida",
+      "scope": "project",
+      "file": ".opencode/skills/calidad-proyecto/SKILL.md",
+      "section": "Formato de salida"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-mapa-de-m-dulos.1",
+      "rule": "Mapa de módulos",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Mapa de módulos",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Mapa de módulos"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-resoluci-n-de-rutas-atlaspaths.2",
+      "rule": "Resolución de rutas (AtlasPaths)",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Resolución de rutas (AtlasPaths)",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Resolución de rutas (AtlasPaths)"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-composici-n-de-doctor-py.3",
+      "rule": "Composición de doctor.py",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Composición de doctor.py",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Composición de doctor.py"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-composici-n-de-healer-py.4",
+      "rule": "Composición de healer.py",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Composición de healer.py",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Composición de healer.py"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-variables-de-entorno-env.5",
+      "rule": "Variables de entorno (.env)",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Variables de entorno (.env)",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Variables de entorno (.env)"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-references-knowledge-md-invariantes-del-sistema.6",
+      "rule": "Invariantes del sistema",
+      "owner": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md#Invariantes del sistema",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/references/KNOWLEDGE.md",
+      "section": "Invariantes del sistema"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-workflow.5",
+      "rule": "Workflow",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Workflow",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Workflow"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-gotchas-riesgos.7",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-relaciones.8",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-archivos-relacionados.9",
+      "rule": "Archivos relacionados",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Archivos relacionados",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Archivos relacionados"
+    },
+    {
+      "id": "project.opencode-skills-configuracion-sistema-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/configuracion-sistema/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/configuracion-sistema/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-references-knowledge-md-mapa-de-m-dulos.1",
+      "rule": "Mapa de módulos",
+      "owner": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md#Mapa de módulos",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md",
+      "section": "Mapa de módulos"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-references-knowledge-md-notas-t-cnicas.2",
+      "rule": "Notas técnicas",
+      "owner": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md#Notas técnicas",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md",
+      "section": "Notas técnicas"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-references-knowledge-md-riesgos.3",
+      "rule": "Riesgos",
+      "owner": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md#Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/references/KNOWLEDGE.md",
+      "section": "Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-workflow.5",
+      "rule": "Workflow",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Workflow",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Workflow"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-gotchas-riesgos.7",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-relaciones.8",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-archivos-relacionados.9",
+      "rule": "Archivos relacionados",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Archivos relacionados",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Archivos relacionados"
+    },
+    {
+      "id": "project.opencode-skills-interfaz-usuario-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/interfaz-usuario/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/interfaz-usuario/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-references-knowledge-md-mapa-de-m-dulos.1",
+      "rule": "Mapa de módulos",
+      "owner": ".opencode/skills/multimodal/references/KNOWLEDGE.md#Mapa de módulos",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/references/KNOWLEDGE.md",
+      "section": "Mapa de módulos"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-references-knowledge-md-patrones-de-dise-o.2",
+      "rule": "Patrones de diseño",
+      "owner": ".opencode/skills/multimodal/references/KNOWLEDGE.md#Patrones de diseño",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/references/KNOWLEDGE.md",
+      "section": "Patrones de diseño"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-references-knowledge-md-riesgos.3",
+      "rule": "Riesgos",
+      "owner": ".opencode/skills/multimodal/references/KNOWLEDGE.md#Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/references/KNOWLEDGE.md",
+      "section": "Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/multimodal/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-workflow.5",
+      "rule": "Workflow",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Workflow",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Workflow"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-gotchas-riesgos.7",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-relaciones.8",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-archivos-relacionados.9",
+      "rule": "Archivos relacionados",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Archivos relacionados",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Archivos relacionados"
+    },
+    {
+      "id": "project.opencode-skills-multimodal-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/multimodal/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/multimodal/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-references-knowledge-md-mapa-de-m-dulos.1",
+      "rule": "Mapa de módulos",
+      "owner": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md#Mapa de módulos",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md",
+      "section": "Mapa de módulos"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-references-knowledge-md-flujo-de-ejecuci-n.2",
+      "rule": "Flujo de ejecución",
+      "owner": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md#Flujo de ejecución",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md",
+      "section": "Flujo de ejecución"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-references-knowledge-md-invariantes-arquitect-nicos.3",
+      "rule": "Invariantes arquitectónicos",
+      "owner": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md#Invariantes arquitectónicos",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md",
+      "section": "Invariantes arquitectónicos"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-references-knowledge-md-deudas-y-restricciones-actuales.4",
+      "rule": "Deudas y restricciones actuales",
+      "owner": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md#Deudas y restricciones actuales",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md",
+      "section": "Deudas y restricciones actuales"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-references-knowledge-md-riesgos-conocidos-detallados.5",
+      "rule": "Riesgos conocidos detallados",
+      "owner": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md#Riesgos conocidos detallados",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/references/KNOWLEDGE.md",
+      "section": "Riesgos conocidos detallados"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-frontmatter.1",
+      "rule": "Frontmatter",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-prop-sito.2",
+      "rule": "Propósito",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Propósito",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Propósito"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-cu-ndo-usarla.3",
+      "rule": "Cuándo usarla",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Cuándo usarla",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Cuándo usarla"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-cu-ndo-no-usarla.4",
+      "rule": "Cuándo no usarla",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Cuándo no usarla",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Cuándo no usarla"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-workflow.5",
+      "rule": "Workflow",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Workflow",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Workflow"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-checklist-r-pido.6",
+      "rule": "Checklist rápido",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Checklist rápido",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Checklist rápido"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-gotchas-riesgos.7",
+      "rule": "Gotchas / Riesgos",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Gotchas / Riesgos",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Gotchas / Riesgos"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-relaciones.8",
+      "rule": "Relaciones",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Relaciones",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Relaciones"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-archivos-relacionados.9",
+      "rule": "Archivos relacionados",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Archivos relacionados",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Archivos relacionados"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-validaci-n.10",
+      "rule": "Validación",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Validación",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Validación"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-formato-de-respuesta.11",
+      "rule": "Formato de respuesta",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Formato de respuesta",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Formato de respuesta"
+    },
+    {
+      "id": "project.opencode-skills-nucleo-atlas-skill-md-reglas-de-seguridad.12",
+      "rule": "Reglas de seguridad",
+      "owner": ".opencode/skills/nucleo-atlas/SKILL.md#Reglas de seguridad",
+      "scope": "project",
+      "file": ".opencode/skills/nucleo-atlas/SKILL.md",
+      "section": "Reglas de seguridad"
+    },
+    {
+      "id": "project.opencode-agents-workflow-auditor-md-frontmatter.1",
+      "rule": "frontmatter",
+      "owner": ".opencode/agents/workflow-auditor.md#frontmatter",
+      "scope": "project",
+      "file": ".opencode/agents/workflow-auditor.md",
+      "section": "frontmatter"
+    },
+    {
+      "id": "project.opencode-agents-workflow-auditor-md-document.2",
+      "rule": "@document",
+      "owner": ".opencode/agents/workflow-auditor.md#@document",
+      "scope": "project",
+      "file": ".opencode/agents/workflow-auditor.md",
+      "section": "@document"
+    },
+    {
+      "id": "project.opencode-agents-workflow-auditor-md-audit-mode.3",
+      "rule": "Audit mode",
+      "owner": ".opencode/agents/workflow-auditor.md#Audit mode",
+      "scope": "project",
+      "file": ".opencode/agents/workflow-auditor.md",
+      "section": "Audit mode"
+    },
+    {
+      "id": "project.opencode-agents-workflow-auditor-md-atlas-specific-evidence.4",
+      "rule": "Atlas-specific evidence",
+      "owner": ".opencode/agents/workflow-auditor.md#Atlas-specific evidence",
+      "scope": "project",
+      "file": ".opencode/agents/workflow-auditor.md",
+      "section": "Atlas-specific evidence"
+    },
+    {
+      "id": "project.opencode-agents-workflow-auditor-md-output.5",
+      "rule": "Output",
+      "owner": ".opencode/agents/workflow-auditor.md#Output",
+      "scope": "project",
+      "file": ".opencode/agents/workflow-auditor.md",
+      "section": "Output"
+    }
+  ]
+}

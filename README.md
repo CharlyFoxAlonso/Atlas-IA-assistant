@@ -33,7 +33,10 @@
 
 Atlas is an **advanced AI assistant system** that seamlessly combines local models (100% privacy) with high-performance cloud APIs (maximum power). It implements:
 
-Atlas v4.1 is currently a **release candidate**.
+Atlas v4.1 is a **feature-branch release candidate**. Incremental-indexing cuts
+IDX-C1 through IDX-C5 and the DOC-C6 documentation alignment are complete; the
+final INT-C7 integration gate is still pending. The branch is not yet declared
+ready to merge.
 
 - **Semantic RAG (Retrieval-Augmented Generation)** powered by ChromaDB for contextual document search.
 - **Intelligent multi-agent system** with dynamic intent routing based on user input.
@@ -93,6 +96,10 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 - Automatically indexes PDFs, DOCX, PPTX, TXT, MD, and images.
 - **Incremental indexing (v4.1):** ingesting a new file indexes only that file — it no longer rebuilds the whole library. A local manifest (`vector_db/index_manifest.json`) tracks each document's SHA-256, so unchanged files are never re-read or re-embedded, modified files are re-indexed individually, and deleted files are removed from the index.
 - `!indexar` keeps its meaning: an explicit **full rebuild**. `!indexar sync` runs the **incremental synchronization** (new/modified/deleted only).
+- `!indexar status` runs the shared read-only consistency diagnosis on demand and
+  reports its five states plus writer/layer summaries without repairing anything.
+- Conservative repair is available only through the technical Healer CLI: preview
+  first, then explicit `--apply`. Orphan vectors are reported and never purged.
 - Implements smart chunking with chapter and section boundary detection.
 - Uses **lazy-loaded ChromaDB & SentenceTransformers** to keep memory footprint light and start times ultra-fast.
 - Fallback text search using contextual score matching when vector DB is uninitialized.
@@ -132,6 +139,9 @@ Most AI assistants are opaque black boxes. Atlas is engineered to be:
 - **Prompt Playground:** the Streamlit UI can compare one prompt across available local models.
 - **Basic dashboard:** the UI exposes current system and RAG metrics. Advanced observability remains partial.
 - **Runtime foundation:** `core/system` provides Doctor, Healer, Launcher, typed results, dry-run defaults, and a technical CLI.
+- **Index consistency:** IDX-C1 through IDX-C5 add read-only diagnosis, one writer
+  lock, conservative repair with post-check, explicit status surfaces, and a
+  controlled Healer/CLI boundary.
 - **Version identity:** technical metadata uses `4.1.0`; visible product labels use `Atlas v4.1`.
 - **Pending:** Chat Session Exporter, advanced dashboard completion, and v4.1.x crawler follow-ups listed in the roadmap.
 
@@ -236,10 +246,29 @@ No need to remember long terminal commands. Use the pre-configured launchers:
 When using the terminal or chat input, you can type special commands starting with `!`:
 - `!ayuda` or `!help` - Display available commands.
 - `!indexar` - Rebuild the semantic RAG index from `memory/Atlas_Memory/`.
+- `!indexar sync` - Synchronize only new, modified, and deleted sources.
+- `!indexar status` - Query index consistency and writer state without writing.
 - `!analizar` - Force memory analysis on pending conversations.
 - `!categorias` - List available memory categories.
 - `!modelos` - View and manage downloaded Ollama models.
 - `!autoconocer` - Generate a detailed system architecture report.
+
+### Technical index maintenance
+
+Index repair is not a chat command or automatic UI action. From the repository root,
+the first command previews the current state without acquiring the writer lock; the
+second explicitly authorizes conservative repair:
+
+```powershell
+.venv\Scripts\python.exe -m core.system heal index_consistency
+.venv\Scripts\python.exe -m core.system heal index_consistency --apply
+```
+
+Preview returns exit code `0` for `HEALTHY`, `HEALTHY_EMPTY`, or a planned
+`INCONSISTENT` repair, and `1` when `DEGRADED` or `UNAVAILABLE` blocks it. Invalid
+arguments return `2`; a requested repair that is busy, blocked, partial, failed, or
+still inconsistent returns `3`. Only a post-check-confirmed convergence is shown as
+completed. The CLI anonymizes per-document items and never offers orphan purging.
 
 ---
 
@@ -295,6 +324,12 @@ We prioritize maintaining a secure, lightweight, and robust assistant over "feat
 
 Completed:
 - [x] Incremental local indexing and synchronization.
+- [x] IDX-C1 read-only consistency diagnosis with five states.
+- [x] IDX-C2 fail-fast single-writer lock and read-only writer state.
+- [x] IDX-C3 conservative repair with identity confirmation and final post-check.
+- [x] IDX-C4 read-only status in Doctor, chat, and explicit Streamlit action.
+- [x] IDX-C5 controlled Healer/technical-CLI repair surface.
+- [x] DOC-C6 documentation aligned with the implemented indexing contracts.
 - [x] Incremental web/crawler ingestion.
 - [x] EPUB and HTML loading.
 - [x] Prompt Playground.
@@ -302,6 +337,12 @@ Completed:
 
 Partial:
 - [~] **Advanced dashboard:** basic metrics exist; expanded CPU, RAM, GPU, and operational views remain pending.
+
+Pending integration:
+- [ ] **INT-C7:** run the final full validation, classify the current branch commits,
+  and obtain explicit merge authorization. Until then, this branch is not merge-ready.
+
+Governing specification: the incremental-indexing behavioral and consistency contracts are frozen in [docs/spec/atlas-v4.1-incremental-indexing-sdd.md](docs/spec/atlas-v4.1-incremental-indexing-sdd.md).
 
 ### v4.1.x technical follow-ups
 - [ ] **L1 / ATLAS-TD-001:** make the ignored crawler `reindexer` compatibility parameter explicit.

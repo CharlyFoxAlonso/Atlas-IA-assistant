@@ -5,18 +5,53 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from core.index_status import IndexStatusView
 from core.system.command_runner import run_command, start_command
 from core.system.doctor import (
     _derive_capabilities,
     _detect_gpu,
     _detect_ollama,
     _detect_python_packages,
+    _index_consistency_check,
     _read_env_presence,
     _startup_profiles,
     diagnosticar_sistema,
 )
 from core.system.paths import get_paths
 from core.system.result_types import CheckResult, CommandResult, DiagnosisResult
+
+
+def _index_status(state="HEALTHY", *, writer_state="inactive"):
+    labels = {
+        "HEALTHY": ("Saludable", "success", True),
+        "HEALTHY_EMPTY": ("Saludable y vacío", "success", True),
+        "DEGRADED": ("Degradado", "warning", False),
+        "INCONSISTENT": ("Inconsistente", "warning", False),
+        "UNAVAILABLE": ("No disponible", "error", False),
+    }
+    label, severity, healthy = labels[state]
+    writer_labels = {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "unknown": "Desconocido",
+    }
+    return IndexStatusView(
+        state=state,
+        state_label=label,
+        observed_state=state,
+        observed_state_label=label,
+        healthy=healthy,
+        severity=severity,
+        writer_state=writer_state,
+        writer_label=writer_labels[writer_state],
+        possibly_transient=writer_state != "inactive",
+        sources_count=1,
+        manifest_entries_count=1,
+        chunk_count=2,
+        divergences={},
+        orphan_count=0,
+        issues=(),
+    )
 
 
 class ResultTypeTests(unittest.TestCase):
@@ -106,6 +141,22 @@ class CommandRunnerTests(unittest.TestCase):
 
 
 class DoctorTests(unittest.TestCase):
+    def test_index_consistency_check_preserves_all_five_states(self):
+        for state in (
+            "HEALTHY",
+            "HEALTHY_EMPTY",
+            "DEGRADED",
+            "INCONSISTENT",
+            "UNAVAILABLE",
+        ):
+            with self.subTest(state=state):
+                check = _index_consistency_check(_index_status(state))
+                self.assertEqual(check.name, "index_consistency")
+                self.assertEqual(check.severity, "recommended")
+                self.assertEqual(check.details["state"], state)
+                expected = "ok" if state in {"HEALTHY", "HEALTHY_EMPTY"} else "warning"
+                self.assertEqual(check.status, expected)
+
     @patch("core.system.doctor.run_command")
     @patch("core.system.doctor.importlib.util.find_spec", return_value=object())
     def test_deep_package_validation_is_isolated_and_structured(self, _find_spec, mocked_run):
@@ -183,9 +234,12 @@ class DoctorTests(unittest.TestCase):
         self.assertFalse(capabilities["rag"])
         self.assertFalse(capabilities["ocr"])
 
+    @patch("core.system.doctor.consultar_estado_indice")
     @patch("core.system.doctor._detect_ollama")
     @patch("core.system.doctor._detect_gpu")
-    def test_public_diagnosis_is_json_serializable(self, mocked_gpu, mocked_ollama):
+    def test_public_diagnosis_is_json_serializable(
+        self, mocked_gpu, mocked_ollama, mocked_index_status
+    ):
         mocked_gpu.return_value = {"installed": False, "functional": False, "vram_mb": None}
         mocked_ollama.return_value = {
             "installed": False,
@@ -193,13 +247,73 @@ class DoctorTests(unittest.TestCase):
             "service_available": False,
             "models": [],
         }
-        report = diagnosticar_sistema(environment={})
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            paths = get_paths(
+                packaged=True,
+                executable=root / "Atlas.exe",
+                environment={
+                    "LOCALAPPDATA": str(root / "Local"),
+                    "APPDATA": str(root / "Roaming"),
+                },
+            )
+            report = diagnosticar_sistema(paths=paths, environment={})
         json.dumps(report)
         self.assertIn("ready_to_start", report)
         self.assertIn("capabilities", report)
         self.assertIsInstance(report["gpu"]["vram_mb"], type(None))
         self.assertIsInstance(report["python_packages"]["streamlit"], bool)
         self.assertIn("streamlit", report["python_package_details"])
+        self.assertNotIn("index_consistency", report)
+        mocked_index_status.assert_not_called()
+
+    @patch("core.system.doctor.consultar_estado_indice")
+    @patch("core.system.doctor._detect_ollama")
+    @patch("core.system.doctor._detect_gpu")
+    def test_index_consistency_is_explicit_and_uses_selected_paths(
+        self, mocked_gpu, mocked_ollama, mocked_index_status
+    ):
+        mocked_gpu.return_value = {
+            "installed": False,
+            "functional": False,
+            "vram_mb": None,
+        }
+        mocked_ollama.return_value = {
+            "installed": False,
+            "functional": False,
+            "service_available": False,
+            "models": [],
+        }
+        mocked_index_status.return_value = _index_status("INCONSISTENT")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            paths = get_paths(
+                packaged=True,
+                executable=root / "Atlas.exe",
+                environment={
+                    "LOCALAPPDATA": str(root / "Local"),
+                    "APPDATA": str(root / "Roaming"),
+                },
+            )
+            report = diagnosticar_sistema(
+                paths=paths,
+                environment={},
+                include_index_consistency=True,
+            )
+
+        self.assertEqual(report["index_consistency"]["state"], "INCONSISTENT")
+        check = next(
+            item for item in report["checks"]
+            if item["name"] == "index_consistency"
+        )
+        self.assertEqual(check["status"], "warning")
+        mocked_index_status.assert_called_once_with(
+            memoria_base=str(paths.private_memory_dir),
+            manifest_path=str(paths.chroma_dir / "index_manifest.json"),
+            chroma_path=str(paths.chroma_dir),
+            lock_path=str(paths.index_writer_lock_path),
+        )
 
     def test_legacy_healer_import_remains_available(self):
         from core.system.healer import Healer

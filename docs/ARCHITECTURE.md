@@ -34,6 +34,17 @@ Atlas implements a **Retrieval-Augmented Generation** pipeline:
 4. **Storage:** Persists vectors in **ChromaDB**.
 5. **Hybrid Retrieval:** Combines semantic cosine similarity with metadata filtering (e.g., specific chapters).
 
+Index maintenance is a separate lifecycle around that retrieval pipeline. A SHA-256
+manifest tracks the last successfully indexed version of each relative document
+identity; all writers share one fail-fast lock. A read-only consistency snapshot
+derives `HEALTHY`, `HEALTHY_EMPTY`, `DEGRADED`, `INCONSISTENT`, or `UNAVAILABLE`
+from source files, manifest, Chroma, and writer state. Conservative repair is an
+explicit Healer/technical-CLI operation with preview, consent, and a final post-check;
+it never purges orphan vectors. The governing contract is the
+[Atlas 4.1 indexing SDD](spec/atlas-v4.1-incremental-indexing-sdd.md), while
+[Incremental Indexing](architecture/incremental-indexing.md) describes the current
+implementation.
+
 ## 3. Inference Engines
 
 Atlas supports three distinct backends for flexibility:
@@ -44,4 +55,13 @@ Atlas supports three distinct backends for flexibility:
 ## 4. Data Persistence
 - **Chats:** Saved as isolated JSON files per session.
 - **Long-term Memory:** Markdown files organized by category (Profile, University, Projects, etc.).
-- **Vector DB:** Persistent ChromaDB storage in `/vector_db`.
+- **Vector DB:** Persistent ChromaDB storage at
+  `core.system.paths.get_paths().chroma_dir`. `core.config` exposes the
+  absolute path and keeps `index_manifest.json` in that same directory.
+  Development defaults to `<project_root>/vector_db`; `ATLAS_DATA_DIR`
+  and packaged mode relocate both together. `ATLAS_DATA_DIR` also controls the
+  default memory root; `ATLAS_MEMORY_DIR` can override only the source-document
+  location without moving the vector store. A distinct legacy
+  `cwd/vector_db` never becomes a silent fallback: when the configured
+  path is absent, Atlas stops for explicit manual migration. Backups read
+  the configured source but keep the stable ZIP layout `vector_db/...`.

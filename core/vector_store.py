@@ -7,14 +7,18 @@ se necesita una búsqueda, no al importar este módulo.
 """
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+from core.config import CHROMA_PATH, COLLECTION_NAME
+from core.index_writer_lock import acquire_index_writer_lock
+from core.system.paths import validate_vector_store_path
 
 # ============================================
 # CONFIGURACIÓN
 # ============================================
-CHROMA_PATH = "./vector_db"
-COLLECTION_NAME = "atlas_rag"
-
 _cliente = None
 _coleccion = None
 _embedding_fn = None
@@ -33,6 +37,8 @@ def _get_collection():
     if _coleccion is not None:
         return _coleccion
 
+    resolved_chroma_path = str(validate_vector_store_path(CHROMA_PATH))
+
     import chromadb
     import os as _os
     _os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -42,7 +48,7 @@ def _get_collection():
         _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="paraphrase-multilingual-MiniLM-L12-v2"
         )
-        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _cliente = chromadb.PersistentClient(path=resolved_chroma_path)
         _coleccion = _cliente.get_or_create_collection(
             name=COLLECTION_NAME,
             embedding_function=_embedding_fn,
@@ -52,16 +58,16 @@ def _get_collection():
     except (KeyError, RuntimeError, ValueError) as e:
         # DB incompat (formato viejo). Respaldo y reintento limpio.
         from core.security import log_seguridad
-        log_seguridad("VECTOR_DB_INCOMPAT", f"Reformateando {CHROMA_PATH}: {type(e).__name__}: {e}")
+        log_seguridad("VECTOR_DB_INCOMPAT", f"Reformateando {resolved_chroma_path}: {type(e).__name__}: {e}")
         import shutil
-        if os.path.exists(CHROMA_PATH):
-            backup = CHROMA_PATH + ".incompat." + datetime.now().strftime("%Y%m%d_%H%M%S")
+        if os.path.exists(resolved_chroma_path):
+            backup = resolved_chroma_path + ".incompat." + datetime.now().strftime("%Y%m%d_%H%M%S")
             try:
-                shutil.move(CHROMA_PATH, backup)
+                shutil.move(resolved_chroma_path, backup)
             except Exception:
                 # Si no se puede mover (archivo bloqueado), abortar
                 raise RuntimeError(
-                    f"No se pudo migrar {CHROMA_PATH}. Cerrá Atlas (y Ollama si lo usás) "
+                    f"No se pudo migrar {resolved_chroma_path}. Cerrá Atlas (y Ollama si lo usás) "
                     f"y borrá manualmente la carpeta vector_db."
                 ) from e
         _coleccion = None
@@ -70,7 +76,7 @@ def _get_collection():
         _embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="paraphrase-multilingual-MiniLM-L12-v2"
         )
-        _cliente = chromadb.PersistentClient(path=CHROMA_PATH)
+        _cliente = chromadb.PersistentClient(path=resolved_chroma_path)
         _coleccion = _cliente.get_or_create_collection(
             name=COLLECTION_NAME,
             embedding_function=_embedding_fn,
@@ -215,7 +221,12 @@ def _ids_chunks_documento(col, doc_id, rutas_legacy=None):
     return list(dict.fromkeys(ids))
 
 
-def eliminar_documento(doc_id, rutas_legacy=None):
+def eliminar_documento(doc_id, rutas_legacy=None, *, lock_path=None):
+    with acquire_index_writer_lock(lock_path=lock_path):
+        return _eliminar_documento_unlocked(doc_id, rutas_legacy=rutas_legacy)
+
+
+def _eliminar_documento_unlocked(doc_id, rutas_legacy=None):
     """
     Elimina de ChromaDB todos los chunks de un documento.
 
@@ -246,7 +257,17 @@ def eliminar_documento(doc_id, rutas_legacy=None):
     return len(ids)
 
 
-def agregar_documento(doc_id, texto, metadata=None):
+def agregar_documento(doc_id, texto, metadata=None, *, lock_path=None):
+    with acquire_index_writer_lock(lock_path=lock_path):
+        return _agregar_documento_unlocked(
+            doc_id,
+            texto,
+            metadata=metadata,
+            lock_path=lock_path,
+        )
+
+
+def _agregar_documento_unlocked(doc_id, texto, metadata=None, *, lock_path=None):
     """
     Agrega un documento a la base de datos vectorial.
 
@@ -282,7 +303,11 @@ def agregar_documento(doc_id, texto, metadata=None):
     if "doc_id" in base_metadata:
         ids = [f"{doc_id}:chunk:{i}" for i in range(len(chunks))]
         rutas_legacy = _variantes_ruta_legacy(base_metadata["doc_id"])
-        eliminar_documento(doc_id, rutas_legacy=rutas_legacy)
+        eliminar_documento(
+            doc_id,
+            rutas_legacy=rutas_legacy,
+            lock_path=lock_path,
+        )
     else:
         ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
         try:
@@ -423,3 +448,139 @@ def obtener_estadisticas():
         "nombre_coleccion": COLLECTION_NAME,
         "ruta_db": CHROMA_PATH
     }
+
+
+# ============================================
+# ACCESO DE SOLO LECTURA (IDX-C1)
+# ============================================
+
+IDX_PUBLIC_ERROR_MESSAGES = {
+    "legacy_vector_store_detected": (
+        "Legacy vector store detected; configured vector storage is unavailable "
+        "until storage is moved or ATLAS_DATA_DIR is restored."
+    ),
+    "chroma_backend_unavailable": (
+        "Chroma backend unavailable while opening existing collection."
+    ),
+    "chroma_collection_read_failed": "Chroma collection could not be read.",
+    "consistency_verification_failed": (
+        "Consistency verification encountered an internal error."
+    ),
+    "raw_chroma_error_rejected": (
+        "Chroma read access reported an unsafe external error."
+    ),
+}
+
+IDX_SAFE_ERROR_TYPES = {
+    "Exception",
+    "RuntimeError",
+    "ValueError",
+    "OSError",
+    "FileNotFoundError",
+    "PermissionError",
+    "LegacyVectorStoreError",
+}
+
+
+def _tipo_error_seguro(error) -> str:
+    nombre = error if isinstance(error, str) else type(error).__name__
+    return nombre if nombre in IDX_SAFE_ERROR_TYPES else "Exception"
+
+
+def _render_idx_error(error_code: str, error_type: Optional[str]) -> str:
+    mensaje = IDX_PUBLIC_ERROR_MESSAGES[error_code]
+    tipo = _tipo_error_seguro(error_type or "Exception")
+    return f"{error_code}: {mensaje} [{tipo}]"
+
+
+@dataclass(frozen=True)
+class ChromaReadStatus:
+    """
+    Estado público y serializable del acceso de solo lectura a Chroma.
+
+    No contiene el handle operativo de la colección: IDX-C1 solo publica
+    metadata allowlisted y mantiene los objetos de backend fuera de las
+    superficies serializables.
+    """
+    root_present: bool = False
+    collection_present: bool = False
+    unavailable: bool = False
+    error_code: Optional[str] = None
+    error_type: Optional[str] = None
+    error: Optional[str] = None
+
+    def __post_init__(self):
+        code = self.error_code
+        error_type = _tipo_error_seguro(self.error_type or "Exception")
+        if code is None and self.error is not None:
+            code = "raw_chroma_error_rejected"
+        if code is None:
+            object.__setattr__(self, "error", None)
+            object.__setattr__(self, "error_type", None)
+            return
+        if code not in IDX_PUBLIC_ERROR_MESSAGES:
+            code = "raw_chroma_error_rejected"
+            error_type = "Exception"
+        object.__setattr__(self, "error_code", code)
+        object.__setattr__(self, "error_type", error_type)
+        object.__setattr__(self, "error", _render_idx_error(code, error_type))
+
+
+class _ChromaReadAccess:
+    """
+    Acceso operativo interno a Chroma para IDX-C1.
+
+    No es dataclass ni superficie pública serializable. El handle puede
+    contener objetos Chroma o fakes de tests; la garantía de seguridad es
+    que solo `status` cruza hacia reportes públicos.
+    """
+    __slots__ = ("status", "_collection")
+
+    def __init__(self, status: Optional[ChromaReadStatus] = None, collection=None):
+        self.status = status or ChromaReadStatus()
+        self._collection = collection
+
+
+def _abrir_coleccion_existente(chroma_path, collection_name):
+    """
+    Abre SOLO una colección Chroma existente en modo lectura (IDX-C1).
+
+    Nunca crea almacenamiento: si la raíz no existe o no contiene el
+    archivo `chroma.sqlite3`, no construye el cliente y reporta la
+    colección como ausente. Sobre una raíz existente usa `get_collection`
+    (nunca `get_or_create_collection`). Un `ValueError` de `get_collection`
+    (colección inexistente en chromadb 0.5.x) se reporta como colección
+    ausente; cualquier otro error se reporta como backend inaccesible.
+    """
+    root = Path(chroma_path).expanduser().resolve()
+    root_present = root.is_dir()
+    if not root_present or not (root / "chroma.sqlite3").is_file():
+        return _ChromaReadAccess(ChromaReadStatus(root_present=root_present))
+    try:
+        import chromadb
+        cliente = chromadb.PersistentClient(path=str(root))
+        coleccion = cliente.get_collection(name=collection_name)
+        return _ChromaReadAccess(
+            ChromaReadStatus(
+                root_present=True,
+                collection_present=True,
+            ),
+            collection=coleccion,
+        )
+    except ValueError:
+        # chromadb 0.5.x lanza ValueError cuando la colección no existe.
+        return _ChromaReadAccess(ChromaReadStatus(root_present=True))
+    except Exception as e:
+        # Backend inaccesible: la colección se intentó abrir pero el fallo
+        # es del backend, no "colección ausente" (unavailable es la señal
+        # autoritativa; collection_present=True evita clasificarla como
+        # colección inexistente).
+        return _ChromaReadAccess(
+            ChromaReadStatus(
+                root_present=True,
+                collection_present=True,
+                unavailable=True,
+                error_code="chroma_backend_unavailable",
+                error_type=_tipo_error_seguro(e),
+            )
+        )
