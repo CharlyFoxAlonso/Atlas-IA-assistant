@@ -46,7 +46,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 | ATLAS-TD-018 | README enlaza una licencia inexistente | MEDIUM | OPEN | README / publicación |
 | ATLAS-TD-019 | Ausencia de registro central de deuda técnica | MEDIUM | RESOLVED | Gobernanza |
 | ATLAS-TD-020 | Documentos históricos no están claramente marcados | LOW | RESOLVED | Documentación histórica |
-| ATLAS-TD-021 | Rutas personales en fallbacks de OCR y PDF | LOW | OPEN | OCR / PDF |
+| ATLAS-TD-021 | Rutas de instalación hardcodeadas en fallbacks de OCR y PDF | LOW | OPEN | OCR / PDF |
 | ATLAS-TD-022 | Fallos de archivos nuevos no persisten en el manifiesto | MEDIUM | OPEN | Indexación incremental |
 | ATLAS-TD-023 | Reporte asimétrico si falla el manifiesto tras eliminar | MEDIUM | OPEN | Indexador / manifiesto |
 | ATLAS-TD-024 | `.tmp` huérfanos del manifiesto sin limpieza | LOW | OPEN | Manifiesto |
@@ -463,7 +463,7 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 
 ---
 
-## ATLAS-TD-021 — Rutas personales en fallbacks de OCR y PDF
+## ATLAS-TD-021 — Rutas de instalación hardcodeadas en fallbacks de OCR y PDF
 
 - **Estado:** `OPEN`
 - **Severidad:** `LOW`
@@ -471,10 +471,10 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Componentes:**
   - `core/pdf_reader.py`
   - `diagnostico_ocr.py`
-- **Descripción:** Existen rutas de fallback con `C:\Users\delfa` para localizar herramientas externas como Poppler o Tesseract.
-- **Impacto:** Reduce portabilidad y conserva una ruta personal en archivos rastreados. No bloquea la ejecución normal cuando las herramientas están disponibles en `PATH`.
-- **Corrección propuesta:** Usar variables de entorno, configuración explícita o detección portable.
-- **Prueba de aceptación:** `git grep -F "C:\Users\delfa" -- "*.py"` no devuelve rutas ejecutables.
+- **Descripción:** La fuente actual no contiene rutas personales con un nombre de usuario fijo. Sin embargo, `core/pdf_reader.py` y `diagnostico_ocr.py` conservan listas de rutas de instalación específicas de Windows y otros sistemas para localizar Poppler, Tesseract y `tessdata`; algunas se expanden desde el home del usuario y otras fijan versiones concretas.
+- **Impacto:** Reduce portabilidad y puede dejar de detectar herramientas instaladas en ubicaciones válidas no enumeradas. No bloquea la ejecución normal cuando la configuración explícita o la detección del sistema encuentra las herramientas.
+- **Corrección propuesta:** Centralizar la configuración de herramientas externas, priorizar variables de entorno o `PATH` y limitar los candidatos hardcodeados a fallbacks portables y mantenibles.
+- **Prueba de aceptación:** Tests aislados demuestran que Poppler, Tesseract y `tessdata` se detectan mediante configuración o `PATH` sin depender de una ruta de instalación fija; la fuente productiva no contiene nombres de usuario personales.
 - **Versión objetivo sugerida:** `v4.1.x`.
 - **Commit de resolución:** pendiente.
 

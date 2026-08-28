@@ -34,8 +34,9 @@
 Atlas is an **advanced AI assistant system** that seamlessly combines local models (100% privacy) with high-performance cloud APIs (maximum power). It implements:
 
 Atlas v4.1 is a **feature-branch release candidate**. Incremental-indexing cuts
-IDX-C1 through IDX-C5 are implemented; DOC-C6 is in progress and the final INT-C7
-integration gate is still pending. The branch is not yet declared ready to merge.
+IDX-C1 through IDX-C5 and the DOC-C6 documentation alignment are complete; the
+final INT-C7 integration gate is still pending. The branch is not yet declared
+ready to merge.
 
 - **Semantic RAG (Retrieval-Augmented Generation)** powered by ChromaDB for contextual document search.
 - **Intelligent multi-agent system** with dynamic intent routing based on user input.
@@ -328,13 +329,13 @@ Completed:
 - [x] IDX-C3 conservative repair with identity confirmation and final post-check.
 - [x] IDX-C4 read-only status in Doctor, chat, and explicit Streamlit action.
 - [x] IDX-C5 controlled Healer/technical-CLI repair surface.
+- [x] DOC-C6 documentation aligned with the implemented indexing contracts.
 - [x] Incremental web/crawler ingestion.
 - [x] EPUB and HTML loading.
 - [x] Prompt Playground.
 - [x] Basic system and RAG dashboard.
 
 Partial:
-- [~] **DOC-C6:** documentation alignment is in progress.
 - [~] **Advanced dashboard:** basic metrics exist; expanded CPU, RAM, GPU, and operational views remain pending.
 
 Pending integration:

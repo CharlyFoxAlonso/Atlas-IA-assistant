@@ -1,14 +1,14 @@
 # SDD — Indexación incremental de Atlas 4.1
 
 **Estado del documento:** ACTIVA (gobernante para la rama `atlas-v4.1-incremental-indexing`)
-**Revisión:** SDD-0 (identidad conservada; alineación DOC-C6)
+**Revisión:** SDD-0 (identidad conservada; DOC-C6 completado)
 **Ruta:** `docs/spec/atlas-v4.1-incremental-indexing-sdd.md`
 **Firmada por:** plan de cierre de la rama `atlas-v4.1-incremental-indexing`
 
 Esta es la **especificación de diseño autoritativa** de la indexación incremental de
 Atlas 4.1. Congela los contratos de comportamiento y consistencia implementados por
-IDX-C1 a IDX-C5 y los cortes restantes DOC-C6 e INT-C7 de la sección 13. Ningún otro
-documento define estos contratos.
+IDX-C1 a IDX-C5, registra el cierre documental DOC-C6 y mantiene INT-C7 como corte
+restante de la sección 13. Ningún otro documento define estos contratos.
 
 Documentos relacionados:
 
@@ -506,7 +506,7 @@ como subproceso. Para la ruta exclusiva de índice debe evitar el constructor ge
 | 4 | **IDX-C3** | Reparación conservadora con post-check obligatorio. | `CURRENT` (completado) |
 | 5 | **IDX-C4** | Superficies de estado de solo lectura (check de Doctor + `!indexar status`). | `CURRENT` (completado) |
 | 6 | **IDX-C5** | Superficie explícita de reparación conservadora (Healer + CLI, dry-run por defecto). | `CURRENT` (completado) |
-| 7 | **DOC-C6** | Reconciliación documental final (feature doc, README, `.env.example`, `TECHNICAL_DEBT.md`, API reference si aplica). | `IN_PROGRESS` (este corte) |
+| 7 | **DOC-C6** | Reconciliación documental final (feature doc, README, `.env.example`, `TECHNICAL_DEBT.md`, API reference si aplica). | `CURRENT` (completado) |
 | 8 | **INT-C7** | Puerta de integración completa de la rama (validación total + clasificación de commits + autorización de merge). | `TARGET_REQUIRED_FOR_V4.1` |
 
 **Purga de huérfanos:** `DEFERRED` (requiere flujo de vista previa y confirmación;
@@ -583,8 +583,7 @@ decisión del usuario. La SDD no decide la estrategia de merge; registra el requ
 
 ## 16. Nota final
 
-Esta especificación congela contratos: IDX-C1 a IDX-C5 están implementados; DOC-C6
-permanece en curso hasta su auditoría y INT-C7 sigue pendiente. Toda discrepancia
-entre esta SDD y el código debe reportarse y resolverse antes de INT-C7, sin
-reconciliar en silencio. Cualquier cambio material posterior a estos contratos
-requiere un corte documental propio.
+Esta especificación congela contratos: IDX-C1 a IDX-C5 están implementados y DOC-C6
+está completado; INT-C7 sigue pendiente. Toda discrepancia entre esta SDD y el código
+debe reportarse y resolverse antes de INT-C7, sin reconciliar en silencio. Cualquier
+cambio material posterior a estos contratos requiere un corte documental propio.

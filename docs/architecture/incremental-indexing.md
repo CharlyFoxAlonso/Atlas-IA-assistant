@@ -1,6 +1,6 @@
 # Indexación incremental de Atlas
 
-**Estado:** Implementado hasta IDX-C5; alineación documental DOC-C6 en curso
+**Estado:** Implementado hasta IDX-C5; alineación documental DOC-C6 completada; integración INT-C7 pendiente
 **Autoridad:** este documento es **descriptivo**; no define contratos. Los contratos de comportamiento y consistencia de la indexación incremental los congela la especificación gobernante [`docs/spec/atlas-v4.1-incremental-indexing-sdd.md`](../spec/atlas-v4.1-incremental-indexing-sdd.md) (cortes IDX-C1 a INT-C7).
 **Módulos:** `core/indexer.py`, `core/index_manifest.py`, `core/vector_store.py`, `core/index_writer_lock.py`, `core/index_consistency.py`, `core/index_repair.py`, `core/index_status.py`, `core/local_ingestion_manager.py`
 **Interfaces:** `!indexar`, `!indexar sync` y `!indexar status` en chat/Streamlit; Doctor read-only; reparación controlada mediante Healer y CLI técnica
