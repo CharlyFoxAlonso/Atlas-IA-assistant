@@ -46,6 +46,13 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 | ATLAS-TD-018 | README enlaza una licencia inexistente | MEDIUM | OPEN | README / publicación |
 | ATLAS-TD-019 | Ausencia de registro central de deuda técnica | MEDIUM | RESOLVED | Gobernanza |
 | ATLAS-TD-020 | Documentos históricos no están claramente marcados | LOW | RESOLVED | Documentación histórica |
+| ATLAS-TD-021 | Rutas personales en fallbacks de OCR y PDF | LOW | OPEN | OCR / PDF |
+| ATLAS-TD-022 | Fallos de archivos nuevos no persisten en el manifiesto | MEDIUM | OPEN | Indexación incremental |
+| ATLAS-TD-023 | Reporte asimétrico si falla el manifiesto tras eliminar | MEDIUM | OPEN | Indexador / manifiesto |
+| ATLAS-TD-024 | `.tmp` huérfanos del manifiesto sin limpieza | LOW | OPEN | Manifiesto |
+| ATLAS-TD-025 | Conteos de chunks sin verificación profunda | MEDIUM | OPEN | Consistencia del índice |
+| ATLAS-TD-026 | Purga controlada de huérfanos diferida | INFORMATIONAL | OPEN | Operación del índice |
+| ATLAS-TD-027 | Cambio de modelo no dispara reindexación | INFORMATIONAL | OPEN | Manifiesto / sincronización |
 
 ---
 
@@ -470,8 +477,123 @@ Una deuda no desaparece cuando se acepta el corte que la originó. Permanece abi
 - **Prueba de aceptación:** `git grep -F "C:\Users\delfa" -- "*.py"` no devuelve rutas ejecutables.
 - **Versión objetivo sugerida:** `v4.1.x`.
 - **Commit de resolución:** pendiente.
-  
-  
+
+---
+
+## ATLAS-TD-022 — Fallos de archivos nuevos no persisten en el manifiesto
+
+- **Estado:** `OPEN`
+- **Severidad:** `MEDIUM`
+- **Origen:** SDD-0 de indexación incremental, INV-7 y sección 14.4.
+- **Componente:** `core/indexer.py`, `core/index_manifest.py`.
+- **Descripción:** Si falla la primera indexación de un archivo, no existe una entrada
+  previa donde conservar `last_error`; el archivo vuelve a descubrirse en cada sync,
+  pero el fallo no queda persistido en el manifiesto.
+- **Impacto:** El reintento funciona, aunque el estado pendiente no sobrevive como
+  diagnóstico estructurado entre ejecuciones.
+- **Corrección propuesta:** Diseñar en un corte futuro una representación compatible
+  de fallos iniciales sin registrar una huella exitosa inexistente.
+- **Prueba de aceptación:** Un fallo inicial sintético persiste como pendiente, se
+  reintenta y converge sin confundirlo con un documento indexado.
+- **Versión objetivo sugerida:** `v4.1.x`.
+- **Commit de resolución:** pendiente.
+
+---
+
+## ATLAS-TD-023 — Reporte asimétrico si falla el manifiesto tras eliminar
+
+- **Estado:** `OPEN`
+- **Severidad:** `MEDIUM`
+- **Origen:** SDD-0 de indexación incremental, INV-6 y sección 14.4.
+- **Componente:** `core/indexer.py`, `core/index_manifest.py`.
+- **Descripción:** Si Chroma elimina correctamente los chunks pero falla el guardado
+  posterior del manifiesto, `eliminar_documento_indexado()` conserva actualmente
+  `deleted`/`not_found` y registra el fallo solo en logs.
+- **Impacto:** El resultado estructurado no representa la misma divergencia que queda
+  observable entre Chroma y manifiesto.
+- **Corrección propuesta:** Alinear el resultado público con la semántica de fallo
+  parcial sin romper compatibilidad.
+- **Prueba de aceptación:** Una falla sintética de `manifest.save` después del borrado
+  produce un resultado no exitoso explícito y permite convergencia posterior.
+- **Versión objetivo sugerida:** `v4.1.x`.
+- **Commit de resolución:** pendiente.
+
+---
+
+## ATLAS-TD-024 — `.tmp` huérfanos del manifiesto sin limpieza
+
+- **Estado:** `OPEN`
+- **Severidad:** `LOW`
+- **Origen:** SDD-0 de indexación incremental, sección 14.4.
+- **Componente:** `core/index_manifest.py`.
+- **Descripción:** La publicación atómica puede dejar un archivo `.tmp` si el proceso
+  termina antes de `os.replace`; no existe una política explícita de limpieza.
+- **Impacto:** Acumula artefactos de mantenimiento sin afectar el manifiesto válido.
+- **Corrección propuesta:** Definir una limpieza segura que nunca sustituya ni borre
+  el manifiesto publicado.
+- **Prueba de aceptación:** Un `.tmp` sintético se gestiona sin modificar el JSON
+  válido ni interpretar el temporal como estado vigente.
+- **Versión objetivo sugerida:** `v4.1.x`.
+- **Commit de resolución:** pendiente.
+
+---
+
+## ATLAS-TD-025 — Conteos de chunks sin verificación profunda
+
+- **Estado:** `OPEN`
+- **Severidad:** `MEDIUM`
+- **Origen:** SDD-0 de indexación incremental, secciones 6 y 14.4.
+- **Componente:** `core/index_consistency.py`, manifiesto y Chroma.
+- **Descripción:** IDX-C1 comprueba presencia por identidad, pero no publica
+  `mismatch_chunk_counts` porque aún no existe una semántica validada para duplicados
+  legacy, estados intermedios o cambios de chunking.
+- **Impacto:** Una identidad puede tener chunks presentes y aun así diferir del conteo
+  registrado sin una categoría específica.
+- **Corrección propuesta:** Definir primero la semántica y luego añadir diagnóstico y
+  reparación en un corte separado.
+- **Prueba de aceptación:** Fixtures para conteo vigente, faltante, duplicado legacy y
+  cambio de chunking producen resultados no ambiguos.
+- **Versión objetivo sugerida:** `v4.1.x`.
+- **Commit de resolución:** pendiente.
+
+---
+
+## ATLAS-TD-026 — Purga controlada de huérfanos diferida
+
+- **Estado:** `OPEN`
+- **Severidad:** `INFORMATIONAL`
+- **Origen:** SDD-0 de indexación incremental, secciones 9 y 14.4.
+- **Componente:** operación futura del índice.
+- **Descripción:** Atlas 4.1 detecta y reporta vectores sin fuente ni manifiesto, pero
+  deliberadamente no los elimina y no expone una opción de purga.
+- **Impacto:** No es un defecto del contrato actual; registra una capacidad destructiva
+  posible que requiere diseño y consentimiento propios.
+- **Corrección propuesta:** Solo mediante una especificación futura independiente con
+  preview, identidad verificable, confirmación explícita y rollback.
+- **Prueba de aceptación:** El corte futuro deberá demostrar que preview no escribe y
+  que nada se elimina sin consentimiento inequívoco.
+- **Versión objetivo sugerida:** posterior a `v4.1`.
+- **Commit de resolución:** pendiente.
+
+---
+
+## ATLAS-TD-027 — Cambio de modelo no dispara reindexación
+
+- **Estado:** `OPEN`
+- **Severidad:** `INFORMATIONAL`
+- **Origen:** SDD-0 de indexación incremental, sección 14.4.
+- **Componente:** `core/index_manifest.py`, `core/indexer.py`.
+- **Descripción:** El manifiesto registra `embedding_model` de forma informativa, pero
+  sincronización y consistencia no lo usan como disparador de reindexación.
+- **Impacto:** Un cambio explícito de modelo puede requerir reconstrucción manual para
+  homogeneizar embeddings; no hay migración automática en v4.1.
+- **Corrección propuesta:** Definir compatibilidad y política de reindexación en un
+  corte futuro antes de automatizarla.
+- **Prueba de aceptación:** Cambiar el modelo en fixtures produce el resultado
+  contractual elegido sin mezclar embeddings silenciosamente.
+- **Versión objetivo sugerida:** `v4.1.x` o posterior.
+- **Commit de resolución:** pendiente.
+
 ---
 
 # Historial de deudas resueltas

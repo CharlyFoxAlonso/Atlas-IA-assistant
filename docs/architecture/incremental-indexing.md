@@ -1,9 +1,9 @@
 # Indexación incremental de Atlas
 
-**Estado:** Implementado (primer corte de Atlas v4.1)
+**Estado:** Implementado hasta IDX-C5; alineación documental DOC-C6 en curso
 **Autoridad:** este documento es **descriptivo**; no define contratos. Los contratos de comportamiento y consistencia de la indexación incremental los congela la especificación gobernante [`docs/spec/atlas-v4.1-incremental-indexing-sdd.md`](../spec/atlas-v4.1-incremental-indexing-sdd.md) (cortes IDX-C1 a INT-C7).
-**Módulos:** `core/indexer.py`, `core/index_manifest.py`, `core/vector_store.py`, `core/local_ingestion_manager.py`
-**Interfaces:** comando `!indexar` / `!indexar sync` (CLI y Streamlit), ingestión local de archivos
+**Módulos:** `core/indexer.py`, `core/index_manifest.py`, `core/vector_store.py`, `core/index_writer_lock.py`, `core/index_consistency.py`, `core/index_repair.py`, `core/index_status.py`, `core/local_ingestion_manager.py`
+**Interfaces:** `!indexar`, `!indexar sync` y `!indexar status` en chat/Streamlit; Doctor read-only; reparación controlada mediante Healer y CLI técnica
 
 ## 1. Problema original
 
@@ -113,9 +113,12 @@ miembros ZIP bajo `vector_db/` sin exponer la ruta absoluta de origen.
 - Escritura **atómica**: `index_manifest.json.tmp` → flush → fsync →
   `os.replace()`. Nunca se escribe sobre el único archivo válido.
 - Si no existe, se empieza vacío (adopción inicial).
-- Si está corrupto o el `schema_version` no coincide, se respalda como
-  `index_manifest.json.corrupt-<timestamp>.bak`, se registra
-  `INDEX_MANIFEST_CORRUPT` y se reconstruye vacío **sin tocar ChromaDB**.
+- En una operación escritora, `IndexManifest.load()` conserva su recuperación
+  histórica: ante corrupción respalda como
+  `index_manifest.json.corrupt-<timestamp>.bak`, registra
+  `INDEX_MANIFEST_CORRUPT` y reconstruye vacío **sin tocar ChromaDB**. El check de
+  consistencia no usa esa vía mutante: reporta corrupción o schema incompatible como
+  `UNAVAILABLE`, sin crear backups ni reconstruir.
 
 ## 6. Detección de cambios
 
@@ -138,8 +141,9 @@ Atlas utiliza **tamaño y mtime como atajo rápido**:
 de un archivo preservando exactamente su tamaño y su mtime produciría un
 falso "sin cambios". Esto **no** es protección criptográfica completa:
 para una aplicación personal local el riesgo se acepta como compromiso
-de rendimiento, y la reconstrucción completa explícita (`!indexar`)
-sigue disponible como vía de verificación total.
+de rendimiento. La reconstrucción completa explícita (`!indexar`)
+reindexa las fuentes conocidas por identidad, pero no sustituye el diagnóstico de
+consistencia ni purga huérfanos.
 
 ## 7. Eliminación
 
@@ -202,7 +206,69 @@ registrado en el manifiesto que ya no existe en disco.
 - Los errores se registran en `atlas_security.log` con tipo y mensaje;
   no hay `except Exception: pass` en el camino de indexación.
 
-## 10. Benchmark
+## 10. Consistencia read-only y estado operativo
+
+`core.index_consistency.verificar_consistencia()` captura una fotografía de fuentes,
+manifiesto, Chroma y writer state sin crear directorios, colección, manifiesto o lock.
+Publica exactamente uno de cinco estados:
+
+- `HEALTHY`: las tres capas convergen.
+- `HEALTHY_EMPTY`: las capas están lógicamente vacías.
+- `DEGRADED`: la comprobación es limitada o un resultado nominal coincide con writer
+  activo/desconocido y puede ser transitorio.
+- `INCONSISTENT`: existe al menos una divergencia accionable.
+- `UNAVAILABLE`: la lectura no es segura o Chroma/manifiesto no permiten diagnosticar.
+
+`UNAVAILABLE` tiene prioridad; `INCONSISTENT` prevalece sobre `DEGRADED`. El reporte
+conserva estado observado y publicado, conteos, divergencias, writer state y el total
+de huérfanos. La proyección de `core.index_status` elimina identidades, rutas y errores
+crudos para Doctor, chat y UI.
+
+## 11. Escritor único
+
+Toda mutación de indexación y `reparar_indice()` adquiere el lock común IDX-C2 de
+forma fail-fast. Un lock activo produce `busy`; no espera ni continúa sin exclusión.
+La recuperación stale solo ocurre durante una adquisición escritora después de
+confirmar que el dueño está inactivo. La inspección read-only:
+
+- reporta lock ausente o stale confirmado como writer conocido e inactivo;
+- reporta dueño vivo como writer conocido y activo;
+- reporta metadata ambigua o PID reutilizado como writer desconocido;
+- nunca crea, recupera ni elimina el lock.
+
+## 12. Reparación conservadora y superficies
+
+`core.index_repair.reparar_indice()` reutiliza el snapshot de consistencia y las
+operaciones públicas del indexador. El pre-check y las escrituras ocurren bajo lock;
+el post-check obligatorio se toma después de liberarlo. `busy` es el único resultado
+sin post-check. Cada operación se confirma por identidad contra el snapshot final y
+un fallo no detiene los demás documentos.
+
+La reparación reindexa cuando cambió el contenido o faltan chunks; si el SHA-256
+permanece igual, actualiza solo size/mtime sin reembedding. Un diagnóstico degradado,
+no disponible, corrupto, incompatible o insuficiente bloquea escrituras. Los
+huérfanos reales se cuentan y reportan, pero nunca se purgan. `success=True` exige
+post-check `HEALTHY`/`HEALTHY_EMPTY` y ausencia de ítems `failed` o
+`still_inconsistent`.
+
+Superficies actuales:
+
+- `!indexar status` y el botón explícito de Streamlit consultan la proyección segura;
+  la UI no diagnostica en cada rerun.
+- Doctor puede incluir `index_consistency` de forma opt-in y sigue siendo read-only.
+- `python -m core.system heal index_consistency` muestra un preview sin lock ni
+  escritura.
+- `python -m core.system heal index_consistency --apply` expresa el consentimiento y
+  delega la reparación en IDX-C3.
+
+La CLI presenta ítems por ordinal, no por identidad. Un preview `INCONSISTENT`
+planificado devuelve exit code `0`; previews `DEGRADED`/`UNAVAILABLE` bloqueados usan
+`1`; argumentos inválidos usan `2`; una ejecución solicitada que termine busy,
+bloqueada, parcial, fallida o aún inconsistente usa `3`. No existe reparación
+automática en Doctor, chat, Streamlit, Launcher, startup o `fix_all`, ni opción de
+purga.
+
+## 13. Benchmark
 
 `scripts/benchmark_indexing.py` compara la lógica anterior (réplica del
 bucle viejo: recorrer y reindexar todo) con la nueva, sobre fixtures
@@ -221,30 +287,28 @@ evidencia válida es la **reducción de operaciones** (archivos abiertos,
 documentos indexados, llamadas al backend). La ganancia real crece con el
 tamaño y el costo de los documentos (PDFs, embeddings reales).
 
-## 11. Limitaciones conocidas
+## 14. Limitaciones conocidas
 
-- **Chunks huérfanos del esquema anterior:** documentos indexados antes
-  de v4.1 cuya metadata no permite identificarlos con precisión (por
-  ejemplo, indexados con `doc_id` = ruta absoluta fuera del flujo del
-  indexer) no se pueden retirar quirúrgicamente. Recomendación: ejecutar
-  una reconstrucción completa explícita (`!indexar`) una única vez tras
-  actualizar. No se ejecuta automáticamente.
-- **La sincronización asume que el manifiesto y ChromaDB están
-  consistentes.** Si la base se borra a mano pero el manifiesto queda, la
-  sincronización omitiría documentos ya registrados. En ese caso, usar
-  `!indexar` (reconstrucción) o borrar también el manifiesto.
+- **Chunks huérfanos:** el consistency check los detecta y reporta con total y
+  muestra acotada. Atlas 4.1 no los borra automáticamente ni ofrece purga; una
+  reconstrucción no promete retirarlos.
+- **Divergencias entre manifiesto y Chroma:** `!indexar status` las diagnostica y la
+  CLI técnica permite preview/reparación conservadora. No se recomienda borrar a
+  mano manifiesto, Chroma o locks.
 - La ingesta por URL (`core/ingestion_manager.py`) y el crawler
   (`core/web_crawler.py`) indexan cada Markdown nuevo mediante
   `indexar_archivo()`. No ejecutan reconstrucción completa en el flujo
   normal.
 - El manifiesto registra un único `embedding_model`/`collection`
-  informativo; no fuerza reindexación si cambian (decisión postergada).
+  informativo; no fuerza reindexación si cambian (deuda diferida).
+- El manifiesto registra `chunk_count`, pero IDX-C1 no realiza verificación profunda
+  de conteos frente a estados legacy o cambios de chunking (deuda diferida).
 - **Falso "sin cambios" por preservación de tamaño+mtime:** un proceso
   externo que altere el contenido conservando exactamente tamaño y mtime
   no sería detectado por el atajo rápido. Riesgo aceptado para una app
   personal local (ver sección 6); no es protección criptográfica completa.
 
-## 12. Decisiones descartadas
+## 15. Decisiones descartadas
 
 - **Base de datos nueva (SQLite) para el manifiesto:** descartada por
   alcance; un JSON atómico es suficiente para miles de documentos.

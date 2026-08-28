@@ -32,6 +32,8 @@ Type these commands directly into the chat:
 | :--- | :--- |
 | `!ayuda` | Displays the full command list. |
 | `!indexar` | Re-scans `memory/Atlas_Memory` to rebuild the semantic index. |
+| `!indexar sync` | Synchronizes only new, modified, and deleted source files. |
+| `!indexar status` | Runs the read-only index diagnosis and shows layer/writer state. |
 | `!analizar` | Forces Atlas to analyze the current conversation for important memories. |
 | `!categorias` | Lists all memory categories (University, Projects, etc.). |
 | `!historial` | Shows the current session's interaction count. |
@@ -44,6 +46,28 @@ Type these commands directly into the chat:
 | `!escuchar [sec]` | Records voice input for the specified duration. |
 | `!autoconocer` | Generates a full technical report of the system architecture. |
 
+### Controlled index repair
+
+Repair is deliberately separate from chat and UI commands. Run the technical CLI
+from the repository root:
+
+```powershell
+.venv\Scripts\python.exe -m core.system heal index_consistency
+.venv\Scripts\python.exe -m core.system heal index_consistency --apply
+```
+
+The first command is a read-only preview. The second is the explicit consent to run
+conservative repair under the single-writer lock and confirm it with a final
+post-check. No startup, Doctor, `!indexar status`, or UI render repairs the index.
+
+The status can be `HEALTHY`, `HEALTHY_EMPTY`, `DEGRADED`, `INCONSISTENT`, or
+`UNAVAILABLE`. A planned `INCONSISTENT` preview exits `0`; a blocked `DEGRADED` or
+`UNAVAILABLE` preview exits `1`; invalid arguments exit `2`; and a requested repair
+that remains busy, blocked, partial, failed, or inconsistent exits `3`. Orphan
+vectors are reported but never purged. User-facing output uses anonymous item
+ordinals and safe reason/type codes rather than document identities, absolute paths,
+or raw exception text.
+
 ## 💡 Tips for Better Results
 
 ### 1. Using Agents
@@ -55,4 +79,7 @@ Atlas automatically switches agents, but you can guide it:
 ### 2. Improving RAG
 - Organize your files in `memory/Atlas_Memory/03_Conocimiento` using folders.
 - Use clear filenames.
-- After adding many files, run `!indexar` to ensure they are searchable.
+- After adding many files, run `!indexar sync`; reserve `!indexar` for an explicit
+  full rebuild of known sources.
+- Use `!indexar status` when you want to inspect consistency without changing the
+  index.
