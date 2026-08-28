@@ -202,6 +202,56 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, EXIT_ARGUMENT_ERROR)
         self.assertIn("--allow-heavy", error.getvalue())
 
+    def test_allow_heavy_without_apply_remains_known_argument_error(self):
+        error = io.StringIO()
+        code = main(["heal", "folders", "--allow-heavy"], stderr=error)
+        self.assertEqual(code, EXIT_ARGUMENT_ERROR)
+        self.assertEqual(
+            error.getvalue(),
+            "Error de argumentos: --allow-heavy requiere --apply\n",
+        )
+
+    def test_unexpected_runtime_error_is_sanitized_in_json_mode(self):
+        private_message = r"C:\Users\synthetic\private.txt token=SYNTHETIC_SECRET"
+        output = io.StringIO()
+        error = io.StringIO()
+        with patch(
+            "core.system.__main__.Healer",
+            side_effect=RuntimeError(private_message),
+        ):
+            code = main(
+                ["heal", "index_consistency", "--apply", "--json"],
+                stdout=output,
+                stderr=error,
+            )
+
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(error.getvalue(), "La operación falló: RuntimeError\n")
+        self.assertNotIn(private_message, output.getvalue() + error.getvalue())
+        self.assertNotIn("Traceback", output.getvalue() + error.getvalue())
+
+    def test_unexpected_value_error_is_not_an_argument_error(self):
+        private_message = r"C:\Users\synthetic\private.txt token=SYNTHETIC_SECRET"
+        output = io.StringIO()
+        error = io.StringIO()
+        with patch(
+            "core.system.__main__.diagnosticar_sistema",
+            side_effect=ValueError(private_message),
+        ):
+            code = main(
+                ["doctor", "--json"],
+                stdout=output,
+                stderr=error,
+            )
+
+        self.assertEqual(code, EXIT_OPERATION_FAILED)
+        self.assertNotEqual(code, EXIT_ARGUMENT_ERROR)
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(error.getvalue(), "La operación falló: ValueError\n")
+        self.assertNotIn(private_message, output.getvalue() + error.getvalue())
+        self.assertNotIn("Traceback", output.getvalue() + error.getvalue())
+
     def test_argparse_error_uses_exit_two_and_supplied_stderr(self):
         error = io.StringIO()
         code = main(["unknown-command"], stderr=error)

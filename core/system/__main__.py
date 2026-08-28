@@ -18,6 +18,30 @@ EXIT_NOT_READY = 1
 EXIT_ARGUMENT_ERROR = 2
 EXIT_OPERATION_FAILED = 3
 
+_CLI_USAGE_MESSAGES = {
+    "allow_heavy_requires_apply": "--allow-heavy requiere --apply",
+    "heavy_repair_requires_consent": (
+        "las reparaciones pesadas requieren --apply y --allow-heavy"
+    ),
+}
+
+
+class _CliUsageError(Exception):
+    """Known CLI usage error with an allowlisted public message."""
+
+    def __init__(self, code: str) -> None:
+        self.public_message = _CLI_USAGE_MESSAGES[code]
+        super().__init__(code)
+
+
+def _safe_cli_error_type(error: object) -> str:
+    try:
+        from core.vector_store import _tipo_error_seguro
+
+        return _tipo_error_seguro(error)
+    except Exception:
+        return "Exception"
+
 
 class AtlasArgumentParser(argparse.ArgumentParser):
     def error(self, message: str) -> None:
@@ -265,9 +289,9 @@ def _doctor(args: argparse.Namespace, stdout: TextIO) -> int:
 
 def _heal(args: argparse.Namespace, stdout: TextIO) -> int:
     if args.allow_heavy and not args.apply:
-        raise ValueError("--allow-heavy requiere --apply")
+        raise _CliUsageError("allow_heavy_requires_apply")
     if args.component in ("python_packages", "ollama_model") and args.apply and not args.allow_heavy:
-        raise ValueError("las reparaciones pesadas requieren --apply y --allow-heavy")
+        raise _CliUsageError("heavy_repair_requires_consent")
 
     healer_options = {
         "dry_run": not args.apply,
@@ -333,8 +357,8 @@ def main(
             return _heal(args, out)
         if args.command == "launch":
             return _launch(args, out)
-    except ValueError as exc:
-        err.write(f"Error de argumentos: {exc}\n")
+    except _CliUsageError as exc:
+        err.write(f"Error de argumentos: {exc.public_message}\n")
         return EXIT_ARGUMENT_ERROR
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else EXIT_ARGUMENT_ERROR
@@ -342,7 +366,7 @@ def main(
         err.write("Operación cancelada por el usuario.\n")
         return EXIT_OPERATION_FAILED
     except Exception as exc:
-        err.write(f"La operación falló: {type(exc).__name__}: {exc}\n")
+        err.write(f"La operación falló: {_safe_cli_error_type(exc)}\n")
         return EXIT_OPERATION_FAILED
     return EXIT_ARGUMENT_ERROR
 
