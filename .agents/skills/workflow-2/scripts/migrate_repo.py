@@ -15,7 +15,7 @@ from workflow_lib import (
     merge_managed_block,
     relative_hashes,
     sha256_bytes,
-    sha256_file,
+    sha256_managed_file,
     template_root,
 )
 
@@ -41,9 +41,9 @@ def plan(source_root: Path, target: Path) -> tuple[list[Action], list[str]]:
         destination = target / Path(rel)
         if not destination.exists():
             actions.append(Action("CREATE", rel, source=source))
-        elif sha256_file(destination) == sha256_file(source):
+        elif sha256_managed_file(destination) == sha256_managed_file(source):
             actions.append(Action("KEEP", rel, source=source))
-        elif installed_hashes.get(rel) == sha256_file(destination):
+        elif installed_hashes.get(rel) == sha256_managed_file(destination):
             actions.append(Action("UPDATE", rel, source=source))
         else:
             actions.append(Action("CONFLICT", rel, source=source))

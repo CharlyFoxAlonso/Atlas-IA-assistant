@@ -15,7 +15,13 @@ from context_report import (
     project_profile_path,
     validate_config,
 )
-from workflow_lib import BEGIN, END, INSTALL_STATE, sha256_file, template_root
+from workflow_lib import (
+    BEGIN,
+    END,
+    INSTALL_STATE,
+    sha256_managed_file,
+    template_root,
+)
 
 
 REQUIRED = [
@@ -604,6 +610,26 @@ def validate_rule_ownership(
     return errors
 
 
+def _validate_install_state(root: Path) -> list[str]:
+    errors: list[str] = []
+    state_path = root / INSTALL_STATE
+    if state_path.exists():
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"invalid install-state.json: {exc}")
+        else:
+            files = state.get("files", {})
+            if isinstance(files, dict):
+                for rel, expected in files.items():
+                    path = root / rel
+                    if not path.exists():
+                        errors.append(f"installed managed file is missing: {rel}")
+                    elif sha256_managed_file(path) != expected:
+                        errors.append(f"installed managed file was modified locally: {rel}")
+    return errors
+
+
 def validate(root: Path) -> list[str]:
     errors: list[str] = []
     for rel in REQUIRED:
@@ -696,21 +722,7 @@ def validate(root: Path) -> list[str]:
     if "Edit" not in (root / ".claude/agents/workflow-builder.md").read_text(encoding="utf-8"):
         errors.append("Claude Builder must include Edit")
 
-    state_path = root / INSTALL_STATE
-    if state_path.exists():
-        try:
-            state = json.loads(state_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            errors.append(f"invalid install-state.json: {exc}")
-        else:
-            files = state.get("files", {})
-            if isinstance(files, dict):
-                for rel, expected in files.items():
-                    path = root / rel
-                    if not path.exists():
-                        errors.append(f"installed managed file is missing: {rel}")
-                    elif sha256_file(path) != expected:
-                        errors.append(f"installed managed file was modified locally: {rel}")
+    errors.extend(_validate_install_state(root))
     return errors
 
 

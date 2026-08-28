@@ -25,6 +25,11 @@ def sha256_file(path: Path) -> str:
     return sha256_bytes(path.read_bytes())
 
 
+def sha256_managed_file(path: Path) -> str:
+    """Hash managed text independently of Git CRLF checkout conversion."""
+    return sha256_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+
+
 def run_git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -162,7 +167,7 @@ def load_install_state(repo: Path) -> dict[str, object]:
 
 def relative_hashes(root: Path, files: Iterable[Path]) -> dict[str, str]:
     return {
-        path.relative_to(root).as_posix(): sha256_file(path)
+        path.relative_to(root).as_posix(): sha256_managed_file(path)
         for path in files
     }
 

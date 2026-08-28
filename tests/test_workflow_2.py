@@ -22,8 +22,10 @@ from context_report import (  # noqa: E402
     select_roles,
     validate_config,
 )
+from migrate_repo import plan as plan_migration  # noqa: E402
 from validate_workflow import (  # noqa: E402
     READ_ONLY_WORKFLOW_COMMANDS,
+    _validate_install_state,
     load_configuration,
     opencode_configuration,
     privacy_configuration,
@@ -33,7 +35,84 @@ from validate_workflow import (  # noqa: E402
     validate_rule_ownership,
     valid_opencode_expectation,
 )
-from workflow_lib import PROJECT_PROFILE, managed_source_files  # noqa: E402
+from workflow_lib import (  # noqa: E402
+    BEGIN,
+    END,
+    PROJECT_PROFILE,
+    managed_source_files,
+    sha256_bytes,
+    sha256_managed_file,
+)
+
+
+class ManagedFileHashTests(unittest.TestCase):
+    def test_managed_hash_is_stable_across_lf_and_crlf(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            lf = root / "lf.md"
+            crlf = root / "crlf.md"
+            changed = root / "changed.md"
+            lf.write_bytes(b"alpha\nbeta\n")
+            crlf.write_bytes(b"alpha\r\nbeta\r\n")
+            changed.write_bytes(b"alpha\r\ngamma\r\n")
+
+            self.assertEqual(
+                sha256_managed_file(lf),
+                sha256_managed_file(crlf),
+            )
+            self.assertNotEqual(
+                sha256_managed_file(lf),
+                sha256_managed_file(changed),
+            )
+
+    def test_migration_keeps_equivalent_managed_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            target = root / "target"
+            managed_rel = Path(".agents/workflow-2/core.md")
+            routing = f"{BEGIN}\n{END}\n".encode("utf-8")
+
+            for repository in (source, target):
+                (repository / managed_rel).parent.mkdir(parents=True)
+                (repository / "AGENTS.md").write_bytes(routing)
+                (repository / "CLAUDE.md").write_bytes(routing)
+
+            (source / managed_rel).write_bytes(b"one\ntwo\n")
+            (target / managed_rel).write_bytes(b"one\r\ntwo\r\n")
+
+            actions, conflicts = plan_migration(source, target)
+            managed_action = next(
+                action for action in actions if action.relative == managed_rel.as_posix()
+            )
+            self.assertEqual(conflicts, [])
+            self.assertEqual(managed_action.kind, "KEEP")
+
+    def test_install_state_accepts_equivalent_managed_line_endings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            managed = root / "managed.md"
+            managed.write_bytes(b"one\r\ntwo\r\n")
+            state_path = root / ".agents/workflow-2/install-state.json"
+            state_path.parent.mkdir(parents=True)
+            state_path.write_text(
+                json.dumps(
+                    {
+                        "files": {
+                            "managed.md": sha256_bytes(b"one\ntwo\n"),
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(_validate_install_state(root), [])
+
+            managed.write_bytes(b"one\r\nchanged\r\n")
+            self.assertEqual(
+                _validate_install_state(root),
+                ["installed managed file was modified locally: managed.md"],
+            )
 
 
 class ContextReportTests(unittest.TestCase):
