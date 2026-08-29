@@ -8,7 +8,8 @@ import io
 import re
 import json
 import requests
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
+from contextvars import ContextVar
 from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -31,6 +32,37 @@ from core.temp_rules import (
 from core.config import BASE_ESTUDIO, BASE_PROMPTS, MAX_HISTORIAL
 
 HISTORIAL = []
+
+_HISTORIAL_STREAMING = ContextVar("historial_streaming", default=None)
+_ERRORES_STREAMING_TIPADOS = ContextVar(
+    "errores_streaming_tipados",
+    default=False,
+)
+
+
+class _ErrorStreamingAislado(Exception):
+    """Sentinel privado que nunca transporta texto del backend."""
+
+
+@contextmanager
+def _usar_contexto_streaming(historial):
+    """Aísla historial y errores para un consumidor frontend-neutral."""
+    token_historial = _HISTORIAL_STREAMING.set(historial)
+    token_errores = _ERRORES_STREAMING_TIPADOS.set(True)
+    try:
+        yield
+    finally:
+        _ERRORES_STREAMING_TIPADOS.reset(token_errores)
+        _HISTORIAL_STREAMING.reset(token_historial)
+
+
+def _historial_actual():
+    historial = _HISTORIAL_STREAMING.get()
+    return HISTORIAL if historial is None else historial
+
+
+def _elevar_error_streaming_aislado():
+    raise _ErrorStreamingAislado() from None
 
 
 # ============================================
@@ -121,17 +153,19 @@ def reescribir_query(pregunta):
 
 def agregar_al_historial(pregunta, respuesta):
     """Agrega interacción al historial."""
-    HISTORIAL.append({"pregunta": pregunta, "respuesta": respuesta})
-    if len(HISTORIAL) > MAX_HISTORIAL:
-        HISTORIAL.pop(0)
+    historial = _historial_actual()
+    historial.append({"pregunta": pregunta, "respuesta": respuesta})
+    if len(historial) > MAX_HISTORIAL:
+        historial.pop(0)
 
 
 def formatear_historial():
     """Formatea historial para el prompt."""
-    if not HISTORIAL:
+    historial = _historial_actual()
+    if not historial:
         return ""
     texto = "\n========================\nHISTORIAL DE CONVERSACIÓN:\n"
-    for i, item in enumerate(HISTORIAL, 1):
+    for i, item in enumerate(historial, 1):
         texto += f"\n{i}. Usuario: {item['pregunta']}\n"
         texto += f"   Atlas: {item['respuesta'][:300]}...\n"
     return texto
@@ -204,6 +238,8 @@ def _stream_local(prompt_completo, modelo="qwen3:8b"):
                         continue
     except Exception as e:
         log_seguridad("STREAM_LOCAL_ERROR", str(e))
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
         yield f"❌ Error en Atlas local: {e}"
 
 
@@ -211,6 +247,8 @@ def _stream_nube(prompt_completo, modelo_nube="meta/llama-3.1-70b-instruct"):
     """Streaming desde NVIDIA API (Prometeo)."""
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("NVIDIA_API_KEY")
     if not api_key:
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
         yield "❌ Error: No se encontró API Key en .env"
         return
 
@@ -231,6 +269,8 @@ def _stream_nube(prompt_completo, modelo_nube="meta/llama-3.1-70b-instruct"):
                 yield chunk.choices[0].delta.content
     except Exception as e:
         log_seguridad("STREAM_NUBE_ERROR", str(e))
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
         yield f"❌ Error en Prometeo: {e}"
 
 
@@ -238,6 +278,8 @@ def _stream_groq(prompt_completo, modelo_groq="llama-3.1-70b-versatile"):
     """Streaming desde Groq Cloud (Ultra rápido)."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
         yield "❌ Error: No se encontró GROQ_API_KEY en .env"
         return
 
@@ -256,6 +298,8 @@ def _stream_groq(prompt_completo, modelo_groq="llama-3.1-70b-versatile"):
                 yield chunk.choices[0].delta.content
     except Exception as e:
         log_seguridad("STREAM_GROQ_ERROR", str(e))
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
         yield f"❌ Error en Groq: {e}"
 
 
@@ -443,9 +487,13 @@ Devolvé SOLO la respuesta final sin preámbulos.
                 continue
             respuesta_completa += chunk
             yield None, respuesta_completa
+    except _ErrorStreamingAislado:
+        raise
     except Exception as e:
-        error_final = e
         log_seguridad("ERROR_RESPUESTA", str(e))
+        if _ERRORES_STREAMING_TIPADOS.get():
+            _elevar_error_streaming_aislado()
+        error_final = e
 
     if respuesta_completa:
         try:
