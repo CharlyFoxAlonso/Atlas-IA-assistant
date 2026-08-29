@@ -1,0 +1,58 @@
+# Canonical line endings for repository text files.
+* text=auto eol=lf
+
+# Windows command scripts remain directly executable on Windows.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Common binary assets and packages must not be text-normalized or diffed.
+*.7z binary
+*.avi binary
+*.bmp binary
+*.bz2 binary
+*.db binary
+*.dylib binary
+*.dll binary
+*.doc binary
+*.docx binary
+*.exe binary
+*.flac binary
+*.gif binary
+*.gz binary
+*.ico binary
+*.jar binary
+*.jpeg binary
+*.jpg binary
+*.m4a binary
+*.mkv binary
+*.mov binary
+*.mp3 binary
+*.mp4 binary
+*.mpeg binary
+*.ogg binary
+*.otf binary
+*.pdf binary
+*.png binary
+*.ppt binary
+*.pptx binary
+*.pyd binary
+*.pyc binary
+*.pyo binary
+*.rar binary
+*.so binary
+*.sqlite binary
+*.sqlite3 binary
+*.tar binary
+*.tif binary
+*.tiff binary
+*.ttf binary
+*.wav binary
+*.webm binary
+*.webp binary
+*.whl binary
+*.woff binary
+*.woff2 binary
+*.xls binary
+*.xlsx binary
+*.xz binary
+*.zip binary
