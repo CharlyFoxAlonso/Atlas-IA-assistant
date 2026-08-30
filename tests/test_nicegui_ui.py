@@ -313,8 +313,11 @@ import atlas_nicegui.__main__
 for name in (
     'nicegui',
     'core.brain',
+    'core.chat_manager',
+    'core.config',
     'core.index_repair',
     'core.index_writer_lock',
+    'core.local_ingestion_manager',
     'sentence_transformers',
     'chromadb',
     'ollama',
@@ -417,7 +420,9 @@ class NiceGuiPageTests(unittest.IsolatedAsyncioTestCase):
         root()
 
         self.assertEqual(calls, [])
-        self.assertEqual(len(fake_ui.buttons), 4)
+        fake_ui.buttons[2].on_click()
+        self.assertEqual(calls, [])
+        self.assertEqual(len(fake_ui.buttons), 6)
         self.assertEqual(fake_ui.columns[0].lines, (STATUS_PLACEHOLDER,))
         self.assertEqual(fake_ui.columns[2].lines, (STATUS_PLACEHOLDER,))
 
@@ -503,17 +508,17 @@ class NiceGuiPageTests(unittest.IsolatedAsyncioTestCase):
         )
         root()
         first = asyncio.create_task(fake_ui.buttons[0].on_click())
-        second = asyncio.create_task(fake_ui.buttons[2].on_click())
+        second = asyncio.create_task(fake_ui.buttons[3].on_click())
         await started.wait()
 
         self.assertEqual(runner_calls, 2)
         self.assertFalse(fake_ui.buttons[0].enabled)
-        self.assertFalse(fake_ui.buttons[2].enabled)
+        self.assertFalse(fake_ui.buttons[3].enabled)
 
         release.set()
         await asyncio.gather(first, second)
         self.assertTrue(fake_ui.buttons[0].enabled)
-        self.assertTrue(fake_ui.buttons[2].enabled)
+        self.assertTrue(fake_ui.buttons[3].enabled)
 
     async def test_ordinary_error_is_fixed_safe_message_and_restores_button(self):
         async def failing_io_bound(_function, *_args):
@@ -633,7 +638,8 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(calls, [])
         self.assertEqual(fake_ui.chat_messages, [])
         self.assertEqual(len(fake_ui.inputs), 1)
-        self.assertEqual(len(fake_ui.buttons), 2)
+        self.assertEqual(len(fake_ui.buttons), 3)
+        self.assertEqual(fake_ui.buttons[2].text, "Nueva conversación")
 
     async def test_button_streams_once_in_worker_and_updates_ui_on_loop(self):
         loop_thread = threading.get_ident()
@@ -762,6 +768,90 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
             ),
         )
 
+    async def test_new_conversation_clears_transcript_input_and_history(self):
+        observed = []
+
+        def streamer(prompt, *, history, cancelled):
+            observed.append((prompt, tuple(dict(item) for item in history)))
+            response = f"respuesta:{prompt}"
+            yield ChatStreamEvent("snapshot", response)
+            history.extend(
+                (
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response},
+                )
+            )
+
+        fake_ui = self._build_page(streamer=streamer)
+        await self._send(fake_ui, "uno")
+        fake_ui.inputs[0].value = "borrador"
+
+        chat_container = fake_ui.columns[1]
+        self.assertEqual(len(chat_container.chat_messages), 2)
+
+        fake_ui.buttons[2].on_click()
+
+        self.assertEqual(chat_container.chat_messages, [])
+        self.assertEqual(fake_ui.inputs[0].value, "")
+        await self._send(fake_ui, "dos")
+        self.assertEqual(observed, [("uno", ()), ("dos", ())])
+
+    async def test_new_conversation_is_disabled_and_guarded_during_turn(self):
+        started = asyncio.Event()
+        release = threading.Event()
+        observed = []
+        loop = asyncio.get_running_loop()
+
+        def streamer(prompt, *, history, cancelled):
+            observed.append((prompt, tuple(dict(item) for item in history)))
+            if prompt == "primero":
+                loop.call_soon_threadsafe(started.set)
+                release.wait(timeout=2)
+            response = f"respuesta:{prompt}"
+            yield ChatStreamEvent("snapshot", response)
+            history.extend(
+                (
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response},
+                )
+            )
+
+        fake_ui = self._build_page(streamer=streamer)
+        fake_ui.inputs[0].value = "primero"
+        first = asyncio.create_task(fake_ui.buttons[1].on_click())
+        await asyncio.wait_for(started.wait(), timeout=1)
+
+        chat_container = fake_ui.columns[1]
+        rendered_messages = tuple(chat_container.chat_messages)
+        self.assertFalse(fake_ui.buttons[2].enabled)
+
+        fake_ui.buttons[2].on_click()
+
+        self.assertEqual(
+            tuple(chat_container.chat_messages),
+            rendered_messages,
+        )
+
+        release.set()
+        await asyncio.wait_for(first, timeout=1)
+        self.assertTrue(fake_ui.buttons[2].enabled)
+
+        await self._send(fake_ui, "segundo")
+        self.assertEqual(observed[0], ("primero", ()))
+        self.assertEqual(
+            observed[1],
+            (
+                "segundo",
+                (
+                    {"role": "user", "content": "primero"},
+                    {
+                        "role": "assistant",
+                        "content": "respuesta:primero",
+                    },
+                ),
+            ),
+        )
+
     async def test_two_pages_have_isolated_histories(self):
         observed = []
 
@@ -780,9 +870,24 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         await self._send(first_page, "primera")
         await self._send(second_page, "segunda")
 
+        first_page.buttons[2].on_click()
+
+        self.assertEqual(first_page.columns[1].chat_messages, [])
+        self.assertEqual(len(second_page.columns[1].chat_messages), 2)
+        await self._send(first_page, "tercera")
+        await self._send(second_page, "cuarta")
+
         self.assertEqual(observed[0][2], ())
         self.assertEqual(observed[1][2], ())
         self.assertIsNot(observed[0][1], observed[1][1])
+        self.assertEqual(observed[2][2], ())
+        self.assertEqual(
+            observed[3][2],
+            (
+                {"role": "user", "content": "segunda"},
+                {"role": "assistant", "content": "SEGUNDA"},
+            ),
+        )
 
     async def test_failure_replaces_partial_output_with_fixed_safe_message(self):
         def streamer(prompt, *, history, cancelled):
@@ -809,6 +914,9 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("C:\\Users", rendered)
         self.assertTrue(fake_ui.inputs[0].enabled)
         self.assertTrue(fake_ui.buttons[1].enabled)
+
+        fake_ui.buttons[2].on_click()
+        self.assertEqual(fake_ui.columns[1].chat_messages, [])
 
     async def test_transport_failure_after_partial_output_is_fixed_and_safe(self):
         observed_histories = []
@@ -877,6 +985,9 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(fake_ui.inputs[0].enabled)
         self.assertTrue(fake_ui.buttons[1].enabled)
 
+        fake_ui.buttons[2].on_click()
+        self.assertEqual(fake_ui.columns[1].chat_messages, [])
+
     async def test_async_cancellation_reaches_worker_and_preserves_history(self):
         started = asyncio.Event()
         cancellation_seen = threading.Event()
@@ -922,6 +1033,7 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(fake_ui.markdowns[0].content, "")
         self.assertTrue(fake_ui.inputs[0].enabled)
         self.assertTrue(fake_ui.buttons[1].enabled)
+        self.assertTrue(fake_ui.buttons[2].enabled)
 
         await self._send(fake_ui, "segundo")
         self.assertEqual(observed_histories, [(), ()])
@@ -1033,10 +1145,12 @@ class NiceGuiChatTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.wait_for(first, timeout=1)
         self.assertFalse(fake_ui.inputs[0].enabled)
         self.assertFalse(fake_ui.buttons[1].enabled)
+        self.assertFalse(fake_ui.buttons[2].enabled)
 
         client.reconnect()
         self.assertTrue(fake_ui.inputs[0].enabled)
         self.assertTrue(fake_ui.buttons[1].enabled)
+        self.assertTrue(fake_ui.buttons[2].enabled)
 
         await self._send(fake_ui, "segundo")
         self.assertEqual(observed_histories, [(), ()])

@@ -222,6 +222,14 @@ def create_root(
         chat_container = ui.column()
         chat_input = None
         send_button = None
+        new_conversation_button = None
+
+        def start_new_conversation() -> None:
+            if chat_in_flight or not _client_is_usable(client):
+                return
+            history.clear()
+            chat_container.clear()
+            chat_input.value = ""
 
         async def submit_chat() -> None:
             nonlocal chat_in_flight, active_cancellation
@@ -241,6 +249,7 @@ def create_root(
 
             chat_input.disable()
             send_button.disable()
+            new_conversation_button.disable()
             chat_input.value = ""
 
             with chat_container:
@@ -330,6 +339,7 @@ def create_root(
                 if _client_is_usable(client):
                     chat_input.enable()
                     send_button.enable()
+                    new_conversation_button.enable()
 
         chat_input = ui.input(
             label="Mensaje",
@@ -337,12 +347,17 @@ def create_root(
         )
         send_button = ui.button("Enviar", on_click=submit_chat)
         chat_input.on("keydown.enter", submit_chat)
+        new_conversation_button = ui.button(
+            "Nueva conversación",
+            on_click=start_new_conversation,
+        )
 
         def restore_chat_controls() -> None:
             if chat_in_flight or not _client_is_usable(client):
                 return
             chat_input.enable()
             send_button.enable()
+            new_conversation_button.enable()
 
         client.on_connect(restore_chat_controls)
 
